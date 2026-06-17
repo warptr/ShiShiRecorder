@@ -185,11 +185,11 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="48dp"
                                     android:text="@string/setting_record_option_record"
-                                    android:paddingStart="16dp"
-                                    android:paddingEnd="16dp"
+                                    android:paddingStart="10dp"
+                                    android:paddingEnd="10dp"
                                     android:drawableStart="@drawable/icon_record_mode_small"
-                                    android:drawablePadding="8dp"
-                                    android:textSize="14sp"
+                                    android:drawablePadding="6dp"
+                                    android:textSize="13sp"
                                     android:background="@drawable/bg_setting_rounded_button" />
 
                                 <com.yepgoryo.CaptureCap.CaptureSwitchModeButton
@@ -197,11 +197,11 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="48dp"
                                     android:text="@string/setting_record_option_stream"
-                                    android:paddingStart="16dp"
-                                    android:paddingEnd="16dp"
+                                    android:paddingStart="10dp"
+                                    android:paddingEnd="10dp"
                                     android:drawableStart="@drawable/icon_record_stream_small"
-                                    android:drawablePadding="8dp"
-                                    android:textSize="14sp"
+                                    android:drawablePadding="6dp"
+                                    android:textSize="13sp"
                                     android:background="@drawable/bg_setting_rounded_button"
                                     android:layout_marginStart="8dp" />
 
@@ -441,32 +441,32 @@
 
                         <Button
                             android:id="@+id/post_record_controls_share"
-                            android:layout_width="160dp"
+                            android:layout_width="180dp"
                             android:layout_height="wrap_content"
                             android:contentDescription="@string/record_share_title"
                             android:drawableLeft="@drawable/icon_record_share"
                             android:text="@string/record_share_title"
                             android:textColor="?attr/colorOnPrimary"
                             android:background="@drawable/bg_rounded_button"
-                            android:paddingLeft="24dp"
-                            android:paddingRight="24dp"
-                            android:drawablePadding="16dp"
+                            android:paddingLeft="16dp"
+                            android:paddingRight="16dp"
+                            android:drawablePadding="8dp"
                             android:layout_centerVertical="true"
                             android:layout_centerHorizontal="true" />
 
                         <Button
                             android:id="@+id/post_record_controls_delete"
-                            android:layout_width="160dp"
+                            android:layout_width="180dp"
                             android:layout_height="wrap_content"
                             android:contentDescription="@string/record_delete_title"
                             android:drawableLeft="@drawable/icon_record_delete"
                             android:text="@string/record_delete_title"
                             android:textColor="?attr/colorOnPrimary"
                             android:background="@drawable/bg_rounded_button"
-                            android:paddingLeft="24dp"
-                            android:paddingRight="24dp"
+                            android:paddingLeft="16dp"
+                            android:paddingRight="16dp"
                             android:layout_marginLeft="12dp"
-                            android:drawablePadding="16dp"
+                            android:drawablePadding="8dp"
                             android:layout_centerVertical="true"
                             android:layout_centerHorizontal="true" />
 
