@@ -270,6 +270,22 @@ class PlaybackRecorder(private var context: Context,
         this.mCallback = callback
     }
 
+    fun setMicrophoneMuted(mic: Boolean) {
+        this.mAudioEncoder?.setMicrophoneMuted(mic)
+    }
+
+    fun setAudioMuted(audio: Boolean) {
+        this.mAudioEncoder?.setAudioMuted(audio)
+    }
+
+    fun microphoneMuted(): Boolean {
+        return this.mAudioEncoder!!.microphoneMuted()
+    }
+
+    fun audioMuted(): Boolean {
+        return this.mAudioEncoder!!.audioMuted()
+    }
+
     private inner class CallbackHandler(looper: Looper) : Handler(looper) {
         @RequiresApi(Build.VERSION_CODES.O)
         override fun handleMessage(message: Message) {

@@ -63,6 +63,10 @@ class MainActivity : AppCompatActivity() {
     var captureStartButton: Button? = null
     var recordOptionsPanel: LinearLayout? = null
     var recordControls: LinearLayout? = null
+    var recordControlMuteMic: Button? = null
+    var recordControlMuteAudio: Button? = null
+    var recordControlUnmuteMic: Button? = null
+    var recordControlUnmuteAudio: Button? = null
     var recordControlPause: Button? = null
     var recordControlResume: Button? = null
     var recordControlStop: Button? = null
@@ -244,6 +248,30 @@ class MainActivity : AppCompatActivity() {
                 captureStartButton!!.isVisible = false
                 mainRecordingButton!!.innerButton().isVisible = true
                 recordOptionsFullPanel!!.isVisible = false
+                if (this@MainActivity.recordingBinder!!.recordMic() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    if (this@MainActivity.recordingBinder!!.micMuted()) {
+                        recordControlMuteMic!!.visibility = View.GONE
+                        recordControlUnmuteMic!!.visibility = View.VISIBLE
+                    } else {
+                        recordControlMuteMic!!.visibility = View.VISIBLE
+                        recordControlUnmuteMic!!.visibility = View.GONE
+                    }
+                } else {
+                    recordControlMuteMic!!.visibility = View.GONE
+                    recordControlUnmuteMic!!.visibility = View.GONE
+                }
+                if (this@MainActivity.recordingBinder!!.recordAudio() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    if (this@MainActivity.recordingBinder!!.audioMuted()) {
+                        recordControlMuteAudio!!.visibility = View.GONE
+                        recordControlUnmuteAudio!!.visibility = View.VISIBLE
+                    } else {
+                        recordControlMuteAudio!!.visibility = View.VISIBLE
+                        recordControlUnmuteAudio!!.visibility = View.GONE
+                    }
+                } else {
+                    recordControlMuteAudio!!.visibility = View.GONE
+                    recordControlUnmuteAudio!!.visibility = View.GONE
+                }
                 if (recordStream) {
                     if (recordOnlyAudio) {
                         recordStatusMessage!!.setText(R.string.streaming_audio_started_text)
@@ -329,6 +357,10 @@ class MainActivity : AppCompatActivity() {
                 mainRecordingButton!!.innerButton().visibility = View.VISIBLE
                 recordStatusMessage!!.visibility = View.VISIBLE
                 recordControls!!.visibility = View.VISIBLE
+                recordControlMuteMic!!.visibility = View.GONE
+                recordControlMuteAudio!!.visibility = View.GONE
+                recordControlUnmuteMic!!.visibility = View.GONE
+                recordControlUnmuteAudio!!.visibility = View.GONE
                 recordControlPause!!.visibility = View.GONE
                 recordControlResume!!.visibility = View.VISIBLE
                 this@MainActivity.recordingState = ActionState.RECORDING_PAUSED
@@ -365,6 +397,30 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         recordStatusMessage!!.setText(R.string.recording_started_text)
                     }
+                }
+                if (this@MainActivity.recordingBinder!!.recordMic() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    if (this@MainActivity.recordingBinder!!.micMuted()) {
+                        recordControlMuteMic!!.visibility = View.GONE
+                        recordControlUnmuteMic!!.visibility = View.VISIBLE
+                    } else {
+                        recordControlMuteMic!!.visibility = View.VISIBLE
+                        recordControlUnmuteMic!!.visibility = View.GONE
+                    }
+                } else {
+                    recordControlMuteMic!!.visibility = View.GONE
+                    recordControlUnmuteMic!!.visibility = View.GONE
+                }
+                if (this@MainActivity.recordingBinder!!.recordAudio() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    if (this@MainActivity.recordingBinder!!.audioMuted()) {
+                        recordControlMuteAudio!!.visibility = View.GONE
+                        recordControlUnmuteAudio!!.visibility = View.VISIBLE
+                    } else {
+                        recordControlMuteAudio!!.visibility = View.VISIBLE
+                        recordControlUnmuteAudio!!.visibility = View.GONE
+                    }
+                } else {
+                    recordControlMuteAudio!!.visibility = View.GONE
+                    recordControlUnmuteAudio!!.visibility = View.GONE
                 }
                 recordControlPause!!.visibility = View.VISIBLE
                 recordControlResume!!.visibility = View.GONE
@@ -703,6 +759,10 @@ class MainActivity : AppCompatActivity() {
         recordOptionsPanel = findViewById<LinearLayout>(R.id.record_options_panel)
 
         recordControls = findViewById<LinearLayout>(R.id.record_controls)
+        recordControlMuteMic = findViewById<Button>(R.id.record_controls_mute_microphone)
+        recordControlMuteAudio = findViewById<Button>(R.id.record_controls_mute_audio)
+        recordControlUnmuteMic = findViewById<Button>(R.id.record_controls_unmute_microphone)
+        recordControlUnmuteAudio = findViewById<Button>(R.id.record_controls_unmute_audio)
         recordControlPause = findViewById<Button>(R.id.record_controls_pause)
         recordControlResume = findViewById<Button>(R.id.record_controls_resume)
         recordControlStop = findViewById<Button>(R.id.record_controls_stop)
@@ -710,6 +770,74 @@ class MainActivity : AppCompatActivity() {
         if (recordStream) {
             recordControlPause!!.isVisible = false
             recordControlResume!!.isVisible = false
+        }
+
+        recordControlMuteMic!!.setOnClickListener {
+            if (this@MainActivity.recordingBinder!!.recordMic()) {
+                if (this@MainActivity.recordingBinder!!.micMuted()) {
+                    this@MainActivity.recordingBinder!!.unmuteMic()
+                    recordControlMuteMic!!.visibility = View.VISIBLE
+                    recordControlUnmuteMic!!.visibility = View.GONE
+                } else {
+                    this@MainActivity.recordingBinder!!.muteMic()
+                    recordControlMuteMic!!.visibility = View.GONE
+                    recordControlUnmuteMic!!.visibility = View.VISIBLE
+                }
+            } else {
+                recordControlMuteMic!!.visibility = View.GONE
+                recordControlUnmuteMic!!.visibility = View.GONE
+            }
+        }
+
+        recordControlMuteAudio!!.setOnClickListener {
+            if (this@MainActivity.recordingBinder!!.recordAudio()) {
+                if (this@MainActivity.recordingBinder!!.audioMuted()) {
+                    this@MainActivity.recordingBinder!!.unmuteAudio()
+                    recordControlMuteAudio!!.visibility = View.VISIBLE
+                    recordControlUnmuteAudio!!.visibility = View.GONE
+                } else {
+                    this@MainActivity.recordingBinder!!.muteAudio()
+                    recordControlMuteAudio!!.visibility = View.GONE
+                    recordControlUnmuteAudio!!.visibility = View.VISIBLE
+                }
+            } else {
+                recordControlMuteAudio!!.visibility = View.GONE
+                recordControlUnmuteAudio!!.visibility = View.GONE
+            }
+        }
+
+        recordControlUnmuteMic!!.setOnClickListener {
+            if (this@MainActivity.recordingBinder!!.recordMic()) {
+                if (this@MainActivity.recordingBinder!!.micMuted()) {
+                    this@MainActivity.recordingBinder!!.unmuteMic()
+                    recordControlMuteMic!!.visibility = View.VISIBLE
+                    recordControlUnmuteMic!!.visibility = View.GONE
+                } else {
+                    this@MainActivity.recordingBinder!!.muteMic()
+                    recordControlMuteMic!!.visibility = View.GONE
+                    recordControlUnmuteMic!!.visibility = View.VISIBLE
+                }
+            } else {
+                recordControlMuteMic!!.visibility = View.GONE
+                recordControlUnmuteMic!!.visibility = View.GONE
+            }
+        }
+
+        recordControlUnmuteAudio!!.setOnClickListener {
+            if (this@MainActivity.recordingBinder!!.recordAudio()) {
+                if (this@MainActivity.recordingBinder!!.audioMuted()) {
+                    this@MainActivity.recordingBinder!!.unmuteAudio()
+                    recordControlMuteAudio!!.visibility = View.VISIBLE
+                    recordControlUnmuteAudio!!.visibility = View.GONE
+                } else {
+                    this@MainActivity.recordingBinder!!.muteAudio()
+                    recordControlMuteAudio!!.visibility = View.GONE
+                    recordControlUnmuteAudio!!.visibility = View.VISIBLE
+                }
+            } else {
+                recordControlMuteAudio!!.visibility = View.GONE
+                recordControlUnmuteAudio!!.visibility = View.GONE
+            }
         }
 
         recordControlPause!!.setOnClickListener {

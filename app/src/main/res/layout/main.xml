@@ -369,57 +369,137 @@
                     android:id="@+id/record_controls"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
+                    android:orientation="vertical"
                     android:layout_marginTop="14dp"
                     android:visibility="gone"
                     android:gravity="center_horizontal">
 
-                    <Button
-                        android:id="@+id/record_controls_pause"
-                        android:layout_width="160dp"
+                    <LinearLayout
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:contentDescription="@string/capture_pause"
-                        android:drawableLeft="@drawable/icon_record_pause"
-                        android:text="@string/capture_pause"
-                        android:textColor="?attr/colorOnPrimary"
-                        android:background="@drawable/bg_rounded_button"
-                        android:paddingLeft="24dp"
-                        android:paddingRight="24dp"
-                        android:drawablePadding="16dp"
-                        android:layout_centerVertical="true"
-                        android:layout_centerHorizontal="true" />
+                        android:orientation="horizontal"
+                        android:layout_marginTop="14dp"
+                        android:gravity="center_horizontal">
 
-                    <Button
-                        android:id="@+id/record_controls_resume"
-                        android:layout_width="160dp"
-                        android:layout_height="wrap_content"
-                        android:contentDescription="@string/capture_resume"
-                        android:drawableLeft="@drawable/icon_record_resume"
-                        android:text="@string/capture_resume"
-                        android:textColor="?attr/colorOnPrimary"
-                        android:background="@drawable/bg_rounded_button"
-                        android:paddingLeft="24dp"
-                        android:paddingRight="24dp"
-                        android:visibility="gone"
-                        android:drawablePadding="16dp"
-                        android:layout_centerVertical="true"
-                        android:layout_centerHorizontal="true" />
+                        <Button
+                            android:id="@+id/record_controls_pause"
+                            android:layout_width="160dp"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="@string/capture_pause"
+                            android:drawableLeft="@drawable/icon_record_pause"
+                            android:text="@string/capture_pause"
+                            android:textColor="?attr/colorOnPrimary"
+                            android:background="@drawable/bg_rounded_button"
+                            android:paddingLeft="24dp"
+                            android:paddingRight="24dp"
+                            android:drawablePadding="16dp"
+                            android:layout_centerVertical="true"
+                            android:layout_centerHorizontal="true" />
 
-                    <Button
-                        android:id="@+id/record_controls_stop"
-                        android:layout_width="160dp"
+                        <Button
+                            android:id="@+id/record_controls_resume"
+                            android:layout_width="160dp"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="@string/capture_resume"
+                            android:drawableLeft="@drawable/icon_record_resume"
+                            android:text="@string/capture_resume"
+                            android:textColor="?attr/colorOnPrimary"
+                            android:background="@drawable/bg_rounded_button"
+                            android:paddingLeft="24dp"
+                            android:paddingRight="24dp"
+                            android:visibility="gone"
+                            android:drawablePadding="16dp"
+                            android:layout_centerVertical="true"
+                            android:layout_centerHorizontal="true" />
+
+                        <Button
+                            android:id="@+id/record_controls_stop"
+                            android:layout_width="160dp"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="@string/capture_stop"
+                            android:drawableLeft="@drawable/icon_record_stop"
+                            android:layout_marginLeft="12dp"
+                            android:text="@string/capture_stop"
+                            android:textColor="?attr/colorOnPrimary"
+                            android:background="@drawable/bg_rounded_button"
+                            android:paddingLeft="24dp"
+                            android:paddingRight="24dp"
+                            android:drawablePadding="16dp"
+                            android:layout_centerVertical="true"
+                            android:layout_centerHorizontal="true" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:contentDescription="@string/capture_stop"
-                        android:drawableLeft="@drawable/icon_record_stop"
-                        android:layout_marginLeft="12dp"
-                        android:text="@string/capture_stop"
-                        android:textColor="?attr/colorOnPrimary"
-                        android:background="@drawable/bg_rounded_button"
-                        android:paddingLeft="24dp"
-                        android:paddingRight="24dp"
-                        android:drawablePadding="16dp"
-                        android:layout_centerVertical="true"
-                        android:layout_centerHorizontal="true" />
+                        android:orientation="horizontal"
+                        android:layout_marginTop="14dp"
+                        android:gravity="center_horizontal">
+
+                        <Button
+                            android:id="@+id/record_controls_mute_microphone"
+                            android:layout_width="160dp"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="@string/mute_microphone"
+                            android:drawableLeft="@drawable/icon_record_mic"
+                            android:text="@string/mute_microphone"
+                            android:textColor="?attr/colorOnPrimary"
+                            android:background="@drawable/bg_rounded_button"
+                            android:paddingLeft="24dp"
+                            android:paddingRight="24dp"
+                            android:drawablePadding="16dp"
+                            android:layout_centerVertical="true"
+                            android:layout_centerHorizontal="true" />
+
+                        <Button
+                            android:id="@+id/record_controls_unmute_microphone"
+                            android:layout_width="160dp"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="@string/unmute_microphone"
+                            android:drawableLeft="@drawable/icon_record_mic_disabled"
+                            android:text="@string/unmute_microphone"
+                            android:textColor="?attr/colorOnPrimary"
+                            android:background="@drawable/bg_rounded_button"
+                            android:paddingLeft="24dp"
+                            android:paddingRight="24dp"
+                            android:drawablePadding="16dp"
+                            android:layout_centerVertical="true"
+                            android:layout_centerHorizontal="true" />
+
+                        <Button
+                            android:id="@+id/record_controls_mute_audio"
+                            android:layout_width="160dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="12dp"
+                            android:contentDescription="@string/mute_audio"
+                            android:drawableLeft="@drawable/icon_record_audio"
+                            android:text="@string/mute_audio"
+                            android:textColor="?attr/colorOnPrimary"
+                            android:background="@drawable/bg_rounded_button"
+                            android:paddingLeft="24dp"
+                            android:paddingRight="24dp"
+                            android:drawablePadding="16dp"
+                            android:layout_centerVertical="true"
+                            android:layout_centerHorizontal="true" />
+
+                        <Button
+                            android:id="@+id/record_controls_unmute_audio"
+                            android:layout_width="160dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="12dp"
+                            android:contentDescription="@string/unmute_audio"
+                            android:drawableLeft="@drawable/icon_record_audio_disabled"
+                            android:text="@string/unmute_audio"
+                            android:textColor="?attr/colorOnPrimary"
+                            android:background="@drawable/bg_rounded_button"
+                            android:paddingLeft="24dp"
+                            android:paddingRight="24dp"
+                            android:drawablePadding="16dp"
+                            android:layout_centerVertical="true"
+                            android:layout_centerHorizontal="true" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 

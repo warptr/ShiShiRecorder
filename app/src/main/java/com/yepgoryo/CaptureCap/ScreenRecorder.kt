@@ -114,6 +114,8 @@ class ScreenRecorder : Service() {
     private var timeRecorded: Long = 0
     private var recordMicrophone: Boolean = false
     private var recordPlayback: Boolean = false
+    private var micMuted: Boolean = false
+    private var playbackMuted: Boolean = false
     private var isPaused: Boolean = false
     private var isStopped: Boolean = false
     private var showFloatingControls: Boolean = false
@@ -220,6 +222,38 @@ class ScreenRecorder : Service() {
 
         fun recordingReset() {
             this@ScreenRecorder.screenRecordingReset()
+        }
+
+        fun muteMic() {
+            this@ScreenRecorder.muteMic()
+        }
+
+        fun unmuteMic() {
+            this@ScreenRecorder.unmuteMic()
+        }
+
+        fun muteAudio() {
+            this@ScreenRecorder.muteAudio()
+        }
+
+        fun unmuteAudio() {
+            this@ScreenRecorder.unmuteAudio()
+        }
+
+        fun micMuted(): Boolean {
+            return this@ScreenRecorder.micMuted()
+        }
+
+        fun audioMuted(): Boolean {
+            return this@ScreenRecorder.audioMuted()
+        }
+
+        fun recordMic(): Boolean {
+            return this@ScreenRecorder.recordMicrophone
+        }
+
+        fun recordAudio(): Boolean {
+            return this@ScreenRecorder.recordPlayback
         }
 
         fun getTimeStart(): Long {
@@ -359,6 +393,41 @@ class ScreenRecorder : Service() {
             }
         }
         return START_STICKY
+    }
+
+    fun refreshNotification() {
+        val refreshNotificationBuilder = getRecordingNotification()
+        this.recordingNotificationManager!!.notify(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, refreshNotificationBuilder.build())
+    }
+
+    fun muteMic() {
+        this.recorderPlayback?.setMicrophoneMuted(true)
+    }
+
+    fun unmuteMic() {
+        this.recorderPlayback?.setMicrophoneMuted(false)
+    }
+
+    fun muteAudio() {
+        this.recorderPlayback?.setAudioMuted(true)
+    }
+
+    fun unmuteAudio() {
+        this.recorderPlayback?.setAudioMuted(false)
+    }
+
+    fun audioMuted(): Boolean {
+        if (this.recorderPlayback == null) {
+            return false
+        }
+        return this.recorderPlayback!!.audioMuted()
+    }
+
+    fun micMuted(): Boolean {
+        if (this.recorderPlayback == null) {
+            return false
+        }
+        return this.recorderPlayback!!.microphoneMuted()
     }
 
     fun actionStart() {
@@ -647,56 +716,8 @@ class ScreenRecorder : Service() {
             this.recordFileFullPath = fullFilePath
             this.timeStart = SystemClock.elapsedRealtime()
 
-            var iconStop: IconCompat = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_stop_color_action))
-            if (getModeNight()) {
-                iconStop = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_stop_color_action_dark))
-            }
-            val stopIntent: Intent = Intent(this, ScreenRecorder::class.java)
-            stopIntent.setAction(ACTION_STOP)
+            val recordingStartedBuilder = getRecordingNotification()
 
-            val notificationStopBuilder: NotificationCompat.Action.Builder = NotificationCompat.Action.Builder(iconStop, getString(R.string.notifications_stop), PendingIntent.getService(this, 0, stopIntent, this.intentFlag))
-            var iconPause: IconCompat = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_pause_color_action))
-            if (getModeNight()) {
-                iconPause = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_pause_color_action_dark))
-            }
-
-            val pauseIntent: Intent = Intent(this, ScreenRecorder::class.java)
-            pauseIntent.setAction(ACTION_PAUSE)
-            val pauseAction: NotificationCompat.Action.Builder = NotificationCompat.Action.Builder(iconPause, getString(R.string.notifications_pause), PendingIntent.getService(this, 0, pauseIntent, this.intentFlag))
-            var recordingStartedBuilder: NotificationCompat.Builder = NotificationCompat.Builder(this, NOTIFICATIONS_RECORDING_CHANNEL)
-            if (this.recordOnlyAudio) {
-                if (enableStream) {
-                    recordingStartedBuilder =
-                        recordingStartedBuilder.setContentTitle(getString(R.string.streaming_audio_started_title))
-                            .setContentText(getString(R.string.streaming_audio_started_text))
-                            .setTicker(getString(R.string.streaming_audio_started_text))
-                } else {
-                    recordingStartedBuilder =
-                        recordingStartedBuilder.setContentTitle(getString(R.string.recording_audio_started_title))
-                            .setContentText(getString(R.string.recording_audio_started_text))
-                            .setTicker(getString(R.string.recording_audio_started_text))
-                }
-            } else {
-                if (enableStream) {
-                    recordingStartedBuilder =
-                        recordingStartedBuilder.setContentTitle(getString(R.string.streaming_started_title))
-                            .setContentText(getString(R.string.streaming_started_text))
-                            .setTicker(getString(R.string.streaming_started_text))
-                } else {
-                    recordingStartedBuilder =
-                        recordingStartedBuilder.setContentTitle(getString(R.string.recording_started_title))
-                            .setContentText(getString(R.string.recording_started_text))
-                            .setTicker(getString(R.string.recording_started_text))
-                }
-            }
-            var iconRecord = Icon.createWithBitmap(getBitmapDescriptor(R.drawable.icon_record_color_action_normal))
-            if (getModeNight()) {
-                iconRecord = Icon.createWithBitmap(getBitmapDescriptor(R.drawable.icon_record_color_action_normal_dark))
-            }
-            recordingStartedBuilder = recordingStartedBuilder.setSmallIcon(R.drawable.icon_record_status).setLargeIcon(iconRecord).setUsesChronometer(true).setWhen(System.currentTimeMillis() - (SystemClock.elapsedRealtime() - this.timeStart)).setOngoing(true).addAction(notificationStopBuilder.build()).setPriority(NotificationCompat.PRIORITY_LOW)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !enableStream) {
-                recordingStartedBuilder.addAction(pauseAction.build())
-            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 startForeground(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, recordingStartedBuilder.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
             } else {
@@ -847,6 +868,70 @@ class ScreenRecorder : Service() {
         }
     }
 
+    private fun getRecordingNotification(): NotificationCompat.Builder {
+        var iconStop: IconCompat = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_stop_color_action))
+        if (getModeNight()) {
+            iconStop = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_stop_color_action_dark))
+        }
+        val stopIntent: Intent = Intent(this, ScreenRecorder::class.java)
+        stopIntent.setAction(ACTION_STOP)
+
+        val notificationStopBuilder: NotificationCompat.Action.Builder = NotificationCompat.Action.Builder(iconStop, getString(R.string.notifications_stop), PendingIntent.getService(this, 0, stopIntent, this.intentFlag))
+        var iconPause: IconCompat = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_pause_color_action))
+        if (getModeNight()) {
+            iconPause = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_pause_color_action_dark))
+        }
+
+        val pauseIntent: Intent = Intent(this, ScreenRecorder::class.java)
+        pauseIntent.setAction(ACTION_PAUSE)
+        val pauseAction: NotificationCompat.Action.Builder = NotificationCompat.Action.Builder(iconPause, getString(R.string.notifications_pause), PendingIntent.getService(this, 0, pauseIntent, this.intentFlag))
+
+        var recordingStartedBuilder: NotificationCompat.Builder = NotificationCompat.Builder(this, NOTIFICATIONS_RECORDING_CHANNEL)
+        if (this.recordOnlyAudio) {
+            if (enableStream) {
+                recordingStartedBuilder =
+                    recordingStartedBuilder.setContentTitle(getString(R.string.streaming_audio_started_title))
+                        .setContentText(getString(R.string.streaming_audio_started_text))
+                        .setTicker(getString(R.string.streaming_audio_started_text))
+            } else {
+                recordingStartedBuilder =
+                    recordingStartedBuilder.setContentTitle(getString(R.string.recording_audio_started_title))
+                        .setContentText(getString(R.string.recording_audio_started_text))
+                        .setTicker(getString(R.string.recording_audio_started_text))
+            }
+        } else {
+            if (enableStream) {
+                recordingStartedBuilder =
+                    recordingStartedBuilder.setContentTitle(getString(R.string.streaming_started_title))
+                        .setContentText(getString(R.string.streaming_started_text))
+                        .setTicker(getString(R.string.streaming_started_text))
+            } else {
+                recordingStartedBuilder =
+                    recordingStartedBuilder.setContentTitle(getString(R.string.recording_started_title))
+                        .setContentText(getString(R.string.recording_started_text))
+                        .setTicker(getString(R.string.recording_started_text))
+            }
+        }
+        var iconRecord = Icon.createWithBitmap(getBitmapDescriptor(R.drawable.icon_record_color_action_normal))
+        if (getModeNight()) {
+            iconRecord = Icon.createWithBitmap(getBitmapDescriptor(R.drawable.icon_record_color_action_normal_dark))
+        }
+
+        recordingStartedBuilder = recordingStartedBuilder
+            .setSmallIcon(R.drawable.icon_record_status)
+            .setLargeIcon(iconRecord)
+            .setUsesChronometer(true)
+            .setWhen(System.currentTimeMillis() - (SystemClock.elapsedRealtime() - this.timeStart))
+            .setOngoing(true)
+            .addAction(notificationStopBuilder.build())
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !enableStream) {
+            recordingStartedBuilder.addAction(pauseAction.build())
+        }
+
+        return recordingStartedBuilder
+    }
     fun screenRecordingStop()  {
         this.isActive = false
         this.timeStart = 0L
@@ -882,6 +967,7 @@ class ScreenRecorder : Service() {
                 } catch (exc: IOException) {
                     Toast.makeText(this, R.string.error_recorder_failed, Toast.LENGTH_SHORT).show()
                 }
+                this.recorderPlayback = null
             }
         }
         this.finishedFile = this.recordFile
@@ -1016,7 +1102,8 @@ class ScreenRecorder : Service() {
         if (getModeNight()) {
             iconPause = Icon.createWithBitmap(getBitmapDescriptor(R.drawable.icon_pause_color_action_normal_dark))
         }
-        this.recordingNotificationManager!!.notify(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, pauseNotificationBuilder.setSmallIcon(R.drawable.icon_pause_status).setLargeIcon(iconPause).setOngoing(true).addAction(stopNotificationAction.build()).addAction(resumeNotificationAction.build()).setPriority(NotificationCompat.PRIORITY_LOW).build())
+        pauseNotificationBuilder = pauseNotificationBuilder.setSmallIcon(R.drawable.icon_pause_status).setLargeIcon(iconPause).setOngoing(true).addAction(stopNotificationAction.build()).addAction(resumeNotificationAction.build()).setPriority(NotificationCompat.PRIORITY_LOW)
+        this.recordingNotificationManager!!.notify(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, pauseNotificationBuilder.build())
     }
 
     fun screenRecordingResume() {
@@ -1034,34 +1121,9 @@ class ScreenRecorder : Service() {
         } else {
             this.recorderPlayback?.resume()
         }
-        var stopIcon: IconCompat = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_stop_color_action))
-        if (getModeNight()) {
-            stopIcon = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_stop_color_action_dark))
-        }
-        val intent = Intent(this, ScreenRecorder::class.java)
-        intent.setAction(ACTION_STOP)
-        val builder: NotificationCompat.Action.Builder = NotificationCompat.Action.Builder(stopIcon, getString(R.string.notifications_stop), PendingIntent.getService(this, 0, intent, this.intentFlag))
-        var pauseIcon: IconCompat = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_pause_color_action))
-        if (getModeNight()) {
-            pauseIcon = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_pause_color_action_dark))
-        }
-        var resumeIcon: Icon = Icon.createWithBitmap(getBitmapDescriptor(R.drawable.icon_record_color_action_normal))
-        if (getModeNight()) {
-            resumeIcon = Icon.createWithBitmap(getBitmapDescriptor(R.drawable.icon_record_color_action_normal_dark))
-        }
-        val pauseIntent = Intent(this, ScreenRecorder::class.java)
-        pauseIntent.setAction(ACTION_PAUSE)
-        this.recordingNotificationManager!!.notify(NotificationID.NOTIFICATION_RECORDING_ID.ordinal,
-            NotificationCompat.Builder(this, NOTIFICATIONS_RECORDING_CHANNEL)
-                .setContentTitle(getString(R.string.recording_started_title))
-                .setContentText(getString(R.string.recording_started_text))
-                .setTicker(getString(R.string.recording_started_text))
-                .setSmallIcon(R.drawable.icon_record_status)
-                .setLargeIcon(resumeIcon)
-                .setUsesChronometer(true).setWhen(System.currentTimeMillis() - (SystemClock.elapsedRealtime() - this.timeStart))
-                .setOngoing(true)
-                .addAction(builder.build()).addAction(NotificationCompat.Action.Builder(pauseIcon, getString(R.string.notifications_pause), PendingIntent.getService(this, 0, pauseIntent, this.intentFlag)).build())
-                .setPriority(NotificationCompat.PRIORITY_LOW).build())
+
+        val recordingStartedBuilder = getRecordingNotification()
+        this.recordingNotificationManager!!.notify(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, recordingStartedBuilder.build())
     }
 
     fun screenRecordingShare() {

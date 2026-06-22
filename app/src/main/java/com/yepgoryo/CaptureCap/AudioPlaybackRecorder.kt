@@ -58,6 +58,8 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
     private var mFormat: Int = 2
     private var mForceStop: AtomicBoolean = AtomicBoolean(false)
     private var mFramesUsCache: SparseLongArray = SparseLongArray(2)
+    private var audioMuted: Boolean = false
+    private var micMuted: Boolean = false
 
     enum class RecordMessage {
         MSG_PREPARE,
@@ -286,7 +288,7 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
         var read = 0
 
         if (!eos) {
-            if (recordMicrophone && !recordAudio) {
+            if ((recordMicrophone && !micMuted) && (!recordAudio || audioMuted)) {
                 val frameMic = ByteArray(audioBufLimit)
                 val micRead = mMic!!.read(frameMic, 0, audioBufLimit)
                 mEncoder.getInputBuffer(index)?.put(frameMic)
@@ -296,7 +298,7 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
                 } else {
                     read = 0
                 }
-            } else if (!recordMicrophone && recordAudio) {
+            } else if ((!recordMicrophone || micMuted) && (recordAudio && !audioMuted)) {
                 val framePlayback = ByteArray(audioBufLimit)
                 val playbackRead = mPlayback!!.read(framePlayback, 0, audioBufLimit)
                 mEncoder.getInputBuffer(index)?.put(framePlayback)
@@ -306,7 +308,7 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
                 } else {
                     read = 0
                 }
-            } else if (recordMicrophone && recordAudio) {
+            } else if ((recordMicrophone && !micMuted) && (recordAudio && !audioMuted)) {
                 val framePlayback = ByteArray(audioBufLimit)
                 val playbackRead: Int = mPlayback!!.read(framePlayback, 0, audioBufLimit)
                 val frameMic = ByteArray(audioBufLimit)
@@ -319,6 +321,29 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
                 var i = 0
                 while (i < micRead) {
                     framePlayback[i] = (framePlayback[i] + frameMic[i]).toByte()
+                    i += 1
+                }
+
+                mEncoder.getInputBuffer(index)?.put(framePlayback)
+
+                if (playbackRead >= 0) {
+                    read = playbackRead
+                } else {
+                    read = 0
+                }
+            } else if (recordMicrophone || recordAudio) {
+                val framePlayback = ByteArray(audioBufLimit)
+                var playbackRead: Int = 0
+
+                if (recordAudio) {
+                    playbackRead = mPlayback!!.read(framePlayback, 0, audioBufLimit)
+                } else if (recordMicrophone) {
+                    playbackRead = mMic!!.read(framePlayback, 0, audioBufLimit)
+                }
+
+                var i = 0
+                while (i < audioBufLimit) {
+                    framePlayback[i] = 0.toByte()
                     i += 1
                 }
 
@@ -343,6 +368,26 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
         mEncoder.queueInputBuffer(index, offset, read, pstTs.toInt(), flags)
     }
 
+    fun setMicrophoneMuted(muted: Boolean) {
+        if (recordMicrophone) {
+            micMuted = muted
+        }
+    }
+
+    fun setAudioMuted(muted: Boolean) {
+        if (recordAudio) {
+            audioMuted = muted
+        }
+    }
+
+    fun microphoneMuted(): Boolean {
+        return micMuted
+    }
+
+    fun audioMuted(): Boolean {
+        return audioMuted
+    }
+
     private fun calculateFrameTimestamp(totalBits: Int): Long {
         val totalSamples: Int = totalBits shr 4
         var frameUs: Long = this.mFramesUsCache.get(totalSamples, -1L)
@@ -359,7 +404,7 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
             currentUs = lastFrameUs
         }
         if (timeUs-currentUs >= (frameUs shl 1)) {
-            currentUs = timeUs 
+            currentUs = timeUs
         }
         this.mFramesUsCache.put(LAST_FRAME_ID, currentUs+frameUs)
         return currentUs

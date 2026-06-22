@@ -149,6 +149,10 @@
     <string name="notifications_resume">Continue</string>
     <string name="notifications_share">Share</string>
     <string name="notifications_delete">Delete</string>
+    <string name="mute_microphone">Mute mic</string>
+    <string name="mute_audio">Mute audio</string>
+    <string name="unmute_microphone">Unmute mic</string>
+    <string name="unmute_audio">Unmute audio</string>
     <string name="error_storage_required">Error: Storage permission required</string>
     <string name="error_storage_select_folder">Error: Select recordings folder</string>
     <string name="error_audio_required">Error: Allow recording audio</string>
