@@ -53,6 +53,8 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import java.util.Timer
+import java.util.TimerTask
 import kotlin.math.sqrt
 
 class ScreenRecorder : Service() {
@@ -112,6 +114,12 @@ class ScreenRecorder : Service() {
     private var lastShakeAcceleration: Float = 9.80665f
     private var timeStart: Long = 0
     private var timeRecorded: Long = 0
+    private var timerValue: Long = 0
+    private var timerEndsAt: Long = 0
+    private var timerEndsAtRealtime: Long = 0
+    private var timerRunning: Boolean = false
+    private var useTimer: Boolean = false
+    private var timerStartRecording: Timer = Timer()
     private var recordMicrophone: Boolean = false
     private var recordPlayback: Boolean = false
     private var micMuted: Boolean = false
@@ -147,6 +155,7 @@ class ScreenRecorder : Service() {
             IOException::class,
             NumberFormatException::class
         )
+
         override fun onSensorChanged(sensorEvent: SensorEvent) {
             var onShake: GlobalProperties.OnShakeProperty =
                 GlobalProperties(this@ScreenRecorder.baseContext).getOnShake()
@@ -194,6 +203,14 @@ class ScreenRecorder : Service() {
     inner class RecordingBinder : Binder() {
         fun isStarted(): Boolean {
             return this@ScreenRecorder.runningService
+        }
+
+        fun isTimerRunning(): Boolean {
+            return this@ScreenRecorder.timerRunning
+        }
+
+        fun abortTimer() {
+            this@ScreenRecorder.abortTimer()
         }
 
         fun recordingPause() {
@@ -377,13 +394,21 @@ class ScreenRecorder : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
             if (intent.action == ACTION_START) {
-                this.recordOnlyAudio = false
-                actionStart()
+                if (!this@ScreenRecorder.timerRunning) {
+                    this.recordOnlyAudio = false
+                    actionStart()
+                }
             } else if (intent.action == ACTION_START_NOVIDEO) {
-                this.recordOnlyAudio = true
-                actionStart()
+                if (!this@ScreenRecorder.timerRunning) {
+                    this.recordOnlyAudio = true
+                    actionStart()
+                }
             } else if (intent.action == ACTION_STOP) {
-                screenRecordingStop()
+                if (!this@ScreenRecorder.timerRunning) {
+                    screenRecordingStop()
+                } else {
+                    abortTimer()
+                }
             } else if (intent.action == ACTION_PAUSE) {
                 screenRecordingPause()
             } else if (intent.action == ACTION_CONTINUE) {
@@ -497,7 +522,12 @@ class ScreenRecorder : Service() {
         if (this.tileBinder != null) {
             this.tileBinder!!.recordingState(true)
         }
-        screenRecordingStart()
+        this.useTimer = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.ENABLE_TIMER, false)
+        if (this.useTimer) {
+            timerStart()
+        } else {
+            screenRecordingStart()
+        }
     }
 
     fun actionConnect(activityBinder: MainActivity.ActivityBinder) {
@@ -505,7 +535,11 @@ class ScreenRecorder : Service() {
         if (this.runningService) {
             if (!this.isPaused) {
                 if (activityBinder != null) {
-                    activityBinder.recordingStart(false)
+                    if (!timerRunning) {
+                        activityBinder.recordingStart(false)
+                    } else {
+                        activityBinder.timerStart(timerEndsAtRealtime)
+                    }
                 }
             } else {
                 if (this.isPaused && activityBinder != null) {
@@ -613,6 +647,7 @@ class ScreenRecorder : Service() {
     }
 
     fun screenRecordingStart() {
+        timerRunning = false
         stoppedOnError = false
         this.isStopped = false
         if (this.minimizeOnStart) {
@@ -932,6 +967,76 @@ class ScreenRecorder : Service() {
 
         return recordingStartedBuilder
     }
+
+    fun timerStart() {
+        this.timerRunning = true
+        this.timerValue = this.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.TIMER_SECONDS, 10).toLong() * 1000
+        this.timerEndsAt = System.currentTimeMillis() + this.timerValue
+        this.timerEndsAtRealtime = SystemClock.elapsedRealtime() + this.timerValue
+        val timerNotificationBuilder = getTimerNotification()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, timerNotificationBuilder.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
+        } else {
+            startForeground(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, timerNotificationBuilder.build())
+        }
+
+        timerStartRecording.purge()
+        timerStartRecording = Timer()
+        timerStartRecording.schedule(object : TimerTask() {
+            override fun run() {
+                this@ScreenRecorder.screenRecordingStart()
+            }
+        }, this.timerValue)
+
+        activityBinder!!.timerStart(this.timerEndsAtRealtime)
+    }
+
+    fun abortTimer() {
+        this@ScreenRecorder.timerStartRecording.cancel()
+        if (this.recordingNotificationManager != null) {
+            this.recordingNotificationManager!!.cancel(NotificationID.NOTIFICATION_RECORDING_ID.ordinal)
+        }
+        stopForeground(true)
+        this@ScreenRecorder.timerRunning = false
+        this@ScreenRecorder.runningService = false
+        this.activityBinder?.recordingReset()
+    }
+
+    private fun getTimerNotification(): NotificationCompat.Builder {
+        var iconStop: IconCompat = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_stop_color_action))
+        if (getModeNight()) {
+            iconStop = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_stop_color_action_dark))
+        }
+        val stopIntent: Intent = Intent(this, ScreenRecorder::class.java)
+        stopIntent.setAction(ACTION_STOP)
+
+        val notificationStopBuilder: NotificationCompat.Action.Builder = NotificationCompat.Action.Builder(iconStop, getString(R.string.timer_abort), PendingIntent.getService(this, 0, stopIntent, this.intentFlag))
+
+        var timerStartedBuilder: NotificationCompat.Builder = NotificationCompat.Builder(this, NOTIFICATIONS_RECORDING_CHANNEL)
+        timerStartedBuilder =
+            timerStartedBuilder.setContentTitle(getString(R.string.timer_wait_title))
+                .setContentText(getString(R.string.timer_wait_description))
+                .setTicker(getString(R.string.timer_wait_description))
+
+        var iconTimer = Icon.createWithBitmap(getBitmapDescriptor(R.drawable.icon_timer_color_action_normal))
+        if (getModeNight()) {
+            iconTimer = Icon.createWithBitmap(getBitmapDescriptor(R.drawable.icon_timer_color_action_dark))
+        }
+
+        timerStartedBuilder = timerStartedBuilder
+            .setSmallIcon(R.drawable.icon_timer_status)
+            .setLargeIcon(iconTimer)
+            .setUsesChronometer(true)
+            .setChronometerCountDown(true)
+            .setWhen(this.timerEndsAt)
+            .setOngoing(true)
+            .addAction(notificationStopBuilder.build())
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+
+        return timerStartedBuilder
+    }
+
     fun screenRecordingStop()  {
         this.isActive = false
         this.timeStart = 0L

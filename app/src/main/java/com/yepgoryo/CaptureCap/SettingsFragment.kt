@@ -52,6 +52,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
             panelOpacityDialogFragmentNewInstance.show(requireFragmentManager(), null)
             return
         }
+        if (preference.key.contentEquals("timerseconds")) {
+            val timerSecondsDialogFragmentNewInstance: TimerDialogFragment = TimerDialogFragment.newInstance(preference.key)
+            timerSecondsDialogFragmentNewInstance.setTargetFragment(this, 0)
+            timerSecondsDialogFragmentNewInstance.setKeyName("timerseconds")
+            timerSecondsDialogFragmentNewInstance.show(requireFragmentManager(), null)
+            return
+        }
         super.onDisplayPreferenceDialog(preference)
     }
 }

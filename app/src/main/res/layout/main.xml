@@ -366,6 +366,54 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/timer_controls"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    android:layout_marginTop="14dp"
+                    android:gravity="center_horizontal">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="14dp"
+                        android:gravity="center_horizontal">
+
+                        <Chronometer
+                            android:id="@+id/timercountdown"
+                            android:layout_height="wrap_content"
+                            android:layout_width="wrap_content"
+                            android:countDown="true"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:paddingRight="7dp"
+                            android:drawableLeft="@drawable/icon_timer"
+                            android:layout_centerHorizontal="true" />
+
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/timer_stop"
+                        android:layout_width="160dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="32dp"
+                        android:contentDescription="@string/timer_abort"
+                        android:drawableLeft="@drawable/icon_record_stop"
+                        android:text="@string/timer_abort"
+                        android:textSize="12sp"
+                        android:textColor="?attr/colorOnPrimary"
+                        android:background="@drawable/bg_rounded_button"
+                        android:paddingLeft="16dp"
+                        android:paddingRight="16dp"
+                        android:drawablePadding="16dp"
+                        android:layout_centerVertical="true"
+                        android:layout_centerHorizontal="true" />
+
+                </LinearLayout>
+
+                <LinearLayout
                     android:id="@+id/record_controls"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

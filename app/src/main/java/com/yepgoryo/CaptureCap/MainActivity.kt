@@ -87,6 +87,9 @@ class MainActivity : AppCompatActivity() {
     private var recordingBinder: ScreenRecorder.RecordingBinder? = null
     private var serviceIntent: Intent? = null
     var timeCounter: Chronometer? = null
+    var timerCountdown: Chronometer? = null
+    var timerControls: LinearLayout? = null
+    var timerStop: Button? = null
     var recordStatusMessage: TextView? = null
     var timerPanel: LinearLayout? = null
     var captureOptionStream: ImageView? = null
@@ -227,8 +230,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     inner class ActivityBinder : Binder() {
+        fun timerStart(timerEnd: Long) {
+            runOnUiThread {
+                recordStatusMessage!!.visibility = View.GONE
+                recordOptionsFullPanel!!.visibility = View.GONE
+                this@MainActivity.optionsPanel!!.visibility = View.GONE
+                captureStartButton!!.isVisible = false
+                mainRecordingButton!!.innerButton().isVisible = false
+                recordOptionsFullPanel!!.isVisible = false
+                recordControls!!.visibility = View.GONE
+
+                timerControls!!.visibility = View.VISIBLE
+                timerCountdown!!.stop()
+                timerCountdown!!.setBase(timerEnd)
+                timerCountdown!!.start()
+            }
+        }
+
         fun recordingStart(stateToRestore: Boolean) {
             runOnUiThread {
+                timerControls!!.visibility = View.GONE
+                timerCountdown!!.stop()
                 this@MainActivity.timeCounter!!.stop()
                 this@MainActivity.timeCounter!!.setBase(this@MainActivity.recordingBinder!!.getTimeStart())
                 this@MainActivity.timeCounter!!.start()
@@ -301,6 +323,8 @@ class MainActivity : AppCompatActivity() {
 
         fun recordingStop(stateToRestore: Boolean) {
             runOnUiThread {
+                timerControls!!.visibility = View.GONE
+                timerCountdown!!.stop()
                 this@MainActivity.timeCounter!!.stop()
                 this@MainActivity.timeCounter!!.setBase(SystemClock.elapsedRealtime())
                 this@MainActivity.audioPlaybackUnavailable!!.visibility = View.GONE
@@ -346,6 +370,8 @@ class MainActivity : AppCompatActivity() {
 
         fun recordingPause(j: Long, stateToRestore: Boolean) {
             runOnUiThread {
+                timerControls!!.visibility = View.GONE
+                timerCountdown!!.stop()
                 this@MainActivity.timeCounter!!.setBase(SystemClock.elapsedRealtime() - j)
                 this@MainActivity.timeCounter!!.stop()
                 recordOptionsFullPanel!!.visibility = View.GONE
@@ -382,6 +408,8 @@ class MainActivity : AppCompatActivity() {
 
         fun recordingResume(time: Long) {
             runOnUiThread {
+                timerControls!!.visibility = View.GONE
+                timerCountdown!!.stop()
                 this@MainActivity.timeCounter!!.setBase(time)
                 this@MainActivity.timeCounter!!.start()
 
@@ -430,6 +458,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         fun recordingReset() {
+            timerControls!!.visibility = View.GONE
+            timerCountdown!!.stop()
             postRecordingPanel!!.visibility = View.GONE
             this@MainActivity.optionsPanel!!.visibility = View.VISIBLE
             recordStatusMessage!!.visibility = View.GONE
@@ -970,6 +1000,10 @@ class MainActivity : AppCompatActivity() {
         recordStatusMessage = findViewById<TextView>(R.id.record_status_message)!!
         this.audioPlaybackUnavailable = findViewById<TextView>(R.id.audioplaybackunavailable)!!
 
+        this.timerCountdown = findViewById<Chronometer>(R.id.timercountdown)!!
+        this.timerControls = findViewById<LinearLayout>(R.id.timer_controls)!!
+        this.timerStop = findViewById<Button>(R.id.timer_stop)!!
+
         resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android")
         if (resourceId > 0) {
             val optionslayoutparams: FrameLayout.LayoutParams = optionsPanel?.layoutParams as FrameLayout.LayoutParams
@@ -996,6 +1030,10 @@ class MainActivity : AppCompatActivity() {
 
         setRecordMode(this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.RECORD_MODE, false))
         this.activityProjectionManager = getSystemService("media_projection") as MediaProjectionManager
+
+        timerStop!!.setOnClickListener {
+            recordingBinder!!.abortTimer()
+        }
 
         postRecordCrop!!.setOnClickListener(object: View.OnClickListener {
             override fun onClick(v: View?) {

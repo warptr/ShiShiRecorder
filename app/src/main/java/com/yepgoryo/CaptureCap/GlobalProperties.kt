@@ -67,7 +67,8 @@ class GlobalProperties(context: Context) {
         DONT_NOTIFY_ON_ROTATE,
         ENABLE_VIBRATION,
         MINIMIZE_ON_START,
-        NO_ROTATE
+        NO_ROTATE,
+        ENABLE_TIMER
     }
 
     enum class PropertiesInt {
@@ -92,7 +93,8 @@ class GlobalProperties(context: Context) {
         PANEL_POSITION_VERTICAL_X_LITTLE,
         PANEL_POSITION_VERTICAL_Y_LITTLE,
         FLOATING_CONTROLS_OPACITY,
-        QUALITY_SCALE
+        QUALITY_SCALE,
+        TIMER_SECONDS
     }
 
     enum class PropertiesSpecial {

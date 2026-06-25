@@ -73,6 +73,12 @@
     <string name="enablevibration_option_description">Enable vibration on recording start, pause and end</string>
     <string name="minimizeonstart_option">Minimize on start</string>
     <string name="minimizeonstart_option_description">Minimize the app when a new recording starts</string>
+    <string name="enabletimer_option">Enable timer</string>
+    <string name="enabletimer_option_description">Enable timer before recording starts</string>
+    <string name="timerseconds_option">Timer duration</string>
+    <string name="timerseconds_option_description">Specify timer\'s duration</string>
+    <string name="timerseconds_option_duration_minutes">minutes</string>
+    <string name="timerseconds_option_duration_seconds">seconds</string>
     <string name="norotate_option">Don\'t restart recording on rotate</string>
     <string name="norotate_option_description">WARNING: If enabled, your video will lose quality after rotation!</string>
     <string name="controls_settings">Controls settings</string>
@@ -153,6 +159,9 @@
     <string name="mute_audio">Mute audio</string>
     <string name="unmute_microphone">Unmute mic</string>
     <string name="unmute_audio">Unmute audio</string>
+    <string name="timer_wait_title">Timer is ticking</string>
+    <string name="timer_wait_description">The recording will start shortly</string>
+    <string name="timer_abort">Abort timer</string>
     <string name="error_storage_required">Error: Storage permission required</string>
     <string name="error_storage_select_folder">Error: Select recordings folder</string>
     <string name="error_audio_required">Error: Allow recording audio</string>

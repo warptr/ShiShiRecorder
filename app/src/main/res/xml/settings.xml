@@ -124,6 +124,19 @@
             android:title="@string/minimizeonstart_option"
             android:defaultValue="false" />
 
+        <SwitchPreferenceCompat
+            android:key="enabletimer"
+            android:summary="@string/enabletimer_option_description"
+            android:title="@string/enabletimer_option"
+            android:defaultValue="false" />
+
+        <com.yepgoryo.CaptureCap.ParameterDialog
+            android:key="timerseconds"
+            android:dependency="enabletimer"
+            android:summary="@string/timerseconds_option_description"
+            android:title="@string/timerseconds_option"
+            android:dialogLayout="@layout/dialog_timer" />
+
     </PreferenceCategory>
 
     <PreferenceCategory
