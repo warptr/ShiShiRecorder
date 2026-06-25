@@ -342,7 +342,7 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
                 }
 
                 var i = 0
-                while (i < audioBufLimit) {
+                while (i < playbackRead) {
                     framePlayback[i] = 0.toByte()
                     i += 1
                 }
