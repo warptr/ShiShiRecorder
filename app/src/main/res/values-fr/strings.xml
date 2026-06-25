@@ -61,8 +61,10 @@
     <string name="samplerate_indicator_description">Définir le taux d\'échantillonnage</string>
     <string name="audio_channels">Canaux audio</string>
     <string name="audio_channels_description">Définir les canaux audio</string>
-    <string name="audio_channels_preferences_option_mono">Mono</string>
-    <string name="audio_channels_preferences_option_stereo">Stéréo</string>
+    <array name="audio_channels_preferences">
+        <item name="audio_channels_preferences_option_mono">Mono</item>
+        <item name="audio_channels_preferences_option_stereo">Stéréo</item>
+    </array>
     <string name="dontnotifyonfinish_option">Ne pas notifier à la fin</string>
     <string name="dontnotifyonfinish_option_description">Ne pas être notifié quand l\'enregistrement se termine</string>
     <string name="dontnotifyonrotate_option">Ne pas notifier en cas de rotation</string>
@@ -81,24 +83,30 @@
     <string name="floating_controls_position_notice">Appuyez sur l\'écran une fois terminé</string>
     <string name="floating_controls_size">Taille des contrôles flottants</string>
     <string name="floating_controls_size_description">Définir la taille des contrôles flottants</string>
-    <string name="floating_controls_size_option_large">Grand</string>
-    <string name="floating_controls_size_option_normal">Normal</string>
-    <string name="floating_controls_size_option_small">Petit</string>
-    <string name="floating_controls_size_option_tiny">Minuscule</string>
+    <array name="floating_controls_size_preferences">
+        <item name="floating_controls_size_option_large">Grand</item>
+        <item name="floating_controls_size_option_normal">Normal</item>
+        <item name="floating_controls_size_option_small">Petit</item>
+        <item name="floating_controls_size_option_tiny">Minuscule</item>
+    </array>
     <string name="floating_controls_opacity">Opacité des contrôles flottants</string>
     <string name="floating_controls_opacity_description">Définir l\'opacité des contrôles flottants</string>
     <string name="floating_controls_description_handle">Poignée des contrôles flottants</string>
     <string name="dark_theme_option">Thème</string>
     <string name="dark_theme_option_description">Définir les préférences du thème</string>
-    <string name="dark_theme_option_dark">Sombre</string>
-    <string name="dark_theme_option_light">Clair</string>
-    <string name="dark_theme_option_auto_item">Automatique</string>
+    <array name="dark_theme_option_preferences">
+        <item name="dark_theme_option_dark">Sombre</item>
+        <item name="dark_theme_option_light">Clair</item>
+        <item name="dark_theme_option_auto_item">Automatique</item>
+    </array>
     <string name="on_shake_option_summary">Action lors de l\'agitation</string>
     <string name="on_shake_option_title">Agitation</string>
     <string name="on_shake_dialog">Action lors de l\'agitation</string>
-    <string name="on_shake_option_nothing">Ne rien faire</string>
-    <string name="on_shake_option_pause">Pause</string>
-    <string name="on_shake_option_stop">Arrêter</string>
+    <array name="on_shake_option_preferences">
+        <item name="on_shake_option_nothing">Ne rien faire</item>
+        <item name="on_shake_option_pause">Pause</item>
+        <item name="on_shake_option_stop">Arrêter</item>
+    </array>
     <string name="dark_theme_change_notice">Redémarrez l\'application pour appliquer le thème</string>
     <string name="overlay_notice_title">Affichage par-dessus les autres apps</string>
     <string name="overlay_notice_description">Pour afficher les contrôles flottants, activez l\'autorisation d\'affichage par-dessus les autres applications</string>
