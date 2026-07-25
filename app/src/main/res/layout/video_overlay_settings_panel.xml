@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/overlay_edit"
+    android:visibility="gone"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/overlay_edit_options"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/scalebar_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:text="@string/overlay_scale" />
+
+            <SeekBar
+                android:id="@+id/input_scale"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:min="10"
+                android:max="100"
+                android:layout_marginLeft="40dp"
+                android:layout_marginRight="40dp"
+                android:padding="10dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rotationbar_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:text="@string/overlay_rotation" />
+
+            <SeekBar
+                android:id="@+id/input_rotation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:min="0"
+                android:max="359"
+                android:layout_marginLeft="40dp"
+                android:layout_marginRight="40dp"
+                android:padding="10dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/opacitybar_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:text="@string/overlay_opacity" />
+
+            <SeekBar
+                android:id="@+id/input_opacity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="255"
+                android:layout_marginLeft="40dp"
+                android:layout_marginRight="40dp"
+                android:padding="10dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/edit_text_num_options"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <LinearLayout
+                android:id="@+id/layer_panel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="10dp"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:gravity="center"
+                    android:text="@string/overlay_layer" />
+
+                <EditText
+                    android:id="@+id/layer_number"
+                    android:inputType="text"
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content" />
+
+                <Button
+                    android:id="@+id/button_layer_number_increase"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:background="@drawable/bg_rounded_button"
+                    android:text="+" />
+
+                <Button
+                    android:id="@+id/button_layer_number_decrease"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:background="@drawable/bg_rounded_button"
+                    android:text="-" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/text_size_edit_panel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="10dp"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:gravity="center"
+                    android:text="@string/overlay_font_size" />
+
+                <EditText
+                    android:id="@+id/input_text_size_edit"
+                    android:inputType="text"
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content" />
+
+                <Button
+                    android:id="@+id/button_text_size_edit_increase"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:background="@drawable/bg_rounded_button"
+                    android:text="+" />
+
+                <Button
+                    android:id="@+id/button_text_size_edit_decrease"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:background="@drawable/bg_rounded_button"
+                    android:text="-" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/overlay_edit_buttons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="10dp"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/button_edit_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_rounded_button"
+                android:text="@string/overlay_edit_text" />
+
+            <Button
+                android:id="@+id/button_edit_color"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:background="@drawable/bg_rounded_button"
+                android:text="@string/overlay_change_color" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

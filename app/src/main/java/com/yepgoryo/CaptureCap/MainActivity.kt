@@ -163,6 +163,7 @@ class MainActivity : AppCompatActivity() {
         REQUEST_MICROPHONE,
         REQUEST_MICROPHONE_PLAYBACK,
         REQUEST_MICROPHONE_RECORD,
+        REQUEST_CAMERA,
         REQUEST_STORAGE,
         REQUEST_STORAGE_AUDIO,
         REQUEST_MODE_CHANGE,
@@ -1211,6 +1212,19 @@ class MainActivity : AppCompatActivity() {
             if (this.recordingBinder!!.isStarted()) {
                 return
             }
+
+            var isHorizontal = false
+            val rotation: Int = display!!.rotation
+            if (rotation == Surface.ROTATION_270 || rotation == Surface.ROTATION_90) {
+                isHorizontal = true
+            }
+
+            val drawOverlay: Boolean = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.DRAW_OVERLAY, false)
+
+            if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && VideoOverlay.getCameraItem(baseContext, isHorizontal) != null && drawOverlay) {
+                requestPermissions(arrayOf(Manifest.permission.CAMERA), RecordingPermissionRequest.REQUEST_CAMERA.ordinal)
+                return
+            }
             if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), RecordingPermissionRequest.REQUEST_POST_NOTIFICATIONS.ordinal)
                 return
@@ -1313,6 +1327,12 @@ class MainActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (RecordingPermissionRequest.entries[requestCode]) {
+            RecordingPermissionRequest.REQUEST_CAMERA -> {
+                if (grantResults[0] == 0) {
+                } else {
+                    Toast.makeText(this, R.string.error_camera_required, Toast.LENGTH_SHORT).show()
+                }
+            }
             RecordingPermissionRequest.REQUEST_MICROPHONE -> {
                 if (grantResults[0] == 0) {
                     this.appSettings!!.setBooleanProperty(GlobalProperties.PropertiesBoolean.CHECK_SOUND_MIC, true)

@@ -153,4 +153,10 @@
 
     <color name="notification_icon_fixed">#373e48</color>
     <color name="notification_icon_dark_fixed">#b7bec8</color>
+
+    <color name="overlay_panel_background">#dd9cadc9</color>
+    <color name="overlay_icon">#f1f2f4</color>
+
+    <color name="grid_background">#f1f2f4</color>
+    <color name="grid_stroke">#4e5765</color>
 </resources>

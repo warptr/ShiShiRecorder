@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation("com.google.code.gson:gson:2.14.0")
     implementation("com.google.android.flexbox:flexbox:3.0.0")
     implementation("androidx.core:core-splashscreen:1.2.0")
     implementation("androidx.preference:preference:1.2.1")

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dialog_color_picker"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <com.yepgoryo.CaptureCap.ColorPicker
+            android:id="@+id/color_picker_view"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_gravity="center" />
+
+        <com.yepgoryo.CaptureCap.ColorPaletteWidget
+            android:id="@+id/color_palette"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/overlay_color_picker_value"
+            android:textSize="14sp" />
+
+        <com.yepgoryo.CaptureCap.ValueSeekBar
+            android:id="@+id/brightness_seekbar"
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:max="255" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/overlay_color_picker_opacity"
+            android:textSize="14sp" />
+
+        <com.yepgoryo.CaptureCap.OpacitySeekBar
+            android:id="@+id/opacity_seekbar"
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:max="255" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="16dp">
+
+            <View
+                android:id="@+id/preview_box"
+                android:layout_width="40dp"
+                android:layout_height="40dp" />
+
+            <EditText
+                android:id="@+id/color_hex"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/overlay_color_picker_hex"
+                android:inputType="text"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

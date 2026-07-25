@@ -14,6 +14,8 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA"/>
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission
@@ -22,6 +24,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="permission:android.permission.START_ACTIVITIES_FROM_BACKGROUND"/>
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.CAMERA" />
     <permission
         android:name="com.yepgoryo.CaptureCap.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
         android:protectionLevel="signature"/>
@@ -101,10 +104,21 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.yepgoryo.CaptureCap.MainActivity"/>
         </activity>
+        <activity
+            android:label="@string/draw_overlay_title"
+            android:name="com.yepgoryo.CaptureCap.VideoOverlaySettings"
+            android:exported="true"
+            android:theme="@style/Theme.CaptureCap.NoActionBar"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:parentActivityName="com.yepgoryo.CaptureCap.SettingsPanel">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.yepgoryo.CaptureCap.SettingsPanel"/>
+        </activity>
         <service
             android:name="com.yepgoryo.CaptureCap.ScreenRecorder"
             android:exported="false"
-            android:foregroundServiceType="mediaProjection"/>
+            android:foregroundServiceType="mediaProjection|camera|microphone"/>
         <service
             android:name="com.yepgoryo.CaptureCap.FloatingControls"
             android:exported="false"/>

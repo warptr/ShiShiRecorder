@@ -10,6 +10,12 @@
         <attr name="cropBarTick" format="color" />
         <attr name="cropBarCursor" format="color" />
 
+        <attr name="overlayPanelBackground" format="color" />
+        <attr name="overlayIcon" format="color" />
+
+        <attr name="gridBackground" format="color" />
+        <attr name="gridStroke" format="color" />
+
         <attr name="statusBar" format="color" />
     </declare-styleable>
 </resources>

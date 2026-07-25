@@ -34,9 +34,11 @@ class PlaybackRecorder(private var context: Context,
         private var customWidth: Int,
         private var customHeight: Int,
         private var scaleRatio: Float,
+        private val rotation: Int,
         refreshRate: Int,
         private var recordMicrophone: Boolean,
         private var recordPlayback: Boolean,
+        private val drawOverlay: Boolean,
         customQuality: Boolean,
         qualityScale: Float,
         customFps: Boolean,
@@ -246,7 +248,22 @@ class PlaybackRecorder(private var context: Context,
                 codec = this.customCodec
                 this.currentProfileLevel = this.codecProfileLevels.get(this.codecsList.lastIndexOf(codec))
             }
-            this.mVideoEncoder = VideoEncoder(customWidth, customHeight, scaleRatio, this.nativeFramerate, this.recordQualityScale, customBitrate, this.recordCustomBitrate, codec, this.currentProfileLevel!!)
+            var bitmapBeforeCameraName = VideoOverlay.BITMAP_BEFORE_CAMERA_VERTICAL
+            if (customWidth > customHeight) {
+                bitmapBeforeCameraName = VideoOverlay.BITMAP_BEFORE_CAMERA_HORIZONTAL
+            }
+
+            var bitmapAfterCameraName = VideoOverlay.BITMAP_AFTER_CAMERA_VERTICAL
+            if (customWidth > customHeight) {
+                bitmapAfterCameraName = VideoOverlay.BITMAP_AFTER_CAMERA_HORIZONTAL
+            }
+
+            val cameraItem = VideoOverlay.getCameraItem(context, (customWidth > customHeight))
+
+            val bitmapBeforeCamera = VideoOverlay.BitmapSerializer.loadBitmapFromFile(context, bitmapBeforeCameraName)
+            val bitmapAfterCamera = VideoOverlay.BitmapSerializer.loadBitmapFromFile(context, bitmapAfterCameraName)
+
+            this.mVideoEncoder = VideoEncoder(context, customWidth, customHeight, scaleRatio, rotation, this.nativeFramerate, this.recordQualityScale, drawOverlay, customBitrate, this.recordCustomBitrate, codec, this.currentProfileLevel!!, bitmapBeforeCamera, bitmapAfterCamera, cameraItem, virtualDisplay!!)
         } else {
             this.mVideoEncoder = null
         }
@@ -356,9 +373,6 @@ class PlaybackRecorder(private var context: Context,
                 prepareVideoEncoder()
             }
             prepareAudioEncoder()
-            if (!this.recordOnlyAudio) {
-                virtualDisplay?.surface = this.mVideoEncoder!!.getInputSurface()
-            }
         } catch (e: Exception) {
             throw RuntimeException(e)
         }
@@ -644,6 +658,7 @@ class PlaybackRecorder(private var context: Context,
             }
 
             override fun onError(encoder: Encoder, exc: Exception) {
+                Log.d("PlaybackRecorder", "Video codec error detected")
                 Message.obtain(this@PlaybackRecorder.mHandler, MessageCommand.MSG_ERROR.ordinal, exc).sendToTarget()
             }
 

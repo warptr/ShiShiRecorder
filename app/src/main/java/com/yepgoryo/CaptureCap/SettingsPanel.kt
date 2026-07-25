@@ -139,6 +139,24 @@ class SettingsPanel : AppCompatActivity(), PreferenceFragmentCompat.OnPreference
             floatingControlsPositionPreference.onPreferenceClickListener = onPreferenceClickListener
             floatingControlsSizePreference.onPreferenceClickListener = onPreferenceClickListener
             floatingControlsOpacityPreference.onPreferenceClickListener = onPreferenceClickListener
+
+            val overlayResetHorizontal: Preference = this.settingsPanel!!.findPreference("drawoverlayerasehorizontal")!!
+            val overlayResetVertical: Preference = this.settingsPanel!!.findPreference("drawoverlayerasevertical")!!
+
+            val onEraseHorizontalPreferenceClickListener: Preference.OnPreferenceClickListener = object: Preference.OnPreferenceClickListener {
+                override fun onPreferenceClick(preference: Preference): Boolean {
+                    videoOverlayErase(true)
+                    return true
+                }
+            }
+            val onEraseVerticalPreferenceClickListener: Preference.OnPreferenceClickListener = object: Preference.OnPreferenceClickListener {
+                override fun onPreferenceClick(preference: Preference): Boolean {
+                    videoOverlayErase(false)
+                    return true
+                }
+            }
+            overlayResetHorizontal.onPreferenceClickListener = onEraseHorizontalPreferenceClickListener
+            overlayResetVertical.onPreferenceClickListener = onEraseVerticalPreferenceClickListener
         }
         val useCustomBitratePreference: Preference = this.settingsPanel!!.findPreference("custombitrate")!!
         val bitratePreference: EditTextPreference = this.settingsPanel!!.findPreference("bitratevalue")!!
@@ -257,9 +275,39 @@ class SettingsPanel : AppCompatActivity(), PreferenceFragmentCompat.OnPreference
         noticeDialogBuilder.setCancelable(true)
         noticeDialogBuilder.setTitle(R.string.overlay_notice_title)
         noticeDialogBuilder.setMessage(R.string.overlay_notice_description)
-        noticeDialogBuilder.setPositiveButton(R.string.overlay_notice_button) { dialogInterface, i -> 
+        noticeDialogBuilder.setPositiveButton(R.string.overlay_notice_button) { dialogInterface, i ->
             this@SettingsPanel.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + MainActivity.appName)))
         }
+        this.dialog = noticeDialogBuilder.create()
+        this.dialog?.show()
+    }
+
+    fun videoOverlayErase(isHorizontal: Boolean) {
+        val noticeDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this)
+        noticeDialogBuilder.setCancelable(true)
+        if (isHorizontal) {
+            noticeDialogBuilder.setTitle(R.string.draw_overlay_erase_horizontal)
+        } else {
+            noticeDialogBuilder.setTitle(R.string.draw_overlay_erase_vertical)
+        }
+        noticeDialogBuilder.setMessage(R.string.draw_overlay_erase_warning)
+        noticeDialogBuilder.setPositiveButton(R.string.dialog_ok) { dialogInterface, i ->
+            VideoOverlay.destroyItems(baseContext, isHorizontal)
+            if (isHorizontal) {
+                Toast.makeText(
+                    baseContext,
+                    R.string.draw_overlay_erase_cleared_horizontal,
+                    Toast.LENGTH_LONG
+                ).show()
+            } else {
+                Toast.makeText(
+                    baseContext,
+                    R.string.draw_overlay_erase_cleared_vertical,
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+        noticeDialogBuilder.setNeutralButton(R.string.dialog_cancel) { _, _ -> }
         this.dialog = noticeDialogBuilder.create()
         this.dialog?.show()
     }

@@ -137,6 +137,35 @@
             android:title="@string/timerseconds_option"
             android:dialogLayout="@layout/dialog_timer" />
 
+        <SwitchPreferenceCompat
+            android:key="drawoverlay"
+            android:summary="@string/draw_overlay_option_description"
+            android:title="@string/draw_overlay_option"
+            android:defaultValue="false" />
+
+        <Preference
+            android:key="drawoverlaycontents"
+            android:title="@string/draw_overlay_contents"
+            android:summary="@string/draw_overlay_contents_description"
+            android:dependency="drawoverlay">
+            <intent android:targetPackage="com.yepgoryo.CaptureCap"
+                android:targetClass="com.yepgoryo.CaptureCap.VideoOverlaySettings" />
+        </Preference>
+
+        <Preference
+            android:key="drawoverlayerasevertical"
+            android:title="@string/draw_overlay_erase_vertical"
+            android:summary="@string/draw_overlay_erase_vertical_description"
+            android:dependency="drawoverlay">
+        </Preference>
+
+        <Preference
+            android:key="drawoverlayerasehorizontal"
+            android:title="@string/draw_overlay_erase_horizontal"
+            android:summary="@string/draw_overlay_erase_horizontal_description"
+            android:dependency="drawoverlay">
+        </Preference>
+
     </PreferenceCategory>
 
     <PreferenceCategory

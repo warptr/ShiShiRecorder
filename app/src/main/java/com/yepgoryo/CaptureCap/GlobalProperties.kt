@@ -68,7 +68,8 @@ class GlobalProperties(context: Context) {
         ENABLE_VIBRATION,
         MINIMIZE_ON_START,
         NO_ROTATE,
-        ENABLE_TIMER
+        ENABLE_TIMER,
+        DRAW_OVERLAY,
     }
 
     enum class PropertiesInt {

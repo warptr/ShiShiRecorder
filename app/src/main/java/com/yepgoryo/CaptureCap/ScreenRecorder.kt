@@ -140,6 +140,8 @@ class ScreenRecorder : Service() {
     private var streamSave: Boolean = false
 
     private var errorDir: Boolean = false
+    private var drawOverlay: Boolean = false
+    private var hasCamera: Boolean = false
     private var finishedFileIntent: Intent? = null
     private var shareFinishedFileIntent: Intent? = null
     private var activityBinder: MainActivity.ActivityBinder? = null
@@ -649,6 +651,17 @@ class ScreenRecorder : Service() {
     fun screenRecordingStart() {
         timerRunning = false
         stoppedOnError = false
+
+        drawOverlay = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.DRAW_OVERLAY, false)
+
+        var horizontal = false
+
+        if (this.display!!.rotation == Surface.ROTATION_270 || this.display!!.rotation == Surface.ROTATION_90) {
+            horizontal = true
+        }
+
+        hasCamera = (VideoOverlay.getCameraItem(baseContext, horizontal) != null)
+
         this.isStopped = false
         if (this.minimizeOnStart) {
             val homeIntent = Intent(Intent.ACTION_MAIN)
@@ -754,7 +767,14 @@ class ScreenRecorder : Service() {
             val recordingStartedBuilder = getRecordingNotification()
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, recordingStartedBuilder.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
+                var serviceStartFlag = ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+                if (recordMicrophone && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    serviceStartFlag = serviceStartFlag or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+                }
+                if (drawOverlay && hasCamera && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    serviceStartFlag = serviceStartFlag or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
+                }
+                startForeground(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, recordingStartedBuilder.build(), serviceStartFlag)
             } else {
                 startForeground(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, recordingStartedBuilder.build())
             }
@@ -894,7 +914,7 @@ class ScreenRecorder : Service() {
                 } catch (exc: Exception) {
                     recordingError()
                 }
-                val playbackRecorder = PlaybackRecorder(applicationContext, this.recordOnlyAudio, this.recordingVirtualDisplay, this.recordingFileDescriptor!!, this.recordingMediaProjection, this.enableStream, this.streamURL, this.streamKey, this.streamSave,width, height, scaleRatio, refreshRate, this.recordMicrophone, this.recordPlayback, customQuality, qualityScale, customFps, fpsValue, customBitrate, bitrateValue, !codec.contentEquals(resources.getString(R.string.codec_option_auto_value)), codec, !audioCodec.contentEquals(resources.getString(R.string.audio_codec_option_auto_value)), audioCodec, this.customSampleRate, this.customChannelsCount, this.mediaAudioSource, this.gameAudioSource, this.unknownAudioSource)
+                val playbackRecorder = PlaybackRecorder(applicationContext, this.recordOnlyAudio, this.recordingVirtualDisplay, this.recordingFileDescriptor!!, this.recordingMediaProjection, this.enableStream, this.streamURL, this.streamKey, this.streamSave,width, height, scaleRatio, this.display!!.rotation, refreshRate, this.recordMicrophone, this.recordPlayback, drawOverlay, customQuality, qualityScale, customFps, fpsValue, customBitrate, bitrateValue, !codec.contentEquals(resources.getString(R.string.codec_option_auto_value)), codec, !audioCodec.contentEquals(resources.getString(R.string.audio_codec_option_auto_value)), audioCodec, this.customSampleRate, this.customChannelsCount, this.mediaAudioSource, this.gameAudioSource, this.unknownAudioSource)
                 this.recorderPlayback = playbackRecorder
                 this.recorderPlayback?.recordingCallback = RecordingFinishedCallback()
                 playbackRecorder.start()
@@ -976,7 +996,14 @@ class ScreenRecorder : Service() {
         val timerNotificationBuilder = getTimerNotification()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, timerNotificationBuilder.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
+            var serviceStartFlag = ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+            if (recordMicrophone && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                serviceStartFlag = serviceStartFlag or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+            }
+            if (drawOverlay && hasCamera && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                serviceStartFlag = serviceStartFlag or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
+            }
+            startForeground(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, timerNotificationBuilder.build(), serviceStartFlag)
         } else {
             startForeground(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, timerNotificationBuilder.build())
         }

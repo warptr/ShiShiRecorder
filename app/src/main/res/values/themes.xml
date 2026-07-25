@@ -56,6 +56,12 @@
         <item name="cropBarTick">@color/crop_tick_paint</item>
         <item name="cropBarCursor">@color/crop_cursor_paint</item>
 
+        <item name="overlayPanelBackground">@color/overlay_panel_background</item>
+        <item name="overlayIcon">@color/overlay_icon</item>
+
+        <item name="gridBackground">@color/grid_background</item>
+        <item name="gridStroke">@color/grid_stroke</item>
+
         <item name="statusBar">@color/md_theme_primary</item>
         <item name="android:navigationBarColor">@color/md_theme_background</item>
         <item name="android:windowLightStatusBar">false</item>
@@ -118,6 +124,12 @@
         <item name="cropBarThumbBorder">@color/crop_thumb_border_paint</item>
         <item name="cropBarTick">@color/crop_tick_paint</item>
         <item name="cropBarCursor">@color/crop_cursor_paint</item>
+
+        <item name="overlayPanelBackground">@color/overlay_panel_background</item>
+        <item name="overlayIcon">@color/overlay_icon</item>
+
+        <item name="gridBackground">@color/grid_background</item>
+        <item name="gridStroke">@color/grid_stroke</item>
 
         <item name="statusBar">@color/md_theme_background</item>
         <item name="android:navigationBarColor">@color/md_theme_background</item>
