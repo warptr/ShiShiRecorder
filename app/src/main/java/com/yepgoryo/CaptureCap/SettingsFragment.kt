@@ -29,6 +29,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             val preferenceFindPreference9: Preference = findPreference("drawoverlaycontents")!!
             val preferenceFindPreference10: Preference = findPreference("drawoverlayerasehorizontal")!!
             val preferenceFindPreference11: Preference = findPreference("drawoverlayerasevertical")!!
+            val preferenceFindPreference12: Preference = findPreference("soundcontrolnotification")!!
 
             val preferenceCategory2: PreferenceCategory = findPreference("capturesettings")!!
             preferenceCategory2.removePreference(preferenceFindPreference5)
@@ -38,11 +39,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
             preferenceCategory2.removePreference(preferenceFindPreference9)
             preferenceCategory2.removePreference(preferenceFindPreference10)
             preferenceCategory2.removePreference(preferenceFindPreference11)
+            preferenceCategory2.removePreference(preferenceFindPreference12)
         }
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
-            val preferenceFindPreference12: Preference = findPreference("enablevibration")!!
+            val preferenceFindPreference13: Preference = findPreference("enablevibration")!!
             val preferenceCategory3: PreferenceCategory = findPreference("capturesettings")!!
-            preferenceCategory3.removePreference(preferenceFindPreference12)
+            preferenceCategory3.removePreference(preferenceFindPreference13)
         }
     }
 

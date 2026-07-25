@@ -476,6 +476,36 @@ class MainActivity : AppCompatActivity() {
         fun resetDir(audio: Boolean) {
             this@MainActivity.resetFolder(audio)
         }
+
+        fun updateSoundSwitchButtons() {
+            runOnUiThread {
+                if (this@MainActivity.recordingBinder!!.recordMic() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    if (this@MainActivity.recordingBinder!!.micMuted()) {
+                        recordControlMuteMic!!.visibility = View.GONE
+                        recordControlUnmuteMic!!.visibility = View.VISIBLE
+                    } else {
+                        recordControlMuteMic!!.visibility = View.VISIBLE
+                        recordControlUnmuteMic!!.visibility = View.GONE
+                    }
+                } else {
+                    recordControlMuteMic!!.visibility = View.GONE
+                    recordControlUnmuteMic!!.visibility = View.GONE
+                }
+
+                if (this@MainActivity.recordingBinder!!.recordAudio() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    if (this@MainActivity.recordingBinder!!.audioMuted()) {
+                        recordControlMuteAudio!!.visibility = View.GONE
+                        recordControlUnmuteAudio!!.visibility = View.VISIBLE
+                    } else {
+                        recordControlMuteAudio!!.visibility = View.VISIBLE
+                        recordControlUnmuteAudio!!.visibility = View.GONE
+                    }
+                } else {
+                    recordControlMuteAudio!!.visibility = View.GONE
+                    recordControlUnmuteAudio!!.visibility = View.GONE
+                }
+            }
+        }
     }
 
     fun doStartService(resultCode: Int, intent: Intent?) {

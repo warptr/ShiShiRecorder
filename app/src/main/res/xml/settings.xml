@@ -75,6 +75,12 @@
             android:title="@string/audio_sources_list"
             app:fragment="com.yepgoryo.CaptureCap.AudioSourcesSettingsFragment" />
 
+        <CheckBoxPreference
+            android:key="soundcontrolnotification"
+            android:summary="@string/sound_control_notification_option_description"
+            android:title="@string/sound_control_notification_option_title"
+            android:defaultValue="false" />
+
         <com.yepgoryo.CaptureCap.CodecList
             android:key="audiocodecvalue"
             android:summary="@string/audio_codec_option_description"

@@ -126,6 +126,8 @@
         <item name="on_shake_option_stop">Stop</item>
     </array>
     <string name="dark_theme_change_notice">Reopen the application to apply theme</string>
+    <string name="sound_control_notification_option_title">Sound control notification</string>
+    <string name="sound_control_notification_option_description">Enable sound switches control notification</string>
     <string name="overlay_notice_title">Display over other apps</string>
     <string name="overlay_notice_description">To show floating controls, enable Drawing over other apps permission</string>
     <string name="overlay_notice_button">Open settings</string>
@@ -167,6 +169,8 @@
     <string name="notifications_resume">Continue</string>
     <string name="notifications_share">Share</string>
     <string name="notifications_delete">Delete</string>
+    <string name="sound_control_title">Sound control</string>
+    <string name="sound_control_description">Set enabled audio sources</string>
     <string name="mute_microphone">Mute mic</string>
     <string name="mute_audio">Mute audio</string>
     <string name="unmute_microphone">Unmute mic</string>

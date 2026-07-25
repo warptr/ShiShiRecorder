@@ -9,10 +9,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.ServiceInfo
-import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.drawable.Icon
 import android.hardware.Sensor
@@ -36,7 +34,6 @@ import android.provider.DocumentsContract
 import android.provider.Settings
 import android.util.DisplayMetrics
 import android.util.Log
-import android.util.TypedValue
 import android.view.Display
 import android.view.Surface
 import android.view.WindowManager
@@ -63,6 +60,11 @@ class ScreenRecorder : Service() {
         const val ACTION_START: String = MainActivity.appName + ".START_RECORDING"
         const val ACTION_START_NOVIDEO: String = MainActivity.appName + ".START_RECORDING_NOVIDEO"
         const val ACTION_PAUSE: String = MainActivity.appName + ".PAUSE_RECORDING"
+        const val ACTION_ENABLE_MIC: String = MainActivity.appName + ".ENABLE_MIC"
+        const val ACTION_DISABLE_MIC: String = MainActivity.appName + ".DISABLE_MIC"
+        const val ACTION_ENABLE_AUDIO: String = MainActivity.appName + ".ENABLE_AUDIO"
+        const val ACTION_DISABLE_AUDIO: String = MainActivity.appName + ".DISABLE_AUDIO"
+
         const val ACTION_CONTINUE: String = MainActivity.appName + ".CONTINUE_RECORDING"
         const val ACTION_STOP: String = MainActivity.appName + ".STOP_RECORDING"
         const val ACTION_ACTIVITY_CONNECT: String = MainActivity.appName + ".ACTIVITY_CONNECT"
@@ -122,6 +124,7 @@ class ScreenRecorder : Service() {
     private var timerStartRecording: Timer = Timer()
     private var recordMicrophone: Boolean = false
     private var recordPlayback: Boolean = false
+    private var enableSoundControlsNotification: Boolean = false
     private var micMuted: Boolean = false
     private var playbackMuted: Boolean = false
     private var isPaused: Boolean = false
@@ -199,7 +202,8 @@ class ScreenRecorder : Service() {
     private enum class NotificationID {
         __,
         NOTIFICATION_RECORDING_ID,
-        NOTIFICATION_RECORDING_FINISHED_ID
+        NOTIFICATION_RECORDING_FINISHED_ID,
+        NOTIFICATION_RECORDING_AUDIO_CONTROLS_ID,
     }
 
     inner class RecordingBinder : Binder() {
@@ -413,6 +417,18 @@ class ScreenRecorder : Service() {
                 }
             } else if (intent.action == ACTION_PAUSE) {
                 screenRecordingPause()
+            } else if (intent.action == ACTION_ENABLE_MIC) {
+                unmuteMic()
+                this.activityBinder?.updateSoundSwitchButtons()
+            } else if (intent.action == ACTION_DISABLE_MIC) {
+                muteMic()
+                this.activityBinder?.updateSoundSwitchButtons()
+            } else if (intent.action == ACTION_ENABLE_AUDIO) {
+                unmuteAudio()
+                this.activityBinder?.updateSoundSwitchButtons()
+            } else if (intent.action == ACTION_DISABLE_AUDIO) {
+                muteAudio()
+                this.activityBinder?.updateSoundSwitchButtons()
             } else if (intent.action == ACTION_CONTINUE) {
                 screenRecordingResume()
             } else if (intent.action == ACTION_ACTIVITY_DELETE_FINISHED_FILE) {
@@ -427,20 +443,41 @@ class ScreenRecorder : Service() {
         this.recordingNotificationManager!!.notify(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, refreshNotificationBuilder.build())
     }
 
+    fun refreshSoundControlsNotification() {
+        val soundNotification = getSoundSwitchNotification()
+        this.recordingNotificationManager!!.notify(NotificationID.NOTIFICATION_RECORDING_AUDIO_CONTROLS_ID.ordinal, soundNotification.build())
+    }
+
+    fun removeSoundControlsNotification() {
+        this.recordingNotificationManager!!.cancel(NotificationID.NOTIFICATION_RECORDING_AUDIO_CONTROLS_ID.ordinal)
+    }
+
     fun muteMic() {
         this.recorderPlayback?.setMicrophoneMuted(true)
+        if (enableSoundControlsNotification) {
+            refreshSoundControlsNotification()
+        }
     }
 
     fun unmuteMic() {
         this.recorderPlayback?.setMicrophoneMuted(false)
+        if (enableSoundControlsNotification) {
+            refreshSoundControlsNotification()
+        }
     }
 
     fun muteAudio() {
         this.recorderPlayback?.setAudioMuted(true)
+        if (enableSoundControlsNotification) {
+            refreshSoundControlsNotification()
+        }
     }
 
     fun unmuteAudio() {
         this.recorderPlayback?.setAudioMuted(false)
+        if (enableSoundControlsNotification) {
+            refreshSoundControlsNotification()
+        }
     }
 
     fun audioMuted(): Boolean {
@@ -653,6 +690,7 @@ class ScreenRecorder : Service() {
         stoppedOnError = false
 
         drawOverlay = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.DRAW_OVERLAY, false)
+        enableSoundControlsNotification = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.SOUND_CONTROL_NOTIFICATION, false)
 
         var horizontal = false
 
@@ -778,6 +816,11 @@ class ScreenRecorder : Service() {
             } else {
                 startForeground(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, recordingStartedBuilder.build())
             }
+
+            if (enableSoundControlsNotification) {
+                refreshSoundControlsNotification()
+            }
+
             if (this.activityBinder != null) {
                 this.activityBinder?.recordingStart(true)
             }
@@ -988,6 +1031,81 @@ class ScreenRecorder : Service() {
         return recordingStartedBuilder
     }
 
+    private fun getSoundSwitchNotification(): NotificationCompat.Builder {
+        var iconAudio: IconCompat = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_notification_audio))
+        if (getModeNight()) {
+            iconAudio = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_notification_audio_dark))
+        }
+        val mutedAudio = audioMuted()
+        if (mutedAudio) {
+            iconAudio = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_notification_audio_disabled))
+            if (getModeNight()) {
+                iconAudio = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_notification_audio_disabled_dark))
+            }
+        }
+
+        val switchAudioIntent: Intent = Intent(this, ScreenRecorder::class.java)
+        switchAudioIntent.setAction(ACTION_DISABLE_AUDIO)
+        if (mutedAudio) {
+            switchAudioIntent.setAction(ACTION_ENABLE_AUDIO)
+        }
+        var switchAudioActionName = getString(R.string.mute_audio)
+        if (mutedAudio) {
+            switchAudioActionName = getString(R.string.unmute_audio)
+        }
+        val switchAudioAction: NotificationCompat.Action.Builder = NotificationCompat.Action.Builder(iconAudio, switchAudioActionName, PendingIntent.getService(this, 0, switchAudioIntent, this.intentFlag))
+
+
+        var iconMicrophone: IconCompat = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_notification_mic))
+        if (getModeNight()) {
+            iconMicrophone = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_notification_mic_dark))
+        }
+        val mutedMicrophone = micMuted()
+        if (mutedMicrophone) {
+            iconMicrophone = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_notification_mic_disabled))
+            if (getModeNight()) {
+                iconMicrophone = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_notification_mic_disabled_dark))
+            }
+        }
+        val switchMicrophoneIntent: Intent = Intent(this, ScreenRecorder::class.java)
+        switchMicrophoneIntent.setAction(ACTION_DISABLE_MIC)
+        if (mutedMicrophone) {
+            switchMicrophoneIntent.setAction(ACTION_ENABLE_MIC)
+        }
+        var switchMicrophoneActionName = getString(R.string.mute_microphone)
+        if (mutedMicrophone) {
+            switchMicrophoneActionName = getString(R.string.unmute_microphone)
+        }
+        val switchMicrophoneAction: NotificationCompat.Action.Builder = NotificationCompat.Action.Builder(iconMicrophone, switchMicrophoneActionName, PendingIntent.getService(this, 0, switchMicrophoneIntent, this.intentFlag))
+
+        var recordingSoundControlBuilder: NotificationCompat.Builder = NotificationCompat.Builder(this, NOTIFICATIONS_RECORDING_CHANNEL)
+
+        recordingSoundControlBuilder =
+            recordingSoundControlBuilder.setContentTitle(getString(R.string.sound_control_title))
+                .setContentText(getString(R.string.sound_control_description))
+
+        var iconSound = Icon.createWithBitmap(getBitmapDescriptor(R.drawable.icon_record_sound_control))
+        if (getModeNight()) {
+            iconSound = Icon.createWithBitmap(getBitmapDescriptor(R.drawable.icon_record_sound_control_dark))
+        }
+
+        recordingSoundControlBuilder = recordingSoundControlBuilder
+            .setSmallIcon(R.drawable.icon_record_sound_control_status)
+            .setLargeIcon(iconSound)
+            .setOngoing(true)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+
+        if (recordMicrophone) {
+            recordingSoundControlBuilder = recordingSoundControlBuilder.addAction(switchMicrophoneAction.build())
+        }
+
+        if (recordPlayback) {
+            recordingSoundControlBuilder = recordingSoundControlBuilder.addAction(switchAudioAction.build())
+        }
+
+        return recordingSoundControlBuilder
+    }
+
     fun timerStart() {
         this.timerRunning = true
         this.timerValue = this.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.TIMER_SECONDS, 10).toLong() * 1000
@@ -1113,6 +1231,9 @@ class ScreenRecorder : Service() {
             this.finishedFileIntent!!.setDataAndType(FileProvider.getUriForFile(applicationContext, MainActivity.appName + ".DocProvider", this.finishedFile), this.finishedDocumentMime)
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && this.finishedFileDocument != null) {
             this.finishedFileIntent!!.setDataAndType(this.finishedFileDocument, this.finishedDocumentMime)
+        }
+        if (enableSoundControlsNotification) {
+            removeSoundControlsNotification()
         }
         val activity: PendingIntent = PendingIntent.getActivity(this, 0, this.finishedFileIntent, this.intentFlag)
         val recordingDeleteIntent = Intent(this, ScreenRecorder::class.java)
