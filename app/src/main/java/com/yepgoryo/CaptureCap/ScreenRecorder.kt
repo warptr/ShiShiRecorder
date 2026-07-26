@@ -817,7 +817,7 @@ class ScreenRecorder : Service() {
                 startForeground(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, recordingStartedBuilder.build())
             }
 
-            if (enableSoundControlsNotification) {
+            if (enableSoundControlsNotification && (recordMicrophone || recordPlayback)) {
                 refreshSoundControlsNotification()
             }
 
