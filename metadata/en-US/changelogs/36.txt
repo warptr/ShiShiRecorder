@@ -1,0 +1,5 @@
+ * Added video overlay support and canvas editor for Android 10+.
+
+ * Added required foreground service recording permissions for camera and microphone for Android 11+.
+
+ * Added notification to control sound sources while recording for Android 10+.

@@ -14,8 +14,8 @@ android {
         applicationId = "com.yepgoryo.CaptureCap"
         minSdk = 23
         targetSdk = 36
-        versionCode = 35
-        versionName = "3.9.2"
+        versionCode = 36
+        versionName = "3.9.5"
 
         vectorDrawables.useSupportLibrary = true
 
