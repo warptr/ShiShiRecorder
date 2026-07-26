@@ -806,7 +806,7 @@ class ScreenRecorder : Service() {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 var serviceStartFlag = ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
-                if (recordMicrophone && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                if ((recordMicrophone || recordPlayback) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     serviceStartFlag = serviceStartFlag or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
                 }
                 if (drawOverlay && hasCamera && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -1115,7 +1115,7 @@ class ScreenRecorder : Service() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             var serviceStartFlag = ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
-            if (recordMicrophone && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if ((recordMicrophone || recordPlayback) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 serviceStartFlag = serviceStartFlag or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
             }
             if (drawOverlay && hasCamera && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
