@@ -89,7 +89,6 @@ class VideoOverlay @JvmOverloads constructor(
                 }
 
                 val jsonString = file.readText()
-                Log.d("VideoOverlay", "Read file string is ${jsonString}")
                 for (item in gson.fromJson(jsonString, Array<OverlayItem>::class.java).toMutableList()) {
                     if (item.isCamera) {
                         return CameraItem(
