@@ -288,19 +288,22 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
         var read = 0
 
         if (!eos) {
-            if ((recordMicrophone && !micMuted) && (!recordAudio || audioMuted)) {
-                val frameMic = ByteArray(audioBufLimit)
-                val micRead = mMic!!.read(frameMic, 0, audioBufLimit)
-                mEncoder.getInputBuffer(index)?.put(frameMic)
-
-                if (micRead >= 0) {
-                    read = micRead
-                } else {
-                    read = 0
-                }
-            } else if ((!recordMicrophone || micMuted) && (recordAudio && !audioMuted)) {
+            if ((recordMicrophone || recordAudio) && ((!recordAudio || audioMuted) && (!recordMicrophone || micMuted))) {
                 val framePlayback = ByteArray(audioBufLimit)
-                val playbackRead = mPlayback!!.read(framePlayback, 0, audioBufLimit)
+                var playbackRead: Int = 0
+
+                if (recordAudio) {
+                    playbackRead = mPlayback!!.read(framePlayback, 0, audioBufLimit)
+                } else if (recordMicrophone) {
+                    playbackRead = mMic!!.read(framePlayback, 0, audioBufLimit)
+                }
+
+                var i = 0
+                while (i < playbackRead) {
+                    framePlayback[i] = 0.toByte()
+                    i += 1
+                }
+
                 mEncoder.getInputBuffer(index)?.put(framePlayback)
 
                 if (playbackRead >= 0) {
@@ -331,22 +334,19 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
                 } else {
                     read = 0
                 }
-            } else if (recordMicrophone || recordAudio) {
+            } else if ((recordMicrophone && !micMuted) && (!recordAudio || audioMuted)) {
+                val frameMic = ByteArray(audioBufLimit)
+                val micRead = mMic!!.read(frameMic, 0, audioBufLimit)
+                mEncoder.getInputBuffer(index)?.put(frameMic)
+
+                if (micRead >= 0) {
+                    read = micRead
+                } else {
+                    read = 0
+                }
+            } else if ((!recordMicrophone || micMuted) && (recordAudio && !audioMuted)) {
                 val framePlayback = ByteArray(audioBufLimit)
-                var playbackRead: Int = 0
-
-                if (recordAudio) {
-                    playbackRead = mPlayback!!.read(framePlayback, 0, audioBufLimit)
-                } else if (recordMicrophone) {
-                    playbackRead = mMic!!.read(framePlayback, 0, audioBufLimit)
-                }
-
-                var i = 0
-                while (i < playbackRead) {
-                    framePlayback[i] = 0.toByte()
-                    i += 1
-                }
-
+                val playbackRead = mPlayback!!.read(framePlayback, 0, audioBufLimit)
                 mEncoder.getInputBuffer(index)?.put(framePlayback)
 
                 if (playbackRead >= 0) {
@@ -354,6 +354,8 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
                 } else {
                     read = 0
                 }
+            } else {
+                throw RuntimeException("Wrong audio configuration!")
             }
 
         }
