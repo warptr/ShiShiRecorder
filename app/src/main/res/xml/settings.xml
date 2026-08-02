@@ -121,6 +121,15 @@
             android:entryValues="@array/screen_orientation_preferences_values"
             android:defaultValue="@string/screen_orientation_option_auto_value" />
 
+        <ListPreference
+            android:key="screenrotation"
+            android:summary="@string/screen_rotation_description"
+            android:title="@string/screen_rotation"
+            android:dialogTitle="@string/screen_rotation"
+            android:entries="@array/screen_rotation_preferences"
+            android:entryValues="@array/screen_rotation_preferences_values"
+            android:defaultValue="@string/screen_rotation_option_auto_value" />
+
         <CheckBoxPreference
             android:key="dontnotifyonfinish"
             android:summary="@string/dontnotifyonfinish_option_description"

@@ -105,6 +105,15 @@
         <item name="screen_orientation_option_force_portrait">Force portrait</item>
         <item name="screen_orientation_option_default">Default</item>
     </array>
+    <string name="screen_rotation">Screen rotation</string>
+    <string name="screen_rotation_description">Force screen rotation</string>
+    <array name="screen_rotation_preferences">
+        <item name="screen_rotation_option_force_0_deg">0 degrees</item>
+        <item name="screen_rotation_option_force_90_deg">90 degrees</item>
+        <item name="screen_rotation_option_force_180_deg">180 degrees</item>
+        <item name="screen_rotation_option_force_270_deg">270 degrees</item>
+        <item name="screen_rotation_option_default">Default</item>
+    </array>
     <string name="draw_overlay_title">Edit overlay</string>
     <string name="draw_overlay_option">Draw overlay</string>
     <string name="draw_overlay_option_description">Draw overlay over recording</string>

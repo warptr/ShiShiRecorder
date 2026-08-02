@@ -27,6 +27,14 @@
         <item name="screen_orientation_option_default">Default</item>
     </array>
     <string name="screen_orientation_option_auto_value">Default</string>
+    <array name="screen_rotation_preferences_values">
+        <item name="screen_rotation_option_force_0_deg">0 degrees</item>
+        <item name="screen_rotation_option_force_90_deg">90 degrees</item>
+        <item name="screen_rotation_option_force_180_deg">180 degrees</item>
+        <item name="screen_rotation_option_force_270_deg">270 degrees</item>
+        <item name="screen_rotation_option_default">Default</item>
+    </array>
+    <string name="screen_rotation_option_auto_value">Default</string>
     <array name="audio_channels_preferences_values">
         <item name="audio_channels_preferences_option_mono_value">Mono</item>
         <item name="audio_channels_preferences_option_stereo_value">Stereo</item>

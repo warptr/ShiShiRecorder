@@ -106,7 +106,8 @@ class GlobalProperties(context: Context) {
         DARK_THEME_APPLIED,
         AUDIO_CHANNELS,
         ON_SHAKE,
-        SCREEN_ORIENTATION
+        SCREEN_ORIENTATION,
+        SCREEN_ROTATION
     }
 
     enum class PropertiesString {
@@ -133,6 +134,14 @@ class GlobalProperties(context: Context) {
     enum class ScreenOrientationProperty {
         FORCE_LANDSCAPE,
         FORCE_PORTRAIT,
+        DEFAULT
+    }
+
+    enum class ScreenRotationProperty {
+        _0_DEGREES_,
+        _90_DEGREES_,
+        _180_DEGREES_,
+        _270_DEGREES_,
         DEFAULT
     }
 
@@ -185,6 +194,21 @@ class GlobalProperties(context: Context) {
 
     fun setScreenOrientation(screenOrientationProperty: ScreenOrientationProperty) {
         this.propertiesListEditor.putString(convertFromPropertyName(PropertiesSpecial.SCREEN_ORIENTATION.toString()), convertFromValueName(screenOrientationProperty.toString()))
+        this.propertiesListEditor.commit()
+    }
+
+    fun getScreenRotation(): ScreenRotationProperty {
+        val screenRotation: String = "_" + convertToValueName(propertiesList.getString(convertFromPropertyName(PropertiesSpecial.SCREEN_ROTATION.toString()), convertFromValueName(ScreenRotationProperty.DEFAULT.toString()))!!) + "_"
+        for (i in ScreenRotationProperty.entries) {
+            if (screenRotation.contentEquals(i.toString())) {
+                return i
+            }
+        }
+        return ScreenRotationProperty.DEFAULT
+    }
+
+    fun setScreenRotation(screenRotationProperty: ScreenRotationProperty) {
+        this.propertiesListEditor.putString(convertFromPropertyName(PropertiesSpecial.SCREEN_ROTATION.toString()), convertFromValueName(screenRotationProperty.toString().removeSurrounding("_")))
         this.propertiesListEditor.commit()
     }
 

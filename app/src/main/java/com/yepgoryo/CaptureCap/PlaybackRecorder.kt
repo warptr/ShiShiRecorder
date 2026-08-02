@@ -14,6 +14,7 @@ import android.os.HandlerThread
 import android.os.Looper
 import android.os.Message
 import android.util.Log
+import android.view.Surface
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import java.io.FileDescriptor
@@ -34,6 +35,7 @@ class PlaybackRecorder(private var context: Context,
         private var customWidth: Int,
         private var customHeight: Int,
         private var forceOrientation: GlobalProperties.ScreenOrientationProperty,
+        private var forceRotation: GlobalProperties.ScreenRotationProperty,
         private var scaleRatio: Float,
         private val rotation: Int,
         refreshRate: Int,
@@ -181,6 +183,21 @@ class PlaybackRecorder(private var context: Context,
                         context.resources.displayMetrics.densityDpi
                     )
                 }
+            }
+            else -> {}
+        }
+        when (forceRotation) {
+            GlobalProperties.ScreenRotationProperty._0_DEGREES_ -> {
+                virtualDisplay!!.setRotation(Surface.ROTATION_0)
+            }
+            GlobalProperties.ScreenRotationProperty._90_DEGREES_ -> {
+                virtualDisplay!!.setRotation(Surface.ROTATION_90)
+            }
+            GlobalProperties.ScreenRotationProperty._180_DEGREES_ -> {
+                virtualDisplay!!.setRotation(Surface.ROTATION_180)
+            }
+            GlobalProperties.ScreenRotationProperty._270_DEGREES_ -> {
+                virtualDisplay!!.setRotation(Surface.ROTATION_270)
             }
             else -> {}
         }
