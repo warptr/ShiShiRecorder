@@ -98,6 +98,13 @@
     <string name="floating_controls_opacity">Floating controls opacity</string>
     <string name="floating_controls_opacity_description">Set floating controls opacity</string>
     <string name="floating_controls_description_handle">Floating controls handle</string>
+    <string name="screen_orientation">Screen orientation</string>
+    <string name="screen_orientation_description">Force screen orientation</string>
+    <array name="screen_orientation_preferences">
+        <item name="screen_orientation_option_force_landscape">Force landscape</item>
+        <item name="screen_orientation_option_force_portrait">Force portrait</item>
+        <item name="screen_orientation_option_default">Default</item>
+    </array>
     <string name="draw_overlay_title">Edit overlay</string>
     <string name="draw_overlay_option">Draw overlay</string>
     <string name="draw_overlay_option_description">Draw overlay over recording</string>

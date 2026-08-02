@@ -125,6 +125,7 @@ class ScreenRecorder : Service() {
     private var recordMicrophone: Boolean = false
     private var recordPlayback: Boolean = false
     private var enableSoundControlsNotification: Boolean = false
+    private var forceOrientation: GlobalProperties.ScreenOrientationProperty = GlobalProperties.ScreenOrientationProperty.DEFAULT
     private var micMuted: Boolean = false
     private var playbackMuted: Boolean = false
     private var isPaused: Boolean = false
@@ -692,6 +693,8 @@ class ScreenRecorder : Service() {
         drawOverlay = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.DRAW_OVERLAY, false)
         enableSoundControlsNotification = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.SOUND_CONTROL_NOTIFICATION, false)
 
+        forceOrientation = this.appSettings!!.getScreenOrientation()
+
         var horizontal = false
 
         if (this.display!!.rotation == Surface.ROTATION_270 || this.display!!.rotation == Surface.ROTATION_90) {
@@ -957,7 +960,7 @@ class ScreenRecorder : Service() {
                 } catch (exc: Exception) {
                     recordingError()
                 }
-                val playbackRecorder = PlaybackRecorder(applicationContext, this.recordOnlyAudio, this.recordingVirtualDisplay, this.recordingFileDescriptor!!, this.recordingMediaProjection, this.enableStream, this.streamURL, this.streamKey, this.streamSave,width, height, scaleRatio, this.display!!.rotation, refreshRate, this.recordMicrophone, this.recordPlayback, drawOverlay, customQuality, qualityScale, customFps, fpsValue, customBitrate, bitrateValue, !codec.contentEquals(resources.getString(R.string.codec_option_auto_value)), codec, !audioCodec.contentEquals(resources.getString(R.string.audio_codec_option_auto_value)), audioCodec, this.customSampleRate, this.customChannelsCount, this.mediaAudioSource, this.gameAudioSource, this.unknownAudioSource)
+                val playbackRecorder = PlaybackRecorder(applicationContext, this.recordOnlyAudio, this.recordingVirtualDisplay, this.recordingFileDescriptor!!, this.recordingMediaProjection, this.enableStream, this.streamURL, this.streamKey, this.streamSave,width, height, forceOrientation, scaleRatio, this.display!!.rotation, refreshRate, this.recordMicrophone, this.recordPlayback, drawOverlay, customQuality, qualityScale, customFps, fpsValue, customBitrate, bitrateValue, !codec.contentEquals(resources.getString(R.string.codec_option_auto_value)), codec, !audioCodec.contentEquals(resources.getString(R.string.audio_codec_option_auto_value)), audioCodec, this.customSampleRate, this.customChannelsCount, this.mediaAudioSource, this.gameAudioSource, this.unknownAudioSource)
                 this.recorderPlayback = playbackRecorder
                 this.recorderPlayback?.recordingCallback = RecordingFinishedCallback()
                 playbackRecorder.start()

@@ -105,7 +105,8 @@ class GlobalProperties(context: Context) {
         DARK_THEME,
         DARK_THEME_APPLIED,
         AUDIO_CHANNELS,
-        ON_SHAKE
+        ON_SHAKE,
+        SCREEN_ORIENTATION
     }
 
     enum class PropertiesString {
@@ -129,6 +130,12 @@ class GlobalProperties(context: Context) {
         _360P_
     }
 
+    enum class ScreenOrientationProperty {
+        FORCE_LANDSCAPE,
+        FORCE_PORTRAIT,
+        DEFAULT
+    }
+
     init {
         val sharedPreferences: SharedPreferences = context.getSharedPreferences(PREFERENCES_ALIAS, 0)
         this.propertiesList = sharedPreferences
@@ -138,17 +145,21 @@ class GlobalProperties(context: Context) {
         this.privatePropertiesListEditor = privateSharedPreferences.edit()
     }
 
-    fun convertPropertyName(name: String): String {
+    fun convertFromPropertyName(name: String): String {
         return name.replace("_", "").lowercase(Locale.ROOT)
     }
 
-    fun convertValueName(name: String): String  {
+    fun convertFromValueName(name: String): String  {
         val valueName: String = name.replace("_", " ").lowercase(Locale.ROOT)
         return valueName.replaceFirst(valueName.take(1), valueName.take(1).uppercase(Locale.ROOT))
     }
 
+    fun convertToValueName(name: String): String  {
+        return name.replace(" ", "_").uppercase(Locale.ROOT)
+    }
+
     fun getResolution(): ResolutionProperty {
-        val resolution: String = "_" + propertiesList.getString(convertPropertyName(PropertiesSpecial.RESOLUTION_VALUE.toString()), convertValueName(ResolutionProperty.NATIVE.toString()))!!.uppercase(Locale.ROOT) + "_"
+        val resolution: String = "_" + convertToValueName(propertiesList.getString(convertFromPropertyName(PropertiesSpecial.RESOLUTION_VALUE.toString()), convertFromValueName(ResolutionProperty.NATIVE.toString()))!!) + "_"
         for (i in ResolutionProperty.entries) {
             if (resolution.contentEquals(i.toString())) {
                 return i
@@ -158,12 +169,27 @@ class GlobalProperties(context: Context) {
     }
 
     fun setResolution(resolutionProperty: ResolutionProperty) {
-        this.propertiesListEditor.putString(convertPropertyName(PropertiesSpecial.RESOLUTION_VALUE.toString()), convertPropertyName(resolutionProperty.toString().replace("_", "")))
+        this.propertiesListEditor.putString(convertFromPropertyName(PropertiesSpecial.RESOLUTION_VALUE.toString()), convertFromValueName(resolutionProperty.toString().replace("_", "")))
+        this.propertiesListEditor.commit()
+    }
+
+    fun getScreenOrientation(): ScreenOrientationProperty {
+        val screenOrientation: String = convertToValueName(propertiesList.getString(convertFromPropertyName(PropertiesSpecial.SCREEN_ORIENTATION.toString()), convertFromValueName(ScreenOrientationProperty.DEFAULT.toString()))!!)
+        for (i in ScreenOrientationProperty.entries) {
+            if (screenOrientation.contentEquals(i.toString())) {
+                return i
+            }
+        }
+        return ScreenOrientationProperty.DEFAULT
+    }
+
+    fun setScreenOrientation(screenOrientationProperty: ScreenOrientationProperty) {
+        this.propertiesListEditor.putString(convertFromPropertyName(PropertiesSpecial.SCREEN_ORIENTATION.toString()), convertFromValueName(screenOrientationProperty.toString()))
         this.propertiesListEditor.commit()
     }
 
     fun getFloatingControlsSize(): FloatingControlsSizeProperty {
-        val controlsSize: String = propertiesList.getString(convertPropertyName(PropertiesSpecial.FLOATING_CONTROLS_SIZE.toString()), convertPropertyName(FloatingControlsSizeProperty.NORMAL.toString()))!!.replace(" ", "_").uppercase(Locale.ROOT)
+        val controlsSize: String = convertToValueName(propertiesList.getString(convertFromPropertyName(PropertiesSpecial.FLOATING_CONTROLS_SIZE.toString()), convertFromValueName(FloatingControlsSizeProperty.NORMAL.toString()))!!)
         for (i in FloatingControlsSizeProperty.entries) {
             if (controlsSize.contentEquals(i.toString())) {
                 return i
@@ -173,7 +199,7 @@ class GlobalProperties(context: Context) {
     }
 
     fun setFloatingControlsSize(floatingControlsSizeProperty: FloatingControlsSizeProperty) {
-        this.propertiesListEditor.putString(convertPropertyName(PropertiesSpecial.FLOATING_CONTROLS_SIZE.toString()), convertPropertyName(floatingControlsSizeProperty.toString()))
+        this.propertiesListEditor.putString(convertFromPropertyName(PropertiesSpecial.FLOATING_CONTROLS_SIZE.toString()), convertFromValueName(floatingControlsSizeProperty.toString()))
         this.propertiesListEditor.commit()
     }
 
@@ -182,7 +208,7 @@ class GlobalProperties(context: Context) {
         if (applied) {
             propertiesSpecial = PropertiesSpecial.DARK_THEME_APPLIED
         }
-        val darkTheme: String = this.propertiesList.getString(convertPropertyName(propertiesSpecial.toString()), convertValueName(DarkThemeProperty.AUTOMATIC.toString()))!!.replace(" ", "_").toUpperCase()
+        val darkTheme: String = convertToValueName(this.propertiesList.getString(convertFromPropertyName(propertiesSpecial.toString()), convertFromValueName(DarkThemeProperty.AUTOMATIC.toString()))!!)
         for (i in DarkThemeProperty.entries) {
             if (darkTheme.contentEquals(i.toString())) {
                 return i
@@ -196,12 +222,12 @@ class GlobalProperties(context: Context) {
         if (applied) {
             darkTheme = PropertiesSpecial.DARK_THEME_APPLIED
         }
-        this.propertiesListEditor.putString(convertPropertyName(darkTheme.toString()), convertPropertyName(darkThemeProperty.toString()))
+        this.propertiesListEditor.putString(convertFromPropertyName(darkTheme.toString()), convertFromValueName(darkThemeProperty.toString()))
         this.propertiesListEditor.commit()
     }
 
     fun getAudioChannels(): AudioChannelsProperty {
-        val audioChannels: String = this.propertiesList.getString(convertPropertyName(PropertiesSpecial.AUDIO_CHANNELS.toString()), convertValueName(AudioChannelsProperty.STEREO.toString()))!!.replace(" ", "_").toUpperCase()
+        val audioChannels: String = convertToValueName(this.propertiesList.getString(convertFromPropertyName(PropertiesSpecial.AUDIO_CHANNELS.toString()), convertFromValueName(AudioChannelsProperty.STEREO.toString()))!!)
         for (i in AudioChannelsProperty.entries) {
             if (audioChannels == i.toString()) {
                 return i
@@ -211,12 +237,12 @@ class GlobalProperties(context: Context) {
     }
 
     fun setAudioChannels(audioChannelsProperty: AudioChannelsProperty) {
-        this.propertiesListEditor.putString(convertPropertyName(PropertiesSpecial.AUDIO_CHANNELS.toString()), convertPropertyName(audioChannelsProperty.toString()))
+        this.propertiesListEditor.putString(convertFromPropertyName(PropertiesSpecial.AUDIO_CHANNELS.toString()), convertFromValueName(audioChannelsProperty.toString()))
         this.propertiesListEditor.commit()
     }
 
     fun getOnShake(): OnShakeProperty {
-        val onShake: String = this.propertiesList.getString(convertPropertyName(PropertiesSpecial.ON_SHAKE.toString()), convertValueName(OnShakeProperty.DO_NOTHING.toString()))!!.replace(" ", "_").toUpperCase()
+        val onShake: String = convertToValueName(this.propertiesList.getString(convertFromPropertyName(PropertiesSpecial.ON_SHAKE.toString()), convertFromValueName(OnShakeProperty.DO_NOTHING.toString()))!!)
         for (i in OnShakeProperty.entries) {
             if (onShake == i.toString()) {
                 return i
@@ -226,78 +252,78 @@ class GlobalProperties(context: Context) {
     }
 
     fun setOnShake(onShakeProperty: OnShakeProperty) {
-        this.propertiesListEditor.putString(convertPropertyName(PropertiesSpecial.ON_SHAKE.toString()), convertPropertyName(onShakeProperty.toString()))
+        this.propertiesListEditor.putString(convertFromPropertyName(PropertiesSpecial.ON_SHAKE.toString()), convertFromValueName(onShakeProperty.toString()))
         this.propertiesListEditor.commit()
     }
 
     fun getStringProperty(propertiesString: PropertiesString, default: String): String {
-        val string: String = this.propertiesList.getString(convertPropertyName(propertiesString.toString()), default) ?: ""
+        val string: String = this.propertiesList.getString(convertFromPropertyName(propertiesString.toString()), default) ?: ""
         if (string == "") return default
         return string
     }
 
     fun setStringProperty(propertiesString: PropertiesString, value: String) {
-        this.propertiesListEditor.putString(convertPropertyName(propertiesString.toString()), value)
+        this.propertiesListEditor.putString(convertFromPropertyName(propertiesString.toString()), value)
         this.propertiesListEditor.commit()
     }
 
     fun getPrivateStringProperty(propertiesString: PropertiesString, default: String): String {
-        val string: String = this.privatePropertiesList.getString(convertPropertyName(propertiesString.toString()), default) ?: ""
+        val string: String = this.privatePropertiesList.getString(convertFromPropertyName(propertiesString.toString()), default) ?: ""
         if (string == "") return default
         return string
     }
 
     fun setPrivateStringProperty(propertiesString: PropertiesString, value: String) {
-        this.privatePropertiesListEditor.putString(convertPropertyName(propertiesString.toString()), value)
+        this.privatePropertiesListEditor.putString(convertFromPropertyName(propertiesString.toString()), value)
         this.privatePropertiesListEditor.commit()
     }
 
     fun getBooleanProperty(propertiesBoolean: PropertiesBoolean, default: Boolean): Boolean {
-        return this.propertiesList.getBoolean(convertPropertyName(propertiesBoolean.toString()), default)
+        return this.propertiesList.getBoolean(convertFromPropertyName(propertiesBoolean.toString()), default)
     }
 
     fun setBooleanProperty(propertiesBoolean: PropertiesBoolean, value: Boolean) {
-        this.propertiesListEditor.putBoolean(convertPropertyName(propertiesBoolean.toString()), value)
+        this.propertiesListEditor.putBoolean(convertFromPropertyName(propertiesBoolean.toString()), value)
         this.propertiesListEditor.commit()
     }
 
     fun getIntProperty(propertiesInt: PropertiesInt, default: Int): Int {
-        return this.propertiesList.getInt(convertPropertyName(propertiesInt.toString()), default)
+        return this.propertiesList.getInt(convertFromPropertyName(propertiesInt.toString()), default)
     }
 
     fun setIntProperty(propertiesInt: PropertiesInt, value: Int) {
-        this.propertiesListEditor.putInt(convertPropertyName(propertiesInt.toString()), value)
+        this.propertiesListEditor.putInt(convertFromPropertyName(propertiesInt.toString()), value)
         this.propertiesListEditor.commit()
     }
 
     fun removeIntProperty(propertiesInt: PropertiesInt) {
-        this.propertiesListEditor.remove(convertPropertyName(propertiesInt.toString()))
+        this.propertiesListEditor.remove(convertFromPropertyName(propertiesInt.toString()))
         this.propertiesListEditor.commit()
     }
 
     fun removeStringProperty(propertiesString: PropertiesString) {
-        this.propertiesListEditor.remove(convertPropertyName(propertiesString.toString()))
+        this.propertiesListEditor.remove(convertFromPropertyName(propertiesString.toString()))
         this.propertiesListEditor.commit()
     }
 
     fun removeBooleanProperty(propertiesBoolean: PropertiesBoolean) {
-        this.propertiesListEditor.remove(convertPropertyName(propertiesBoolean.toString()))
+        this.propertiesListEditor.remove(convertFromPropertyName(propertiesBoolean.toString()))
         this.propertiesListEditor.commit()
     }
 
     fun getIntPropertyName(propertiesInt: PropertiesInt): String {
-        return convertPropertyName(propertiesInt.toString())
+        return convertFromPropertyName(propertiesInt.toString())
     }
 
     fun getBooleanPropertyName(propertiesBoolean: PropertiesBoolean): String {
-        return convertPropertyName(propertiesBoolean.toString())
+        return convertFromPropertyName(propertiesBoolean.toString())
     }
 
     fun getStringPropertyName(propertiesString: PropertiesString): String {
-        return convertPropertyName(propertiesString.toString())
+        return convertFromPropertyName(propertiesString.toString())
     }
 
     fun getSpecialPropertyName(propertiesSpecial: PropertiesSpecial): String {
-        return convertPropertyName(propertiesSpecial.toString())
+        return convertFromPropertyName(propertiesSpecial.toString())
     }
 }

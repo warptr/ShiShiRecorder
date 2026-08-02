@@ -33,6 +33,7 @@ class PlaybackRecorder(private var context: Context,
         private var saveStreamToFile: Boolean,
         private var customWidth: Int,
         private var customHeight: Int,
+        private var forceOrientation: GlobalProperties.ScreenOrientationProperty,
         private var scaleRatio: Float,
         private val rotation: Int,
         refreshRate: Int,
@@ -155,6 +156,33 @@ class PlaybackRecorder(private var context: Context,
         }
         if (enableStream) {
             this.fullStreamPath = this.streamUrl + "/" + this.streamKey
+        }
+        when (forceOrientation) {
+            GlobalProperties.ScreenOrientationProperty.FORCE_LANDSCAPE -> {
+                if (customWidth < customHeight) {
+                    val hold = customHeight
+                    customHeight = customWidth
+                    customWidth = hold
+                    virtualDisplay!!.resize(
+                        customWidth,
+                        customHeight,
+                        context.resources.displayMetrics.densityDpi
+                    )
+                }
+            }
+            GlobalProperties.ScreenOrientationProperty.FORCE_PORTRAIT -> {
+                if (customWidth > customHeight) {
+                    val hold = customWidth
+                    customWidth = customHeight
+                    customHeight = hold
+                    virtualDisplay!!.resize(
+                        customWidth,
+                        customHeight,
+                        context.resources.displayMetrics.densityDpi
+                    )
+                }
+            }
+            else -> {}
         }
     }
 
