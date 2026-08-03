@@ -186,20 +186,26 @@ class PlaybackRecorder(private var context: Context,
             }
             else -> {}
         }
-        when (forceRotation) {
-            GlobalProperties.ScreenRotationProperty._0_DEGREES_ -> {
-                virtualDisplay!!.setRotation(Surface.ROTATION_0)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
+            when (forceRotation) {
+                GlobalProperties.ScreenRotationProperty._0_DEGREES_ -> {
+                    virtualDisplay!!.setRotation(Surface.ROTATION_0)
+                }
+
+                GlobalProperties.ScreenRotationProperty._90_DEGREES_ -> {
+                    virtualDisplay!!.setRotation(Surface.ROTATION_90)
+                }
+
+                GlobalProperties.ScreenRotationProperty._180_DEGREES_ -> {
+                    virtualDisplay!!.setRotation(Surface.ROTATION_180)
+                }
+
+                GlobalProperties.ScreenRotationProperty._270_DEGREES_ -> {
+                    virtualDisplay!!.setRotation(Surface.ROTATION_270)
+                }
+
+                else -> {}
             }
-            GlobalProperties.ScreenRotationProperty._90_DEGREES_ -> {
-                virtualDisplay!!.setRotation(Surface.ROTATION_90)
-            }
-            GlobalProperties.ScreenRotationProperty._180_DEGREES_ -> {
-                virtualDisplay!!.setRotation(Surface.ROTATION_180)
-            }
-            GlobalProperties.ScreenRotationProperty._270_DEGREES_ -> {
-                virtualDisplay!!.setRotation(Surface.ROTATION_270)
-            }
-            else -> {}
         }
     }
 
