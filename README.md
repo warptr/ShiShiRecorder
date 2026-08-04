@@ -9,6 +9,10 @@
 
 <img src="metadata/en-US/images/phoneScreenshots/1.jpg" alt="CaptureCap Screenshot 1" width="200"/> <img src="metadata/en-US/images/phoneScreenshots/2.jpg" alt="CaptureCap Screenshot 2" width="200"/> <img src="metadata/en-US/images/phoneScreenshots/3.jpg" alt="CaptureCap Screenshot 3" width="200"/>
 
+| :robot: AI Notice                                                                                  |
+|:---------------------------------------------------------------------------------------------------|
+| This program has code assisted/written by the AI. For more information, please see [AI.md](AI.md)  |
+
 *Audio Playback recording requires Android 10 or later. No Root needed*
 
 *(**WARNING**: Some device vendors may not allow recording certain Audio Playback sources, or even recording applications' audio at all)*
