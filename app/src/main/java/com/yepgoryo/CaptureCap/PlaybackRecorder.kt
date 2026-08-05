@@ -165,11 +165,6 @@ class PlaybackRecorder(private var context: Context,
                     val hold = customHeight
                     customHeight = customWidth
                     customWidth = hold
-                    virtualDisplay!!.resize(
-                        customWidth,
-                        customHeight,
-                        context.resources.displayMetrics.densityDpi
-                    )
                 }
             }
             GlobalProperties.ScreenOrientationProperty.FORCE_PORTRAIT -> {
@@ -177,15 +172,15 @@ class PlaybackRecorder(private var context: Context,
                     val hold = customWidth
                     customWidth = customHeight
                     customHeight = hold
-                    virtualDisplay!!.resize(
-                        customWidth,
-                        customHeight,
-                        context.resources.displayMetrics.densityDpi
-                    )
                 }
             }
             else -> {}
         }
+        virtualDisplay!!.resize(
+            customWidth,
+            customHeight,
+            context.resources.displayMetrics.densityDpi
+        )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
             when (forceRotation) {
                 GlobalProperties.ScreenRotationProperty._0_DEGREES_ -> {
@@ -810,12 +805,6 @@ class PlaybackRecorder(private var context: Context,
     }
 
     fun release() {
-        if (virtualDisplay != null) {
-            virtualDisplay?.surface = null
-            if (!this.doRestart) {
-                virtualDisplay?.release()
-            }
-        }
         this.mVideoOutputFormat = null
         this.mAudioOutputFormat = null
         this.mVideoTrackIndex = INVALID_INDEX

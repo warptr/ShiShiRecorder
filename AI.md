@@ -18,6 +18,7 @@ TimerDialogFragment
 ValueSeekBar
 VideoOverlay
 VideoOverlaySettings
+HardwareOrientationSensor
 ```
 
 Other classes _could_ and _can_ get created or modified by adding AI assisted/written code too.

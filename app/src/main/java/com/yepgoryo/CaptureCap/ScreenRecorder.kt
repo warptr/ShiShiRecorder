@@ -52,7 +52,10 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.Timer
 import java.util.TimerTask
+
 import kotlin.math.sqrt
+
+import kotlinx.coroutines.*
 
 class ScreenRecorder : Service() {
 
@@ -134,7 +137,13 @@ class ScreenRecorder : Service() {
     private var showFloatingControls: Boolean = false
     private var recordOnlyAudio: Boolean = false
     private var isActive: Boolean = false
+    private var isRestarting: Boolean = false
+    private var ignoreRotate: Boolean = false
+    private var useRotateHardwareSensor: Boolean = false
+    private var lastRotation: Int = Surface.ROTATION_0
+    private var forcingOrientationAllowed: Boolean = false
     private var dontNotifyOnFinish: Boolean = false
+    private var dontNotifyOnRotate: Boolean = false
     private var mediaAudioSource: Boolean = true
     private var gameAudioSource: Boolean = false
     private var unknownAudioSource: Boolean = false
@@ -167,6 +176,31 @@ class ScreenRecorder : Service() {
             var onShake: GlobalProperties.OnShakeProperty =
                 GlobalProperties(this@ScreenRecorder.baseContext).getOnShake()
             if (sensorEvent.sensor.type == Sensor.TYPE_ACCELEROMETER) {
+                if (!useRotateHardwareSensor && isActive && !recordOnlyAudio && !ignoreRotate && forcingOrientationAllowed) {
+                    if (orientationOnStart != display!!.rotation && display!!.rotation != Surface.ROTATION_180) {
+                        orientationOnStart = display!!.rotation
+                        isActive = false
+                        isRestarting = true
+
+                        screenRecordingStop()
+
+                        when (display!!.rotation) {
+                            Surface.ROTATION_0 -> {
+                                forceOrientation =
+                                    GlobalProperties.ScreenOrientationProperty.FORCE_PORTRAIT
+                            }
+
+                            Surface.ROTATION_90, Surface.ROTATION_270 -> {
+                                forceOrientation =
+                                    GlobalProperties.ScreenOrientationProperty.FORCE_LANDSCAPE
+                            }
+
+                            Surface.ROTATION_180 -> {}
+                        }
+
+                        screenRecordingStart()
+                    }
+                }
                 if (this@ScreenRecorder.appSettings != null && this@ScreenRecorder.isActive && onShake != GlobalProperties.OnShakeProperty.DO_NOTHING) {
                     var sensorGx: Float = sensorEvent.values[0]
                     var sensorGy: Float = sensorEvent.values[1]
@@ -206,6 +240,7 @@ class ScreenRecorder : Service() {
         NOTIFICATION_RECORDING_ID,
         NOTIFICATION_RECORDING_FINISHED_ID,
         NOTIFICATION_RECORDING_AUDIO_CONTROLS_ID,
+        NOTIFICATION_RECORDING_ROTATED_ID,
     }
 
     inner class RecordingBinder : Binder() {
@@ -372,8 +407,10 @@ class ScreenRecorder : Service() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
+        orientationSensor.close()
+        scope.cancel()
         this.sensor?.unregisterListener(this.sensorListener)
+        super.onDestroy()
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -386,16 +423,66 @@ class ScreenRecorder : Service() {
         return this.recordingBinder
     }
 
+    private lateinit var orientationSensor: HardwareOrientationSensor
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
     override fun onCreate() {
         super.onCreate()
         this.display = (baseContext.getSystemService("display") as DisplayManager).getDisplay(0)
         val sensorManager: SensorManager = applicationContext.getSystemService("sensor") as SensorManager
         this.sensor = sensorManager
         sensorManager.registerListener(this.sensorListener, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), 2)
+
+        orientationSensor = HardwareOrientationSensor(
+            this,
+            500L,
+            10f
+        )
+
+        scope.launch {
+            orientationSensor.orientationFlow.collect { event ->
+                if (event != null) {
+                    onHardwareOrientationChanged(event)
+                }
+            }
+        }
+
         if (this.panelBinder == null) {
             val intent = Intent(this, FloatingControls::class.java)
             intent.setAction(FloatingControls.ACTION_RECORD_PANEL)
             bindService(intent, this.mPanelConnection, Context.BIND_AUTO_CREATE)
+        }
+    }
+
+    private fun onHardwareOrientationChanged(event: OrientationChangedEvent) {
+        val orientation = event.orientation
+
+        val timeSinceChangeMs = SystemClock.elapsedRealtime() - event.timestampMs
+        if (isActive && useRotateHardwareSensor && !recordOnlyAudio && !ignoreRotate && forcingOrientationAllowed) {
+            if (orientation != lastRotation && orientation != Surface.ROTATION_180 && timeSinceChangeMs <= 2000) {
+                isActive = false
+                isRestarting = true
+
+                screenRecordingStop()
+
+                when (orientation) {
+                    Surface.ROTATION_0 -> {
+                        forceOrientation =
+                            GlobalProperties.ScreenOrientationProperty.FORCE_PORTRAIT
+                    }
+
+                    Surface.ROTATION_90, Surface.ROTATION_270 -> {
+                        forceOrientation =
+                            GlobalProperties.ScreenOrientationProperty.FORCE_LANDSCAPE
+                    }
+
+                    Surface.ROTATION_180 -> {}
+                }
+
+                screenRecordingStart()
+
+                lastRotation = orientation
+            }
         }
     }
 
@@ -500,6 +587,7 @@ class ScreenRecorder : Service() {
         val displayMetrics = DisplayMetrics()
         this.display!!.getRealMetrics(displayMetrics)
         this.orientationOnStart = this.display!!.rotation
+        lastRotation = this.display!!.rotation
         screenDensity = displayMetrics.densityDpi.toFloat()
         if (this.orientationOnStart == Surface.ROTATION_270 || this.orientationOnStart == Surface.ROTATION_90) {
             this.screenWidthNormal = displayMetrics.heightPixels
@@ -693,8 +781,14 @@ class ScreenRecorder : Service() {
 
         drawOverlay = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.DRAW_OVERLAY, false)
         enableSoundControlsNotification = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.SOUND_CONTROL_NOTIFICATION, false)
+        ignoreRotate = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.NO_ROTATE, false)
+        useRotateHardwareSensor = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.ROTATE_HARDWARE_SENSOR, false)
+        dontNotifyOnRotate = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.DONT_NOTIFY_ON_ROTATE, false)
 
-        forceOrientation = this.appSettings!!.getScreenOrientation()
+        if (!isRestarting) {
+            forceOrientation = this.appSettings!!.getScreenOrientation()
+            forcingOrientationAllowed = (forceOrientation == GlobalProperties.ScreenOrientationProperty.DEFAULT)
+        }
         forceRotation = this.appSettings!!.getScreenRotation()
 
         var horizontal = false
@@ -713,7 +807,7 @@ class ScreenRecorder : Service() {
             startActivity(homeIntent)
         }
         this.showFloatingControls = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.FLOATING_CONTROLS, false) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && Settings.canDrawOverlays(this)
-        if (this.showFloatingControls) {
+        if (this.showFloatingControls && !isRestarting) {
             val floatingControlsIntent = Intent(this, FloatingControls::class.java)
             floatingControlsIntent.setAction(FloatingControls.ACTION_RECORD_PANEL)
             startService(floatingControlsIntent)
@@ -827,18 +921,36 @@ class ScreenRecorder : Service() {
             }
 
             if (this.activityBinder != null) {
-                this.activityBinder?.recordingStart(true)
+                if (!isRestarting) {
+                    this.activityBinder?.recordingStart(true)
+                } else {
+                    this.activityBinder?.recordingResume(this.timeStart)
+                }
+            }
+
+            if (this.showFloatingControls && isRestarting) {
+                this.panelBinder?.setResume(this.timeStart)
             }
 
             var width: Int
             var height: Int
 
-            if (this.orientationOnStart == Surface.ROTATION_270 || this.orientationOnStart == Surface.ROTATION_90) {
-                width = this.screenHeightNormal
-                height = this.screenWidthNormal
+            if (useRotateHardwareSensor) {
+                if (this.lastRotation == Surface.ROTATION_270 || this.lastRotation == Surface.ROTATION_90) {
+                    width = this.screenHeightNormal
+                    height = this.screenWidthNormal
+                } else {
+                    width = this.screenWidthNormal
+                    height = this.screenHeightNormal
+                }
             } else {
-                width = this.screenWidthNormal
-                height = this.screenHeightNormal
+                if (this.orientationOnStart == Surface.ROTATION_270 || this.orientationOnStart == Surface.ROTATION_90) {
+                    width = this.screenHeightNormal
+                    height = this.screenWidthNormal
+                } else {
+                    width = this.screenWidthNormal
+                    height = this.screenHeightNormal
+                }
             }
 
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1) {
@@ -875,7 +987,7 @@ class ScreenRecorder : Service() {
             val mediaProjectionManager: MediaProjectionManager = getSystemService(MediaProjectionManager::class.java)
             val callback: MediaProjection.Callback = object: MediaProjection.Callback() {
                 override fun onStop() {
-                    if (this@ScreenRecorder.isActive) {
+                    if (this@ScreenRecorder.isActive && !this@ScreenRecorder.isRestarting) {
                         this@ScreenRecorder.recordingError()
                     }
                 }
@@ -884,14 +996,22 @@ class ScreenRecorder : Service() {
             if (this.recordOnlyAudio && (!this.recordPlayback || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)) {
                 this.recordingMediaProjection = null
             } else {
-                val mediaProjection: MediaProjection? = mediaProjectionManager.getMediaProjection(this.intentResult, this.intentData!!)
-                this.recordingMediaProjection = mediaProjection
-                mediaProjection!!.registerCallback(callback, null)
+                if (!isRestarting) {
+                    val mediaProjection: MediaProjection? =
+                        mediaProjectionManager.getMediaProjection(
+                            this.intentResult,
+                            this.intentData!!
+                        )
+                    this.recordingMediaProjection = mediaProjection
+                    mediaProjection!!.registerCallback(callback, null)
+                }
             }
 
-            if (!this.recordOnlyAudio) {
+            if (!this.recordOnlyAudio && !isRestarting) {
                 this.recordingVirtualDisplay = this.recordingMediaProjection!!.createVirtualDisplay("CaptureCap", width, height, screenDensity.toInt(), DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, null, null, null)
             }
+
+            isRestarting = false
 
             var refreshRate: Int = this.display!!.refreshRate.toInt()
             val customQuality: Boolean = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.CUSTOM_QUALITY, false)
@@ -1034,6 +1154,26 @@ class ScreenRecorder : Service() {
         }
 
         return recordingStartedBuilder
+    }
+
+    private fun getScreenRotatedNotification(): NotificationCompat.Builder {
+        var screenRotatedBuilder: NotificationCompat.Builder = NotificationCompat.Builder(this, NOTIFICATIONS_RECORDING_CHANNEL)
+
+        screenRotatedBuilder =
+            screenRotatedBuilder.setContentTitle(getString(R.string.recording_rotated_title))
+                .setContentText(getString(R.string.recording_rotated_text))
+
+        var iconRotated = Icon.createWithBitmap(getBitmapDescriptor(R.drawable.icon_notification_rotate))
+        if (getModeNight()) {
+            iconRotated = Icon.createWithBitmap(getBitmapDescriptor(R.drawable.icon_notification_rotate_dark))
+        }
+
+        screenRotatedBuilder = screenRotatedBuilder
+            .setSmallIcon(R.drawable.icon_rotate_status)
+            .setLargeIcon(iconRotated)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+
+        return screenRotatedBuilder
     }
 
     private fun getSoundSwitchNotification(): NotificationCompat.Builder {
@@ -1193,23 +1333,29 @@ class ScreenRecorder : Service() {
         this.timeRecorded = 0L
         this.isPaused = false
         this.isStopped = true
-        this.runningService = false
-        tileBinder?.recordingState(false)
-        if (!this.errorDir && this.activityBinder != null) {
-            this.activityBinder!!.recordingStop(true)
+        if (!isRestarting) {
+            this.runningService = false
+            tileBinder?.recordingState(false)
         }
-        if (this.panelBinder != null && this.showFloatingControls) {
+        if (!this.errorDir && this.activityBinder != null) {
+            if (!isRestarting) {
+                this.activityBinder!!.recordingStop(true)
+            }
+        }
+        if (this.panelBinder != null && this.showFloatingControls && !isRestarting) {
             this.panelBinder?.setStop()
         }
+
+        if (!this.recordOnlyAudio && !isRestarting) {
+            this.recordingVirtualDisplay!!.release()
+        }
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             if (this.recordingMediaRecorder != null) {
                 try {
                     this.recordingMediaRecorder?.stop()
                     this.recordingMediaRecorder?.reset()
                     this.recordingMediaRecorder?.release()
-                    if (!this.recordOnlyAudio) {
-                        this.recordingVirtualDisplay!!.release()
-                    }
                 } catch (exc: RuntimeException) {
                     Toast.makeText(this, R.string.error_recorder_failed, Toast.LENGTH_SHORT).show()
                 }
@@ -1217,6 +1363,9 @@ class ScreenRecorder : Service() {
         } else {
             if (this.recorderPlayback != null) {
                 this.recorderPlayback?.quit()
+                if (!isRestarting) {
+                    this.recordingVirtualDisplay?.release()
+                }
                 try {
                     this.recordingOpenFileDescriptor!!.close()
                 } catch (exc: IOException) {
@@ -1237,8 +1386,13 @@ class ScreenRecorder : Service() {
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && this.finishedFileDocument != null) {
             this.finishedFileIntent!!.setDataAndType(this.finishedFileDocument, this.finishedDocumentMime)
         }
-        if (enableSoundControlsNotification) {
-            removeSoundControlsNotification()
+        if (!isRestarting) {
+            if (enableSoundControlsNotification) {
+                removeSoundControlsNotification()
+            }
+            if (this.recordingNotificationManager != null) {
+                this.recordingNotificationManager!!.cancel(NotificationID.NOTIFICATION_RECORDING_ROTATED_ID.ordinal)
+            }
         }
         val activity: PendingIntent = PendingIntent.getActivity(this, 0, this.finishedFileIntent, this.intentFlag)
         val recordingDeleteIntent = Intent(this, ScreenRecorder::class.java)
@@ -1303,18 +1457,36 @@ class ScreenRecorder : Service() {
         }
         val notificationDelete: NotificationCompat.Builder = finishedRecordingBuilder.setContentIntent(activity).setSmallIcon(R.drawable.icon_record_finished_status).setLargeIcon(finishedIcon).addAction(notificationShareBuilder.build()).addAction(notificationDeleteBuilder.build()).setAutoCancel(true).setPriority(NotificationCompat.PRIORITY_LOW)
         val notificationStreamFinished: NotificationCompat.Builder = finishedRecordingBuilder.setContentIntent(activity).setSmallIcon(R.drawable.icon_record_finished_status).setLargeIcon(finishedIcon).setAutoCancel(true).setPriority(NotificationCompat.PRIORITY_LOW)
-        if (!this.dontNotifyOnFinish && (!enableStream || (enableStream && streamSave))) {
-            this.recordingNotificationManager!!.notify(NotificationID.NOTIFICATION_RECORDING_FINISHED_ID.ordinal, notificationDelete.build())
+        if (!isRestarting) {
+            if (!this.dontNotifyOnFinish && (!enableStream || (enableStream && streamSave))) {
+                this.recordingNotificationManager!!.notify(
+                    NotificationID.NOTIFICATION_RECORDING_FINISHED_ID.ordinal,
+                    notificationDelete.build()
+                )
+            } else {
+                if (enableStream) {
+                    this.recordingNotificationManager!!.notify(
+                        NotificationID.NOTIFICATION_RECORDING_FINISHED_ID.ordinal,
+                        notificationStreamFinished.build()
+                    )
+                }
+            }
         } else {
-            if (enableStream) {
-                this.recordingNotificationManager!!.notify(NotificationID.NOTIFICATION_RECORDING_FINISHED_ID.ordinal, notificationStreamFinished.build())
+            if (!dontNotifyOnRotate) {
+                val rotationNotification = getScreenRotatedNotification()
+                this.recordingNotificationManager!!.notify(
+                    NotificationID.NOTIFICATION_RECORDING_ROTATED_ID.ordinal,
+                    rotationNotification.build()
+                )
             }
         }
-        if (this.recordingMediaProjection != null) {
-            this.recordingMediaProjection?.stop()
-            this.recordingMediaProjection = null
+        if (!isRestarting) {
+            if (this.recordingMediaProjection != null) {
+                this.recordingMediaProjection?.stop()
+                this.recordingMediaProjection = null
+            }
+            stopForeground(true)
         }
-        stopForeground(true)
         this.errorDir = false
     }
 

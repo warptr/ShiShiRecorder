@@ -31,6 +31,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             val preferenceFindPreference11: Preference = findPreference("drawoverlayerasevertical")!!
             val preferenceFindPreference12: Preference = findPreference("soundcontrolnotification")!!
             val preferenceFindPreference13: Preference = findPreference("screenorientation")!!
+            val preferenceFindPreference14: Preference = findPreference("rotatehardwaresensor")!!
+            val preferenceFindPreference15: Preference = findPreference("dontnotifyonrotate")!!
+            val preferenceFindPreference16: Preference = findPreference("norotate")!!
 
             val preferenceCategory2: PreferenceCategory = findPreference("capturesettings")!!
             preferenceCategory2.removePreference(preferenceFindPreference5)
@@ -42,6 +45,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             preferenceCategory2.removePreference(preferenceFindPreference11)
             preferenceCategory2.removePreference(preferenceFindPreference12)
             preferenceCategory2.removePreference(preferenceFindPreference13)
+            preferenceCategory2.removePreference(preferenceFindPreference14)
+            preferenceCategory2.removePreference(preferenceFindPreference15)
+            preferenceCategory2.removePreference(preferenceFindPreference16)
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA) {
             val preferenceFindPreference14: Preference = findPreference("screenrotation")!!

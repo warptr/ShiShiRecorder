@@ -79,8 +79,10 @@
     <string name="timerseconds_option_description">Specify timer\'s duration</string>
     <string name="timerseconds_option_duration_minutes">minutes</string>
     <string name="timerseconds_option_duration_seconds">seconds</string>
-    <string name="norotate_option">Don\'t restart recording on rotate</string>
+    <string name="norotate_option">Don\'t restart on rotate</string>
     <string name="norotate_option_description">WARNING: If enabled, your video will lose quality after rotation!</string>
+    <string name="rotatehardwaresensor_option">Hardware rotation</string>
+    <string name="rotatehardwaresensor_option_description">Detect rotation by hardware sensors instead of display</string>
     <string name="controls_settings">Controls settings</string>
     <string name="floating_controls_option">Enable floating controls</string>
     <string name="floating_controls_option_description">Show floating controls panel</string>

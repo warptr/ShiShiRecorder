@@ -68,6 +68,7 @@ class GlobalProperties(context: Context) {
         ENABLE_VIBRATION,
         MINIMIZE_ON_START,
         NO_ROTATE,
+        ROTATE_HARDWARE_SENSOR,
         ENABLE_TIMER,
         DRAW_OVERLAY,
         SOUND_CONTROL_NOTIFICATION,
