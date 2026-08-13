@@ -138,6 +138,9 @@ class MainActivity : AppCompatActivity() {
         if (result.resultCode == -1 && this@MainActivity.recordingBinder != null) {
             this@MainActivity.doStartService(result.resultCode, result.data!!)
         }
+        if (intent.action == ACTION_ACTIVITY_START_RECORDING && this.stateActivated) {
+            this@MainActivity.finish()
+        }
     }
     private var requestFolderPermission: ActivityResultLauncher<Intent> = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         this@MainActivity.requestFolder(result.resultCode, result.data!!.data!!, false, false)
