@@ -179,6 +179,12 @@
             android:title="@string/timerseconds_option"
             android:dialogLayout="@layout/dialog_timer" />
 
+        <CheckBoxPreference
+            android:key="prerecording"
+            android:summary="@string/prerecording_option_description"
+            android:title="@string/prerecording_option"
+            android:defaultValue="false" />
+
         <SwitchPreferenceCompat
             android:key="drawoverlay"
             android:summary="@string/draw_overlay_option_description"

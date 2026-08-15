@@ -34,6 +34,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             val preferenceFindPreference14: Preference = findPreference("rotatehardwaresensor")!!
             val preferenceFindPreference15: Preference = findPreference("dontnotifyonrotate")!!
             val preferenceFindPreference16: Preference = findPreference("norotate")!!
+            val preferenceFindPreference17: Preference = findPreference("prerecording")!!
 
             val preferenceCategory2: PreferenceCategory = findPreference("capturesettings")!!
             preferenceCategory2.removePreference(preferenceFindPreference5)
@@ -48,6 +49,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             preferenceCategory2.removePreference(preferenceFindPreference14)
             preferenceCategory2.removePreference(preferenceFindPreference15)
             preferenceCategory2.removePreference(preferenceFindPreference16)
+            preferenceCategory2.removePreference(preferenceFindPreference17)
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA) {
             val preferenceFindPreference14: Preference = findPreference("screenrotation")!!

@@ -89,7 +89,10 @@ class MainActivity : AppCompatActivity() {
     var timeCounter: Chronometer? = null
     var timerCountdown: Chronometer? = null
     var timerControls: LinearLayout? = null
+    var preRecordControls: LinearLayout? = null
     var timerStop: Button? = null
+    var preRecordStart: Button? = null
+    var preRecordAbort: Button? = null
     var recordStatusMessage: TextView? = null
     var timerPanel: LinearLayout? = null
     var captureOptionStream: ImageView? = null
@@ -234,6 +237,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     inner class ActivityBinder : Binder() {
+        fun preRecordingStart() {
+            runOnUiThread {
+                recordStatusMessage!!.visibility = View.GONE
+                recordOptionsFullPanel!!.visibility = View.GONE
+                this@MainActivity.optionsPanel!!.visibility = View.GONE
+                captureStartButton!!.isVisible = false
+                mainRecordingButton!!.innerButton().isVisible = false
+                recordOptionsFullPanel!!.isVisible = false
+                recordControls!!.visibility = View.GONE
+
+                preRecordControls!!.visibility = View.VISIBLE
+            }
+        }
+
         fun timerStart(timerEnd: Long) {
             runOnUiThread {
                 recordStatusMessage!!.visibility = View.GONE
@@ -254,6 +271,7 @@ class MainActivity : AppCompatActivity() {
         fun recordingStart(stateToRestore: Boolean) {
             runOnUiThread {
                 timerControls!!.visibility = View.GONE
+                preRecordControls!!.visibility = View.GONE
                 timerCountdown!!.stop()
                 this@MainActivity.timeCounter!!.stop()
                 this@MainActivity.timeCounter!!.setBase(this@MainActivity.recordingBinder!!.getTimeStart())
@@ -328,6 +346,7 @@ class MainActivity : AppCompatActivity() {
         fun recordingStop(stateToRestore: Boolean) {
             runOnUiThread {
                 timerControls!!.visibility = View.GONE
+                preRecordControls!!.visibility = View.GONE
                 timerCountdown!!.stop()
                 this@MainActivity.timeCounter!!.stop()
                 this@MainActivity.timeCounter!!.setBase(SystemClock.elapsedRealtime())
@@ -375,6 +394,7 @@ class MainActivity : AppCompatActivity() {
         fun recordingPause(j: Long, stateToRestore: Boolean) {
             runOnUiThread {
                 timerControls!!.visibility = View.GONE
+                preRecordControls!!.visibility = View.GONE
                 timerCountdown!!.stop()
                 this@MainActivity.timeCounter!!.setBase(SystemClock.elapsedRealtime() - j)
                 this@MainActivity.timeCounter!!.stop()
@@ -413,6 +433,7 @@ class MainActivity : AppCompatActivity() {
         fun recordingResume(time: Long) {
             runOnUiThread {
                 timerControls!!.visibility = View.GONE
+                preRecordControls!!.visibility = View.GONE
                 timerCountdown!!.stop()
                 this@MainActivity.timeCounter!!.setBase(time)
                 this@MainActivity.timeCounter!!.start()
@@ -463,6 +484,7 @@ class MainActivity : AppCompatActivity() {
 
         fun recordingReset() {
             timerControls!!.visibility = View.GONE
+            preRecordControls!!.visibility = View.GONE
             timerCountdown!!.stop()
             postRecordingPanel!!.visibility = View.GONE
             this@MainActivity.optionsPanel!!.visibility = View.VISIBLE
@@ -1037,6 +1059,18 @@ class MainActivity : AppCompatActivity() {
         this.timerCountdown = findViewById<Chronometer>(R.id.timercountdown)!!
         this.timerControls = findViewById<LinearLayout>(R.id.timer_controls)!!
         this.timerStop = findViewById<Button>(R.id.timer_stop)!!
+
+        this.preRecordControls = findViewById<LinearLayout>(R.id.prerecord_controls)!!
+        this.preRecordStart = findViewById<Button>(R.id.prerecord_start)!!
+        this.preRecordAbort = findViewById<Button>(R.id.prerecord_abort)!!
+
+        preRecordStart!!.setOnClickListener {
+            recordingBinder!!.startFromPreRecord()
+        }
+
+        preRecordAbort!!.setOnClickListener {
+            recordingBinder!!.abortPreRecord()
+        }
 
         resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android")
         if (resourceId > 0) {

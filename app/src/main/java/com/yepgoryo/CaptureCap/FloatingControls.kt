@@ -29,6 +29,7 @@ class FloatingControls : Service() {
 
     companion object {
         const val ACTION_RECORD_PANEL = MainActivity.appName + ".PANEL_RECORD"
+        const val ACTION_PRERECORD_PANEL = MainActivity.appName + ".PANEL_PRERECORD"
         const val ACTION_POSITION_PANEL = MainActivity.appName + ".PANEL_POSITION"
     }
 
@@ -90,6 +91,10 @@ class FloatingControls : Service() {
                     this@FloatingControls.timerStart = this@FloatingControls.recordingProgress!!.base
                     this@FloatingControls.closePanel()
                     this@FloatingControls.startRecord()
+                } else if (this@FloatingControls.startAction == ACTION_PRERECORD_PANEL) {
+                    this@FloatingControls.timerStart = 0
+                    this@FloatingControls.closePanel()
+                    this@FloatingControls.startRecord()
                 }
             }
         }
@@ -117,6 +122,9 @@ class FloatingControls : Service() {
             if (intent.action == ACTION_RECORD_PANEL) {
                 this.isStopped = false
                 this.startAction = ACTION_RECORD_PANEL
+            } else if (intent.action == ACTION_PRERECORD_PANEL) {
+                this.isStopped = true
+                this.startAction = ACTION_PRERECORD_PANEL
             } else {
                 if (intent.action == ACTION_POSITION_PANEL) {
                     this.isStopped = true
@@ -181,18 +189,21 @@ class FloatingControls : Service() {
         }
 
         fun setPause(timeRecorded: Long) {
+            this@FloatingControls.recordingProgress?.visibility = View.VISIBLE
             this@FloatingControls.recordingProgress?.setBase(SystemClock.elapsedRealtime() - timeRecorded)
             this@FloatingControls.recordingProgress?.stop()
             this@FloatingControls.setControlState(true)
         }
 
         fun setResume(timeStarted: Long) {
+            this@FloatingControls.recordingProgress?.visibility = View.VISIBLE
             this@FloatingControls.recordingProgress?.setBase(timeStarted)
             this@FloatingControls.recordingProgress?.start()
             this@FloatingControls.setControlState(false)
         }
 
         fun setRestart(orientation: Int) {
+            this@FloatingControls.recordingProgress?.visibility = View.VISIBLE
             this@FloatingControls.isRestarting = true
             this@FloatingControls.orientationOnStart = orientation
             this@FloatingControls.timerStart = SystemClock.elapsedRealtime()
@@ -201,10 +212,16 @@ class FloatingControls : Service() {
         }
 
         fun setStop() {
+            this@FloatingControls.recordingProgress?.visibility = View.VISIBLE
             this@FloatingControls.isStopped = true
             this@FloatingControls.setControlState(false)
             this@FloatingControls.closePanel()
             this@FloatingControls.startAction = null
+        }
+
+        fun setPreRecord() {
+            this@FloatingControls.recordingProgress?.visibility = View.INVISIBLE
+            setControlState(true)
         }
     }
 
@@ -396,7 +413,11 @@ class FloatingControls : Service() {
             this@FloatingControls.panelHidden = false
             this@FloatingControls.stopButton?.visibility = View.VISIBLE
             setControlState(this@FloatingControls.recordingPaused)
-            this@FloatingControls.recordingProgress?.visibility = View.VISIBLE
+            if (this@FloatingControls.startAction == ACTION_PRERECORD_PANEL) {
+                this@FloatingControls.recordingProgress?.visibility = View.INVISIBLE
+            } else {
+                this@FloatingControls.recordingProgress?.visibility = View.VISIBLE
+            }
             this@FloatingControls.viewHandle?.visibility = View.VISIBLE
             panelWrapped!!.visibility = View.VISIBLE
             this@FloatingControls.panelWidth = this@FloatingControls.panelWidthNormal
@@ -550,6 +571,10 @@ class FloatingControls : Service() {
         this@FloatingControls.stopButton = this@FloatingControls.floatingPanel!!.findViewById(R.id.recordstopbuttonfloating)
         this@FloatingControls.resumeButton = this@FloatingControls.floatingPanel!!.findViewById(R.id.recordresumebuttonfloating)
         this@FloatingControls.recordingProgress = this@FloatingControls.floatingPanel!!.findViewById(R.id.timerrecordfloating)
+        this@FloatingControls.recordingProgress?.visibility = View.VISIBLE
+        if (this@FloatingControls.startAction == ACTION_PRERECORD_PANEL) {
+            this@FloatingControls.recordingProgress!!.visibility = View.INVISIBLE
+        }
         this@FloatingControls.resumeButton?.visibility = View.GONE
         panelWrapped = floatingPanel!!.findViewById<LinearLayout>(R.id.panelwrapped)
         if (this@FloatingControls.panelHidden) {
@@ -562,12 +587,20 @@ class FloatingControls : Service() {
             panelWrapped!!.visibility = View.VISIBLE
             this@FloatingControls.stopButton?.visibility = View.VISIBLE
             setControlState(this@FloatingControls.recordingPaused)
-            this@FloatingControls.recordingProgress?.visibility = View.VISIBLE
+            if (this@FloatingControls.startAction == ACTION_PRERECORD_PANEL) {
+                this@FloatingControls.recordingProgress?.visibility = View.INVISIBLE
+            } else {
+                this@FloatingControls.recordingProgress?.visibility = View.VISIBLE
+            }
         }
-        if (this@FloatingControls.startAction == ACTION_RECORD_PANEL) {
+        if (this@FloatingControls.startAction == ACTION_RECORD_PANEL || this@FloatingControls.startAction == ACTION_PRERECORD_PANEL) {
             this@FloatingControls.stopButton?.setOnClickListener {
                 if (this@FloatingControls.recordingPanelBinder != null) {
-                    this@FloatingControls.recordingPanelBinder?.stopService()
+                    if (this@FloatingControls.startAction == ACTION_PRERECORD_PANEL) {
+                        this@FloatingControls.recordingPanelBinder?.abortPreRecord()
+                    } else {
+                        this@FloatingControls.recordingPanelBinder?.stopService()
+                    }
                 }
                 this@FloatingControls.closePanel()
             }
@@ -578,7 +611,10 @@ class FloatingControls : Service() {
                 this@FloatingControls.setControlState(true)
             }
             this@FloatingControls.resumeButton?.setOnClickListener {
-                if (this@FloatingControls.recordingPanelBinder != null) {
+                if (this@FloatingControls.startAction == ACTION_PRERECORD_PANEL) {
+                    this@FloatingControls.closePanel()
+                    this@FloatingControls.recordingPanelBinder?.recordingStart()
+                } else if (this@FloatingControls.recordingPanelBinder != null) {
                     this@FloatingControls.recordingPanelBinder?.recordingResume()
                 }
                 this@FloatingControls.setControlState(false)
@@ -586,7 +622,9 @@ class FloatingControls : Service() {
             if (!this@FloatingControls.isRestarting) {
                 this@FloatingControls.recordingProgress?.setBase(this@FloatingControls.timerStart)
             }
-            this@FloatingControls.recordingProgress?.start()
+            if (this@FloatingControls.startAction != ACTION_PRERECORD_PANEL) {
+                this@FloatingControls.recordingProgress?.start()
+            }
         }
 
         this.floatingPanel?.setOnTouchListener(object : View.OnTouchListener {

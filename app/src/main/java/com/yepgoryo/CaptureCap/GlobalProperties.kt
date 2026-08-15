@@ -72,6 +72,7 @@ class GlobalProperties(context: Context) {
         ENABLE_TIMER,
         DRAW_OVERLAY,
         SOUND_CONTROL_NOTIFICATION,
+        PRE_RECORDING,
     }
 
     enum class PropertiesInt {

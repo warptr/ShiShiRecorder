@@ -366,6 +366,69 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/prerecord_controls"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    android:layout_marginTop="14dp"
+                    android:gravity="center_horizontal">
+
+                    <TextView
+                        android:id="@+id/prerecord_prepare_notice"
+                        android:layout_height="wrap_content"
+                        android:layout_width="wrap_content"
+                        android:textSize="24sp"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:gravity="center"
+                        android:text="@string/capture_prepared_title"
+                        android:layout_centerHorizontal="true" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="14dp"
+                        android:gravity="center_horizontal">
+
+                        <Button
+                            android:id="@+id/prerecord_start"
+                            android:layout_width="160dp"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="@string/capture_start"
+                            android:drawableLeft="@drawable/icon_record_resume"
+                            android:text="@string/capture_start"
+                            android:textSize="12sp"
+                            android:textColor="?attr/colorOnPrimary"
+                            android:background="@drawable/bg_rounded_button"
+                            android:paddingLeft="16dp"
+                            android:paddingRight="16dp"
+                            android:drawablePadding="16dp"
+                            android:layout_centerVertical="true"
+                            android:layout_centerHorizontal="true" />
+
+                        <Button
+                            android:id="@+id/prerecord_abort"
+                            android:layout_width="180dp"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="@string/capture_abort"
+                            android:drawableLeft="@drawable/icon_record_stop"
+                            android:text="@string/capture_abort"
+                            android:textSize="12sp"
+                            android:textColor="?attr/colorOnPrimary"
+                            android:layout_marginLeft="12dp"
+                            android:background="@drawable/bg_rounded_button"
+                            android:paddingLeft="16dp"
+                            android:paddingRight="16dp"
+                            android:drawablePadding="16dp"
+                            android:layout_centerVertical="true"
+                            android:layout_centerHorizontal="true" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <LinearLayout
                     android:id="@+id/timer_controls"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

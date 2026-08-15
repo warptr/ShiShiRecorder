@@ -123,6 +123,8 @@ class ScreenRecorder : Service() {
     private var timerEndsAt: Long = 0
     private var timerEndsAtRealtime: Long = 0
     private var timerRunning: Boolean = false
+    private var startFromPanel: Boolean = false
+    private var startedFromPanel: Boolean = false
     private var useTimer: Boolean = false
     private var timerStartRecording: Timer = Timer()
     private var recordMicrophone: Boolean = false
@@ -252,6 +254,14 @@ class ScreenRecorder : Service() {
             return this@ScreenRecorder.timerRunning
         }
 
+        fun startFromPreRecord() {
+            actionStart()
+        }
+
+        fun abortPreRecord() {
+            this@ScreenRecorder.abortPreRecord()
+        }
+
         fun abortTimer() {
             this@ScreenRecorder.abortTimer()
         }
@@ -373,6 +383,10 @@ class ScreenRecorder : Service() {
             )
         }
 
+        fun recordingStart() {
+            this@ScreenRecorder.screenRecordingStart()
+        }
+
         fun recordingPause() {
             this@ScreenRecorder.screenRecordingPause()
         }
@@ -383,6 +397,10 @@ class ScreenRecorder : Service() {
 
         fun stopService() {
             this@ScreenRecorder.screenRecordingStop()
+        }
+
+        fun abortPreRecord() {
+            this@ScreenRecorder.abortPreRecord()
         }
     }
 
@@ -499,9 +517,11 @@ class ScreenRecorder : Service() {
                     actionStart()
                 }
             } else if (intent.action == ACTION_STOP) {
-                if (!this@ScreenRecorder.timerRunning) {
+                if (!this@ScreenRecorder.timerRunning && !this@ScreenRecorder.startFromPanel) {
                     screenRecordingStop()
-                } else {
+                } else if (this@ScreenRecorder.startFromPanel) {
+                    abortPreRecord()
+                } else if (this@ScreenRecorder.timerRunning) {
                     abortTimer()
                 }
             } else if (intent.action == ACTION_PAUSE) {
@@ -608,6 +628,7 @@ class ScreenRecorder : Service() {
         this.streamKey = this.appSettings!!.getPrivateStringProperty(GlobalProperties.PropertiesString.STREAM_KEY, "")
         this.streamSave = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.STREAM_SAVE_TO_FILE, false)
         this.intentFlag = Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+        this.startFromPanel = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.PRE_RECORDING, false)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             this.intentFlag = Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
@@ -652,9 +673,15 @@ class ScreenRecorder : Service() {
             this.tileBinder!!.recordingState(true)
         }
         this.useTimer = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.ENABLE_TIMER, false)
-        if (this.useTimer) {
+        if (this.useTimer && !this.startFromPanel) {
             timerStart()
+        } else if (this.startFromPanel && !startedFromPanel) {
+            startOnPanel()
+            startedFromPanel = true
         } else {
+            if (this.startFromPanel && startedFromPanel) {
+                panelBinder?.setStop()
+            }
             screenRecordingStart()
         }
     }
@@ -664,8 +691,10 @@ class ScreenRecorder : Service() {
         if (this.runningService) {
             if (!this.isPaused) {
                 if (activityBinder != null) {
-                    if (!timerRunning) {
+                    if (!timerRunning && !startedFromPanel) {
                         activityBinder.recordingStart(false)
+                    } else if (startedFromPanel) {
+                        activityBinder.preRecordingStart()
                     } else {
                         activityBinder.timerStart(timerEndsAtRealtime)
                     }
@@ -777,6 +806,7 @@ class ScreenRecorder : Service() {
 
     fun screenRecordingStart() {
         timerRunning = false
+        startedFromPanel = false
         stoppedOnError = false
 
         drawOverlay = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.DRAW_OVERLAY, false)
@@ -1251,6 +1281,32 @@ class ScreenRecorder : Service() {
         return recordingSoundControlBuilder
     }
 
+    fun startOnPanel() {
+        this.showFloatingControls = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.FLOATING_CONTROLS, false) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && Settings.canDrawOverlays(this)
+        if (this.showFloatingControls && !isRestarting) {
+            val floatingControlsIntent = Intent(this, FloatingControls::class.java)
+            floatingControlsIntent.setAction(FloatingControls.ACTION_PRERECORD_PANEL)
+            startService(floatingControlsIntent)
+            panelBinder?.setPreRecord()
+        }
+
+        val preRecordNotificationBuilder = getPreRecordNotification()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            var serviceStartFlag = ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+            if ((recordMicrophone || recordPlayback) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                serviceStartFlag = serviceStartFlag or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+            }
+            if (drawOverlay && hasCamera && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                serviceStartFlag = serviceStartFlag or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
+            }
+            startForeground(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, preRecordNotificationBuilder.build(), serviceStartFlag)
+        } else {
+            startForeground(NotificationID.NOTIFICATION_RECORDING_ID.ordinal, preRecordNotificationBuilder.build())
+        }
+        this.activityBinder?.preRecordingStart()
+    }
+
     fun timerStart() {
         this.timerRunning = true
         this.timerValue = this.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.TIMER_SECONDS, 10).toLong() * 1000
@@ -1282,6 +1338,17 @@ class ScreenRecorder : Service() {
         activityBinder!!.timerStart(this.timerEndsAtRealtime)
     }
 
+    fun abortPreRecord() {
+        if (this.recordingNotificationManager != null) {
+            this.recordingNotificationManager!!.cancel(NotificationID.NOTIFICATION_RECORDING_ID.ordinal)
+        }
+        stopForeground(true)
+        this@ScreenRecorder.runningService = false
+        this.activityBinder?.recordingReset()
+        startedFromPanel = false
+        panelBinder?.setStop()
+    }
+
     fun abortTimer() {
         this@ScreenRecorder.timerStartRecording.cancel()
         if (this.recordingNotificationManager != null) {
@@ -1291,6 +1358,46 @@ class ScreenRecorder : Service() {
         this@ScreenRecorder.timerRunning = false
         this@ScreenRecorder.runningService = false
         this.activityBinder?.recordingReset()
+    }
+
+    private fun getPreRecordNotification(): NotificationCompat.Builder {
+        var startIcon: IconCompat = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_record_continue_color_action))
+        if (getModeNight()) {
+            startIcon = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_record_continue_color_action_dark))
+        }
+        val startIntent = Intent(this, ScreenRecorder::class.java)
+        startIntent.setAction(ACTION_START)
+        val resumeNotificationAction: NotificationCompat.Action.Builder = NotificationCompat.Action.Builder(startIcon, getString(R.string.capture_start), PendingIntent.getService(this, 0, startIntent, this.intentFlag))
+
+
+        var iconStop: IconCompat = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_stop_color_action))
+        if (getModeNight()) {
+            iconStop = IconCompat.createWithBitmap(getBitmapDescriptor(R.drawable.icon_stop_color_action_dark))
+        }
+        val stopIntent: Intent = Intent(this, ScreenRecorder::class.java)
+        stopIntent.setAction(ACTION_STOP)
+
+        val notificationStopBuilder: NotificationCompat.Action.Builder = NotificationCompat.Action.Builder(iconStop, getString(R.string.capture_abort), PendingIntent.getService(this, 0, stopIntent, this.intentFlag))
+
+        var preRecordingBuilder: NotificationCompat.Builder = NotificationCompat.Builder(this, NOTIFICATIONS_RECORDING_CHANNEL)
+        preRecordingBuilder =
+            preRecordingBuilder.setContentTitle(getString(R.string.capture_prepared_title))
+                .setContentText(getString(R.string.capture_prepared_description))
+
+        var iconPreRecord = Icon.createWithBitmap(getBitmapDescriptor(R.drawable.icon_record_continue_color_action))
+        if (getModeNight()) {
+            iconPreRecord = Icon.createWithBitmap(getBitmapDescriptor(R.drawable.icon_record_continue_color_action_dark))
+        }
+
+        preRecordingBuilder = preRecordingBuilder
+            .setSmallIcon(R.drawable.icon_record_status)
+            .setLargeIcon(iconPreRecord)
+            .setOngoing(true)
+            .addAction(resumeNotificationAction.build())
+            .addAction(notificationStopBuilder.build())
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+
+        return preRecordingBuilder
     }
 
     private fun getTimerNotification(): NotificationCompat.Builder {

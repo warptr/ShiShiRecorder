@@ -49,6 +49,9 @@
     <string name="resolution_option_description">Set custom video resolution</string>
     <string name="resolution_option_auto">Native</string>
     <string name="capture_start">Start capture</string>
+    <string name="capture_abort">Abort capture</string>
+    <string name="capture_prepared_title">Prepared for capture</string>
+    <string name="capture_prepared_description">Start or abort capture</string>
     <string name="codec_option">Choose custom video codec</string>
     <string name="codec_option_description">Set custom video codec</string>
     <string name="codec_option_auto">Default</string>
@@ -83,6 +86,8 @@
     <string name="norotate_option_description">WARNING: If enabled, your video will lose quality after rotation!</string>
     <string name="rotatehardwaresensor_option">Hardware rotation</string>
     <string name="rotatehardwaresensor_option_description">Detect rotation by hardware sensors instead of display</string>
+    <string name="prerecording_option">Pre-recording pause</string>
+    <string name="prerecording_option_description">Start the recording whenever you need to</string>
     <string name="controls_settings">Controls settings</string>
     <string name="floating_controls_option">Enable floating controls</string>
     <string name="floating_controls_option_description">Show floating controls panel</string>
