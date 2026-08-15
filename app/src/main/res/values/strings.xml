@@ -104,6 +104,8 @@
     </array>
     <string name="floating_controls_opacity">Floating controls opacity</string>
     <string name="floating_controls_opacity_description">Set floating controls opacity</string>
+    <string name="floating_controls_reduce_to_dot">Floating controls panel dot</string>
+    <string name="floating_controls_reduce_to_dot_description">Reduce panel to a dot when collapsed</string>
     <string name="floating_controls_description_handle">Floating controls handle</string>
     <string name="screen_orientation">Screen orientation</string>
     <string name="screen_orientation_description">Force screen orientation</string>

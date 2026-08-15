@@ -14,12 +14,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val preferenceFindPreference2: Preference = findPreference("floatingcontrolsposition")!!
         val preferenceFindPreference3: Preference = findPreference("floatingcontrolssize")!!
         val preferenceFindPreference4: Preference = findPreference("floatingcontrolsopacity")!!
+        val preferenceFindPreference18: Preference = findPreference("floatingcontrolsreducetodot")!!
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             val preferenceCategory: PreferenceCategory = findPreference("controlssettings")!!
             preferenceCategory.removePreference(preferenceFindPreference)
             preferenceCategory.removePreference(preferenceFindPreference2)
             preferenceCategory.removePreference(preferenceFindPreference3)
             preferenceCategory.removePreference(preferenceFindPreference4)
+            preferenceCategory.removePreference(preferenceFindPreference18)
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             val preferenceFindPreference5: Preference = findPreference("codecvalue")!!

@@ -24,6 +24,7 @@ import android.widget.Chronometer
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
+import androidx.core.view.setPadding
 
 class FloatingControls : Service() {
 
@@ -38,6 +39,9 @@ class FloatingControls : Service() {
     private var display: Display? = null
     private var displayHeight: Int = 0
     private var displayWidth: Int = 0
+    private lateinit var panelLayout: LinearLayout
+    private var panelScale: Float = 1.0f
+    private var reduceToDot: Boolean = false
     private var floatWindowLayoutParam: WindowManager.LayoutParams? = null
     private var floatingPanel: ViewGroup? = null
     private var heightNormal: Int = 0
@@ -59,6 +63,7 @@ class FloatingControls : Service() {
     private var stopButton: ImageButton? = null
     private var timerStart: Long = 0
     private var viewHandle: ImageView? = null
+    private var viewHandlePadding: Int = 0
     private var windowManager: WindowManager? = null
     private var isHorizontal = true
     private var recordingPaused = false
@@ -166,12 +171,22 @@ class FloatingControls : Service() {
     fun setControlState(paused: Boolean) {
         this@FloatingControls.recordingPaused = paused
         if (!this@FloatingControls.panelHidden) {
+            panelScale = 1.0f
+            viewHandle!!.setPadding(viewHandlePadding)
             if (paused) {
                 this@FloatingControls.pauseButton?.visibility = View.GONE
                 this@FloatingControls.resumeButton?.visibility = View.VISIBLE
             } else {
                 this@FloatingControls.pauseButton?.visibility = View.VISIBLE
                 this@FloatingControls.resumeButton?.visibility = View.GONE
+            }
+        } else {
+            if (reduceToDot) {
+                panelScale = 0.5f
+                viewHandle!!.setPadding((resources.displayMetrics.density * 8).toInt())
+            } else {
+                panelScale = 1.0f
+                viewHandle!!.setPadding(viewHandlePadding)
             }
         }
     }
@@ -338,50 +353,50 @@ class FloatingControls : Service() {
 
         if (!this@FloatingControls.panelHidden) {
             if (this@FloatingControls.isHorizontal) {
-                if ((newX - (this@FloatingControls.panelWidth / 2)) < -(this@FloatingControls.displayWidth / 2)) {
-                    newX = -(this@FloatingControls.displayWidth / 2) + (this@FloatingControls.panelWidth / 2)
-                } else if (((this@FloatingControls.panelWidth / 2) + newX) > (this@FloatingControls.displayWidth / 2)) {
-                    newX = (this@FloatingControls.displayWidth / 2) - (this@FloatingControls.panelWidth / 2)
+                if ((newX - ((this@FloatingControls.panelWidth*panelScale) / 2)) < -(this@FloatingControls.displayWidth / 2)) {
+                    newX = -(this@FloatingControls.displayWidth / 2) + ((this@FloatingControls.panelWidth*panelScale).toInt() / 2)
+                } else if ((((this@FloatingControls.panelWidth*panelScale) / 2) + newX) > (this@FloatingControls.displayWidth / 2)) {
+                    newX = (this@FloatingControls.displayWidth / 2) - ((this@FloatingControls.panelWidth*panelScale).toInt() / 2)
                 }
-                if ((newY - (this@FloatingControls.panelHeight / 2)) < -(this@FloatingControls.displayHeight / 2)) {
+                if ((newY - ((this@FloatingControls.panelHeight*panelScale) / 2)) < -(this@FloatingControls.displayHeight / 2)) {
                     newY = -(this@FloatingControls.displayHeight / 2)
-                } else if (((this@FloatingControls.panelHeight / 2) + newY) > (this@FloatingControls.displayHeight / 2)) {
-                    newY = (this@FloatingControls.displayHeight / 2) - (this@FloatingControls.panelHeight / 2)
+                } else if ((((this@FloatingControls.panelHeight*panelScale) / 2) + newY) > (this@FloatingControls.displayHeight / 2)) {
+                    newY = (this@FloatingControls.displayHeight / 2) - ((this@FloatingControls.panelHeight*panelScale).toInt() / 2)
                 }
             } else {
-                if ((newX - (this@FloatingControls.panelWidth / 2)) < -(this@FloatingControls.displayWidth / 2)) {
-                    newX = -(this@FloatingControls.displayWidth / 2) + (this@FloatingControls.panelWidth / 2)
-                } else if (((this@FloatingControls.panelWidth / 2) + newX) > (this@FloatingControls.displayWidth / 2)) {
-                    newX = (this@FloatingControls.displayWidth / 2) - (this@FloatingControls.panelWidth / 2)
+                if ((newX - ((this@FloatingControls.panelWidth*panelScale) / 2)) < -(this@FloatingControls.displayWidth / 2)) {
+                    newX = -(this@FloatingControls.displayWidth / 2) + ((this@FloatingControls.panelWidth*panelScale).toInt() / 2)
+                } else if ((((this@FloatingControls.panelWidth*panelScale) / 2) + newX) > (this@FloatingControls.displayWidth / 2)) {
+                    newX = (this@FloatingControls.displayWidth / 2) - ((this@FloatingControls.panelWidth*panelScale).toInt() / 2)
                 }
-                if ((newY - (this@FloatingControls.panelHeight / 2)) < -(this@FloatingControls.displayHeight / 2)) {
-                    newY = -(this@FloatingControls.displayHeight / 2) + (this@FloatingControls.panelHeight / 2)
-                } else if (((this@FloatingControls.panelHeight / 2) + newY) > (this@FloatingControls.displayHeight / 2)) {
-                    newY = (this@FloatingControls.displayHeight / 2) - (this@FloatingControls.panelHeight / 2)
+                if ((newY - ((this@FloatingControls.panelHeight*panelScale) / 2)) < -(this@FloatingControls.displayHeight / 2)) {
+                    newY = -(this@FloatingControls.displayHeight / 2) + ((this@FloatingControls.panelHeight*panelScale).toInt() / 2)
+                } else if ((((this@FloatingControls.panelHeight*panelScale) / 2) + newY) > (this@FloatingControls.displayHeight / 2)) {
+                    newY = (this@FloatingControls.displayHeight / 2) - ((this@FloatingControls.panelHeight*panelScale).toInt() / 2)
                 }
             }
         } else {
             if (this@FloatingControls.isHorizontal) {
-                if ((newX - (this@FloatingControls.panelWeightHidden / 2)) < -(this@FloatingControls.displayWidth / 2)) {
-                    newX = -(this@FloatingControls.displayWidth / 2) + (this@FloatingControls.panelWeightHidden / 2)
-                } else if (((this@FloatingControls.panelWeightHidden / 2) + newX) > (this@FloatingControls.displayWidth / 2)) {
-                    newX = ((this@FloatingControls.displayWidth / 2) - (this@FloatingControls.panelWeightHidden / 2))
+                if ((newX - ((this@FloatingControls.panelWeightHidden*panelScale) / 2)) < -(this@FloatingControls.displayWidth / 2)) {
+                    newX = -(this@FloatingControls.displayWidth / 2) + ((this@FloatingControls.panelWeightHidden*panelScale).toInt() / 2)
+                } else if ((((this@FloatingControls.panelWeightHidden*panelScale) / 2) + newX) > (this@FloatingControls.displayWidth / 2)) {
+                    newX = ((this@FloatingControls.displayWidth / 2) - ((this@FloatingControls.panelWeightHidden*panelScale).toInt() / 2))
                 }
-                if ((newY - (this@FloatingControls.panelHeight / 2)) < -(this@FloatingControls.displayHeight / 2)) {
-                    newY = -(this@FloatingControls.displayHeight / 2) + (this@FloatingControls.panelHeight / 2)
-                } else if (((this@FloatingControls.panelHeight / 2) + newY) > (this@FloatingControls.displayHeight / 2)) {
-                    newY = (this@FloatingControls.displayHeight / 2) - (this@FloatingControls.panelHeight / 2)
+                if ((newY - ((this@FloatingControls.panelHeight*panelScale) / 2)) < -(this@FloatingControls.displayHeight / 2)) {
+                    newY = -(this@FloatingControls.displayHeight / 2) + ((this@FloatingControls.panelHeight*panelScale).toInt() / 2)
+                } else if ((((this@FloatingControls.panelHeight*panelScale) / 2) + newY) > (this@FloatingControls.displayHeight / 2)) {
+                    newY = (this@FloatingControls.displayHeight / 2) - ((this@FloatingControls.panelHeight*panelScale).toInt() / 2)
                 }
             } else {
-                if ((newX - (this@FloatingControls.panelWidth / 2)) < -(this@FloatingControls.displayWidth / 2)) {
-                    newX = -(this@FloatingControls.displayWidth / 2) + (this@FloatingControls.panelWidth / 2)
-                } else if (((this@FloatingControls.panelWidth / 2) + newX) > (this@FloatingControls.displayWidth / 2)) {
-                    newX = ((this@FloatingControls.displayWidth / 2) - (this@FloatingControls.panelWidth / 2))
+                if ((newX - ((this@FloatingControls.panelWidth*panelScale) / 2)) < -(this@FloatingControls.displayWidth / 2)) {
+                    newX = -(this@FloatingControls.displayWidth / 2) + ((this@FloatingControls.panelWidth*panelScale).toInt() / 2)
+                } else if ((((this@FloatingControls.panelWidth*panelScale) / 2) + newX) > (this@FloatingControls.displayWidth / 2)) {
+                    newX = ((this@FloatingControls.displayWidth / 2) - ((this@FloatingControls.panelWidth*panelScale).toInt() / 2))
                 }
-                if ((newY - (this@FloatingControls.panelWeightHidden / 2)) < -(this@FloatingControls.displayHeight / 2)) {
-                    newY = (-(this@FloatingControls.displayHeight / 2) + (this@FloatingControls.panelWeightHidden / 2))
-                } else if (((this@FloatingControls.panelWeightHidden / 2) + newY) > (this@FloatingControls.displayHeight / 2)) {
-                    newY = ((this@FloatingControls.displayHeight / 2) - (this@FloatingControls.panelWeightHidden / 2))
+                if ((newY - ((this@FloatingControls.panelWeightHidden*panelScale) / 2)) < -(this@FloatingControls.displayHeight / 2)) {
+                    newY = (-(this@FloatingControls.displayHeight / 2) + ((this@FloatingControls.panelWeightHidden*panelScale).toInt() / 2))
+                } else if ((((this@FloatingControls.panelWeightHidden*panelScale) / 2) + newY) > (this@FloatingControls.displayHeight / 2)) {
+                    newY = ((this@FloatingControls.displayHeight / 2) - ((this@FloatingControls.panelWeightHidden*panelScale).toInt() / 2))
                 }
             }
         }
@@ -396,6 +411,13 @@ class FloatingControls : Service() {
 
         if (!this@FloatingControls.panelHidden) {
             this@FloatingControls.panelHidden = true
+            if (reduceToDot) {
+                panelScale = 0.5f
+                viewHandle!!.setPadding((resources.displayMetrics.density * 8).toInt())
+            } else {
+                panelScale = 1.0f
+                viewHandle!!.setPadding(viewHandlePadding)
+            }
             this@FloatingControls.stopButton?.visibility = View.GONE
             this@FloatingControls.pauseButton?.visibility = View.GONE
             this@FloatingControls.resumeButton?.visibility = View.GONE
@@ -404,13 +426,17 @@ class FloatingControls : Service() {
             this@FloatingControls.panelWidth = this@FloatingControls.panelWeightHidden
             if (this@FloatingControls.isHorizontal) {
                 newX += (this@FloatingControls.panelWidthNormal / 2) - (this@FloatingControls.panelWeightHidden / 2)
-                this@FloatingControls.floatWindowLayoutParam!!.width = this@FloatingControls.panelWeightHidden
+                this@FloatingControls.floatWindowLayoutParam!!.width = (this@FloatingControls.panelWeightHidden*panelScale).toInt()
+                this@FloatingControls.floatWindowLayoutParam!!.height = (this@FloatingControls.panelHeight*panelScale).toInt()
             } else {
                 newY += (this@FloatingControls.panelHeight / 2) - (this@FloatingControls.panelWeightHidden / 2)
-                this@FloatingControls.floatWindowLayoutParam!!.height = this@FloatingControls.panelWeightHidden
+                this@FloatingControls.floatWindowLayoutParam!!.width = (this@FloatingControls.panelWidthNormal*panelScale).toInt()
+                this@FloatingControls.floatWindowLayoutParam!!.height = (this@FloatingControls.panelWeightHidden*panelScale).toInt()
             }
         } else {
             this@FloatingControls.panelHidden = false
+            panelScale = 1.0f
+            viewHandle!!.setPadding(viewHandlePadding)
             this@FloatingControls.stopButton?.visibility = View.VISIBLE
             setControlState(this@FloatingControls.recordingPaused)
             if (this@FloatingControls.startAction == ACTION_PRERECORD_PANEL) {
@@ -423,10 +449,12 @@ class FloatingControls : Service() {
             this@FloatingControls.panelWidth = this@FloatingControls.panelWidthNormal
             if (this@FloatingControls.isHorizontal) {
                 newX -= (this@FloatingControls.panelWidthNormal / 2) - (this@FloatingControls.panelWeightHidden / 2)
-                this@FloatingControls.floatWindowLayoutParam!!.width = this@FloatingControls.panelWidthNormal
+                this@FloatingControls.floatWindowLayoutParam!!.width = (this@FloatingControls.panelWidthNormal*panelScale).toInt()
+                this@FloatingControls.floatWindowLayoutParam!!.height = (this@FloatingControls.panelHeight*panelScale).toInt()
             } else {
                 newY -= (this@FloatingControls.panelHeight / 2) - (this@FloatingControls.panelWeightHidden / 2)
-                this@FloatingControls.floatWindowLayoutParam!!.height = this@FloatingControls.panelHeight
+                this@FloatingControls.floatWindowLayoutParam!!.width = (this@FloatingControls.panelWidthNormal*panelScale).toInt()
+                this@FloatingControls.floatWindowLayoutParam!!.height = (this@FloatingControls.panelHeight*panelScale).toInt()
             }
         }
 
@@ -447,6 +475,7 @@ class FloatingControls : Service() {
 
         this@FloatingControls.appSettings = globalProperties
         this@FloatingControls.panelSize = globalProperties.getFloatingControlsSize()
+        reduceToDot = this@FloatingControls.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.FLOATING_CONTROLS_REDUCE_TO_DOT, false)
 
         if (this@FloatingControls.isHorizontal) {
             when (this@FloatingControls.panelSize) {
@@ -492,30 +521,40 @@ class FloatingControls : Service() {
 
         this@FloatingControls.layoutType = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         this@FloatingControls.viewHandle = this@FloatingControls.floatingPanel!!.findViewById(R.id.floatingpanelhandle)
-        val linearLayout: LinearLayout = this@FloatingControls.floatingPanel!!.findViewById(R.id.panelwithbackground)
+        viewHandlePadding = viewHandle!!.paddingBottom
+        panelLayout = this@FloatingControls.floatingPanel!!.findViewById(R.id.panelwithbackground)
 
-        linearLayout.setAlpha((this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.FLOATING_CONTROLS_OPACITY, 9) + 1) * 0.1f)
-        linearLayout.measure(0, 0)
-        this@FloatingControls.panelWidthNormal = linearLayout.measuredWidth
-        this@FloatingControls.panelHeight = linearLayout.measuredHeight
+        panelLayout.setAlpha((this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.FLOATING_CONTROLS_OPACITY, 9) + 1) * 0.1f)
+        panelLayout.measure(0, 0)
+        this@FloatingControls.panelWidthNormal = panelLayout.measuredWidth
+        this@FloatingControls.panelHeight = panelLayout.measuredHeight
 
         viewHandle!!.measure(0, 0)
 
         this@FloatingControls.panelWeightHidden = viewHandle!!.measuredHeight
 
         if (this@FloatingControls.panelHidden) {
+            if (reduceToDot) {
+                panelScale = 0.5f
+                viewHandle!!.setPadding((resources.displayMetrics.density * 8).toInt())
+            } else {
+                panelScale = 1.0f
+                viewHandle!!.setPadding(viewHandlePadding)
+            }
             this@FloatingControls.panelWidth = this@FloatingControls.panelWeightHidden
             if (this@FloatingControls.isHorizontal) {
-                this@FloatingControls.floatWindowLayoutParam = WindowManager.LayoutParams(this@FloatingControls.panelWeightHidden, this@FloatingControls.panelHeight, this@FloatingControls.layoutType, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT)
+                this@FloatingControls.floatWindowLayoutParam = WindowManager.LayoutParams((this@FloatingControls.panelWeightHidden*panelScale).toInt(), (this@FloatingControls.panelHeight*panelScale).toInt(), this@FloatingControls.layoutType, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT)
             } else {
-                this@FloatingControls.floatWindowLayoutParam = WindowManager.LayoutParams(this@FloatingControls.panelWidthNormal, this@FloatingControls.panelWeightHidden, this@FloatingControls.layoutType, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT)
+                this@FloatingControls.floatWindowLayoutParam = WindowManager.LayoutParams((this@FloatingControls.panelWidthNormal*panelScale).toInt(), (this@FloatingControls.panelWeightHidden*panelScale).toInt(), this@FloatingControls.layoutType, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT)
             }
         } else {
+            panelScale = 1.0f
+            viewHandle!!.setPadding(viewHandlePadding)
             this@FloatingControls.panelWidth = this@FloatingControls.panelWidthNormal
             if (this@FloatingControls.isHorizontal) {
-                this@FloatingControls.floatWindowLayoutParam = WindowManager.LayoutParams(this@FloatingControls.panelWidthNormal, this@FloatingControls.panelHeight, this@FloatingControls.layoutType, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT)
+                this@FloatingControls.floatWindowLayoutParam = WindowManager.LayoutParams((this@FloatingControls.panelWidthNormal*panelScale).toInt(), (this@FloatingControls.panelHeight*panelScale).toInt(), this@FloatingControls.layoutType, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT)
             } else {
-                this@FloatingControls.floatWindowLayoutParam = WindowManager.LayoutParams(this@FloatingControls.panelWidthNormal, this@FloatingControls.panelHeight, this@FloatingControls.layoutType, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT)
+                this@FloatingControls.floatWindowLayoutParam = WindowManager.LayoutParams((this@FloatingControls.panelWidthNormal*panelScale).toInt(), (this@FloatingControls.panelHeight*panelScale).toInt(), this@FloatingControls.layoutType, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT)
             }
         }
 
