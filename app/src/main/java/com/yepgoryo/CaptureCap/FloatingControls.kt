@@ -172,7 +172,7 @@ class FloatingControls : Service() {
         this@FloatingControls.recordingPaused = paused
         if (!this@FloatingControls.panelHidden) {
             panelScale = 1.0f
-            viewHandle!!.setPadding(viewHandlePadding)
+            viewHandle?.setPadding(viewHandlePadding)
             if (paused) {
                 this@FloatingControls.pauseButton?.visibility = View.GONE
                 this@FloatingControls.resumeButton?.visibility = View.VISIBLE

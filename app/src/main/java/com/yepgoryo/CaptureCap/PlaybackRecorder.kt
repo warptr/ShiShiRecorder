@@ -176,30 +176,33 @@ class PlaybackRecorder(private var context: Context,
             }
             else -> {}
         }
-        virtualDisplay!!.resize(
-            customWidth,
-            customHeight,
-            context.resources.displayMetrics.densityDpi
-        )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
-            when (forceRotation) {
-                GlobalProperties.ScreenRotationProperty._0_DEGREES_ -> {
-                    virtualDisplay!!.setRotation(Surface.ROTATION_0)
-                }
+        if (!recordOnlyAudio) {
+            virtualDisplay!!.resize(
+                customWidth,
+                customHeight,
+                context.resources.displayMetrics.densityDpi
+            )
 
-                GlobalProperties.ScreenRotationProperty._90_DEGREES_ -> {
-                    virtualDisplay!!.setRotation(Surface.ROTATION_90)
-                }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
+                when (forceRotation) {
+                    GlobalProperties.ScreenRotationProperty._0_DEGREES_ -> {
+                        virtualDisplay!!.setRotation(Surface.ROTATION_0)
+                    }
 
-                GlobalProperties.ScreenRotationProperty._180_DEGREES_ -> {
-                    virtualDisplay!!.setRotation(Surface.ROTATION_180)
-                }
+                    GlobalProperties.ScreenRotationProperty._90_DEGREES_ -> {
+                        virtualDisplay!!.setRotation(Surface.ROTATION_90)
+                    }
 
-                GlobalProperties.ScreenRotationProperty._270_DEGREES_ -> {
-                    virtualDisplay!!.setRotation(Surface.ROTATION_270)
-                }
+                    GlobalProperties.ScreenRotationProperty._180_DEGREES_ -> {
+                        virtualDisplay!!.setRotation(Surface.ROTATION_180)
+                    }
 
-                else -> {}
+                    GlobalProperties.ScreenRotationProperty._270_DEGREES_ -> {
+                        virtualDisplay!!.setRotation(Surface.ROTATION_270)
+                    }
+
+                    else -> {}
+                }
             }
         }
     }
