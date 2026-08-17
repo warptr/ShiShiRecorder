@@ -21,8 +21,8 @@ find_package(ZLIB REQUIRED)
 
 FetchContent_Declare(
   librtmp
-  GIT_REPOSITORY https://git.ffmpeg.org/rtmpdump.git
-  GIT_TAG        v2.6
+  GIT_REPOSITORY https://github.com/mirror/rtmpdump.git
+  GIT_TAG        6f6bb1353fc84f4cc37138baa99f586750028a01
 )
 
 FetchContent_MakeAvailable(librtmp)
