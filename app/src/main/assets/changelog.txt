@@ -1,0 +1,319 @@
+Version code 40
+---
+ * Switched rtmpdump's mirror.
+
+
+Version code 39
+---
+ * Fixed crash when recording only audio.
+
+ * Added auto-closing the activity started from a tile.
+
+ * Added an option to start recording from panel or notification after giving permission to record screen.
+
+ * Added an option to collapse the floating panel to a dot.
+
+
+Version code 38
+---
+ * Fixed audio recording logic.
+
+ * Added an option to force screen orientation (horizontal or vertical).
+
+ * Added an option to force screen rotation for Android 16+.
+
+ * Now a new recording starts once the screen rotates, to preserve quality.
+
+ * Added an option to disable notification on screen rotation.
+
+ * Added an option to detect screen rotation based on hardware sensors.
+
+
+Version code 37
+---
+ * Fixed adding microphone foreground permission for system audio too.
+
+
+Version code 36
+---
+ * Added video overlay support and canvas editor for Android 10+.
+
+ * Added required foreground service recording permissions for camera and microphone for Android 11+.
+
+ * Added notification to control sound sources while recording for Android 10+.
+
+
+Version code 35
+---
+ * Timer option before recording.
+
+ * Options to mute microphone or audio while recording.
+
+ * French translations and Makefile (Paul BOREL).
+
+
+Version code 34
+---
+ * Redesigned the app's interface.
+
+
+Version code 33
+---
+ * Fixed reproducible builds for native libraries.
+
+
+Version code 32
+---
+ * Added RTMP and RTMPS streaming support for Android 10+.
+ * Fixed some miscellaneous issues with app's theme.
+ * Added disable notification vibration option for Android 8 and below.
+
+
+Version code 31
+---
+ * Added a recording crop option for Android 10+.
+ * Fixed main activity not starting the recording animation, created a new application dark theme.
+ * Added donate button, fixed about section a bit.
+
+
+Version code 30
+---
+ * Quick fix for quick tile crashing on Android versions below 14.
+
+
+Version code 29
+---
+ * Update to latest Android 15 SDK, abandon Android Lollipop support.
+
+ * Remove recording restart function, cannot reuse intent.
+
+
+Version code 28
+---
+ * Fix the Android 14 crash.
+
+ * Update Hebrew translations.
+
+
+Version code 27
+---
+ * Return back to GitHub due to dire personal circumstances.
+
+
+Version code 26
+---
+ * Move to GitLab.
+
+
+Version code 25
+---
+ * Redesign of the interface.
+
+ * Add about section.
+
+
+Version code 24
+---
+ * Add different paths for audio and video recordings.
+
+ * Add video resolution scaling.
+
+ * Polish translation (SpacingBat3)
+
+ * Spanish translation (Cuzi)
+
+ * Norwegian translation (Cuzi)
+
+ * German translation (Cuzi)
+
+
+Version code 23
+---
+ * Fix audio playback not recording in some cases.
+
+ * Fix codec settings not being applied.
+
+ * Add audio codec settings.
+
+ * Add audio playback source settings.
+
+ * Add stop recording on shake settings.
+
+ * Add minimize recording on start settings.
+
+ * Add recording end notification settings.
+
+
+Version code 22
+---
+ * Fixed recording write error on Android 10+.
+
+
+Version code 21
+---
+ * Fixed storage permission for Android 10.
+
+
+Version code 20
+---
+ * Fix quick start tile.
+
+
+Version code 19
+---
+ * Fixed pause offset on recording.
+
+
+Version code 18
+---
+ * Fix recording pausing for Android 10+.
+
+ * Restore automatic FPS detection.
+
+
+Version code 17
+---
+ * Fix audio sample rate and channels settings.
+
+
+Version code 16
+---
+ * Remove automatic FPS detection.
+
+
+Version code 15
+---
+ * Added options for audio channels and sample rate.
+
+ * Fixed notification open and share for Android < 10.
+
+ * Fixed Hebrew wrong language code.
+
+
+Version code 14
+---
+ * Fixed orientation detection and panel position.
+
+ * Added audio only recording option.
+
+ * Fixed notification, added delete and share buttons.
+
+
+Version code 13
+---
+ * Fixed media scanning.
+
+ * Fixed FPS and bitrate max values.
+
+ * Added panel opacity option.
+
+ * Added little panel size.
+
+ * Fixed text scaling.
+
+
+Version code 12
+---
+ * Fixed initial panel boundaries check.
+
+
+Version code 11
+---
+ * Fixed fps and bitrate settings.
+
+ * Fixed panel touch response.
+
+ * Added panel position option.
+
+ * Added panel scale option.
+
+
+Version code 10
+---
+ * Fixed screen rotation crashes.
+
+ * Fixed settings parameters.
+
+ * Fixed dark theme.
+
+ * Fixed floating panel position.
+
+ * Added vertical floating panel.
+
+
+Version code 9
+---
+ * Disabled notification sound for Android 7 or lower.
+
+ * Fixed screen orientation detection.
+
+ * Simplified Chinese translation by sr093906.
+
+ * Native framerate support.
+
+ * Added settings panel with recording parameters.
+
+ * Added floating controls panel for Android 8+.
+
+
+Version code 8
+---
+ * Fix icon size.
+
+
+Version code 7
+---
+ * Added quick start tile states.
+
+ * Centered application view.
+
+ * Added dark theme.
+
+ * Added adaptive icon.
+
+
+Version code 6
+---
+ * Another fix for crashing on recording start for Android 8 or lower.
+
+ * Fix application not installing on Android 12+.
+
+
+Version code 5
+---
+ * Added an option for audio recording.
+
+
+Version code 4
+---
+ * Added audio recording support for Android 10 and later.
+
+ * Added recording quick start tile.
+
+ * Fix crash on recording start for Android 8 or lower.
+
+ * Added Portuguese translation.
+
+
+Version code 3
+---
+ * Fix a screen resolution bug.
+
+
+Version code 2
+---
+ * Metadata and unsigned build for F-Droid
+
+ * Ukrainian translation by K0tyk
+
+ * Hebrew translation
+
+
+Version code 1
+---
+ * Record screen and microphone
+
+ * Pause and resume recording
+
+ * Save recording to directory
+

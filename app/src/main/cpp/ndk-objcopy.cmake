@@ -1,3 +1,6 @@
+# This code has been co-authored by an AI.
+# Model name: Qwen 3 Coder Next
+
 if(NOT DEFINED NDK_ROOT)
     message(FATAL_ERROR "NDK_ROOT must be defined!")
 endif()

@@ -1,3 +1,8 @@
+/*
+ * This code has been co-authored by an AI.
+ * Model name: Qwen 3 Coder Next
+ */
+
 #include <jni.h>
 #include <string>
 #include <vector>

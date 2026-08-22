@@ -1,3 +1,8 @@
+/*
+ * This code has been co-authored by an AI.
+ * Model name: Qwen 3 Coder Next
+ */
+
 package com.yepgoryo.CaptureCap
 
 import android.graphics.Bitmap
@@ -12,7 +17,7 @@ import android.view.Surface
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class LayeredRenderer(
+class LayerRenderer(
     private val eglContext: EGLContext,
     private val backgroundSurfaceTexture: SurfaceTexture,
     private val backgroundSurfaceTextureId: Int,

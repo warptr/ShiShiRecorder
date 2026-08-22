@@ -1,4 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -127,14 +128,16 @@
 
                 </LinearLayout>
 
-                <LinearLayout
+                <com.google.android.flexbox.FlexboxLayout
                     android:id="@+id/appbuttons"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:padding="10dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_horizontal"
-                    android:layout_centerHorizontal="true">
+                    android:layout_marginTop="16dp"
+                    app:alignItems="center"
+                    app:alignContent="stretch"
+                    app:justifyContent="center"
+                    app:flexWrap="wrap"
+                    android:orientation="horizontal">
 
                     <Button
                         android:id="@+id/showlicense"
@@ -145,8 +148,8 @@
                         android:contentDescription="@string/info_license"
                         android:textSize="12sp"
                         android:paddingLeft="8dp"
+                        android:layout_margin="4dp"
                         android:background="@drawable/bg_rounded_button"
-                        android:layout_marginRight="16dp"
                         android:layout_centerHorizontal="true" />
 
                     <Button
@@ -158,10 +161,37 @@
                         android:contentDescription="@string/info_donate"
                         android:background="@drawable/bg_rounded_button"
                         android:paddingLeft="8dp"
+                        android:layout_margin="4dp"
                         android:textSize="12sp"
                         android:layout_centerHorizontal="true" />
 
-                </LinearLayout>
+                    <Button
+                        android:id="@+id/ainotice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/info_ainotice"
+                        android:drawableLeft="@drawable/icon_ai_usage"
+                        android:contentDescription="@string/info_ainotice"
+                        android:textSize="12sp"
+                        android:paddingLeft="8dp"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/bg_rounded_button"
+                        android:layout_centerHorizontal="true" />
+
+                    <Button
+                        android:id="@+id/changelog"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/info_changelog"
+                        android:drawableLeft="@drawable/icon_changelog"
+                        android:contentDescription="@string/info_changelog"
+                        android:background="@drawable/bg_rounded_button"
+                        android:paddingLeft="8dp"
+                        android:layout_margin="4dp"
+                        android:textSize="12sp"
+                        android:layout_centerHorizontal="true" />
+
+                </com.google.android.flexbox.FlexboxLayout>
 
             </LinearLayout>
 

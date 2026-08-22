@@ -1,3 +1,6 @@
+# This code has been co-authored by an AI.
+# Model name: Qwen 3 Coder Next
+
 cmake_minimum_required(VERSION 3.18.1)
 project("rtmp_encoder")
 

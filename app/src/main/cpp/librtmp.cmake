@@ -1,3 +1,6 @@
+# This code has been co-authored by an AI.
+# Model name: Qwen 3 Coder Next
+
 include(FetchContent)
 
 option(RTMP_USE_OPENSSL "Use OpenSSL for crypto" ON)

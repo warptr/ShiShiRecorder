@@ -593,6 +593,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /*
+     * This function has been co-authored by an AI.
+     * Model name: Qwen 3 Coder Next
+     */
     private fun openMenu() {
         val display = (baseContext.getSystemService("display") as DisplayManager).getDisplay(0)
         if (display.rotation == Surface.ROTATION_270 || display.rotation == Surface.ROTATION_90) {
@@ -606,6 +610,10 @@ class MainActivity : AppCompatActivity() {
         }.start()
     }
 
+    /*
+     * This function has been co-authored by an AI.
+     * Model name: Qwen 3 Coder Next
+     */
     private fun closeMenu() {
         recordOptionsOpen = false
         menuHiddenTopMargin = -captureOptionsPanel!!.height

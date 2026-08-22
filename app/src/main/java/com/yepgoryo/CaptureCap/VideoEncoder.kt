@@ -88,7 +88,7 @@ class VideoEncoder(private val context: Context, customWidth: Int, customHeight:
     private val buffersHandlerThread = HandlerThread("BuffersLoop")
     private var buffersHandler: Handler? = null
 
-    private var layeredRenderer: LayeredRenderer? = null
+    private var layerRenderer: LayerRenderer? = null
     private var cameraManager: FrontCameraManager? = null
 
     private var surfaceTexture: SurfaceTexture? = null
@@ -247,12 +247,12 @@ class VideoEncoder(private val context: Context, customWidth: Int, customHeight:
                                         )
                                     }
                                 }
-                                if (layeredRenderer == null) {
+                                if (layerRenderer == null) {
                                     var cameraRotation = 0
                                     if (cameraManager != null) {
                                         cameraRotation = cameraManager!!.getCameraRotation()
                                     }
-                                    layeredRenderer = LayeredRenderer(
+                                    layerRenderer = LayerRenderer(
                                         coreGl!!.context,
                                         surfaceTexture!!,
                                         surfaceTextureId,
@@ -270,7 +270,7 @@ class VideoEncoder(private val context: Context, customWidth: Int, customHeight:
                                     )
                                 }
 
-                                layeredRenderer!!.draw()
+                                layerRenderer!!.draw()
                             }
                             surfaceTexture!!.updateTexImage()
                             if (camera != null) {
@@ -380,7 +380,7 @@ class VideoEncoder(private val context: Context, customWidth: Int, customHeight:
         this.mEncoder?.stop()
 
         renderHandler?.post {
-            layeredRenderer?.release()
+            layerRenderer?.release()
         }
 
         renderHandler?.removeCallbacksAndMessages(null)

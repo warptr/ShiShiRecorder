@@ -26,6 +26,8 @@ class AppInfo : AppCompatActivity() {
     private var licenseButton: Button? = null
 
     private var donateButton: Button? = null
+    private var aiNoticeButton: Button? = null
+    private var changelogButton: Button? = null
     private var licenseScroll: NestedScrollView? = null
 
     public override fun onCreate(bundle: Bundle?) {
@@ -43,6 +45,8 @@ class AppInfo : AppCompatActivity() {
         this.licenseScroll = findViewById(R.id.mainscroll)
         this.licenseButton = findViewById(R.id.showlicense)
         this.donateButton = findViewById(R.id.donate)
+        this.aiNoticeButton = findViewById(R.id.ainotice)
+        this.changelogButton = findViewById(R.id.changelog)
 
         this.licenseButton?.setOnClickListener {
             this@AppInfo.startActivity(Intent(this@AppInfo, LicenseScreen::class.java))
@@ -50,6 +54,14 @@ class AppInfo : AppCompatActivity() {
 
         this.donateButton?.setOnClickListener {
             this@AppInfo.startActivity(Intent(this@AppInfo, DonateScreen::class.java))
+        }
+
+        this.aiNoticeButton?.setOnClickListener {
+            this@AppInfo.startActivity(Intent(this@AppInfo, AINoticeScreen::class.java))
+        }
+
+        this.changelogButton?.setOnClickListener {
+            this@AppInfo.startActivity(Intent(this@AppInfo, ChangelogScreen::class.java))
         }
 
         this.contributorsView = findViewById(R.id.contributorslist)

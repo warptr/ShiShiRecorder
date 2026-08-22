@@ -2,7 +2,6 @@ Parts of this program were assisted/written by the AI.
 
 Most notably:
 
-```
 ColorGradientSeekBar
 ColorPaletteWidget
 ColorPicker
@@ -22,8 +21,9 @@ RtmpMuxer
 ValueSeekBar
 VideoOverlay
 VideoOverlaySettings
-```
 
-Other classes _could_ and _can_ get created or modified by adding AI assisted/written code too.
+Other classes *could* and *can* get created or modified by adding AI assisted/written code too.
 
-If you don't agree with the adoption of AI in the development of this program, please __don't use it__.
+The full notice is available in the repository, under AI.md file.
+
+If you don't agree with the adoption of AI in the development of this program, please *don't use it*.

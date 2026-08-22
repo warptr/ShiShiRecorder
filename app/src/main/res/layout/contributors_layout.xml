@@ -43,8 +43,7 @@
             app:alignContent="center"
             app:justifyContent="center"
             app:flexWrap="wrap"
-            android:orientation="horizontal"
-            android:gravity="center">
+            android:orientation="horizontal">
 
             <Button
                 android:id="@+id/contributor_github"
