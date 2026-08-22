@@ -20,6 +20,7 @@ import android.hardware.SensorManager
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.media.AudioManager
+import android.media.MediaFormat
 import android.media.MediaRecorder
 import android.media.MediaScannerConnection
 import android.media.projection.MediaProjection
@@ -815,6 +816,38 @@ class ScreenRecorder : Service() {
         useRotateHardwareSensor = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.ROTATE_HARDWARE_SENSOR, false)
         dontNotifyOnRotate = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.DONT_NOTIFY_ON_ROTATE, false)
 
+        val format: String = this.appSettings!!.getStringProperty(GlobalProperties.PropertiesString.FORMAT_VALUE, resources.getString(R.string.format_option_auto_value))
+        val audioFormat: String = this.appSettings!!.getStringProperty(GlobalProperties.PropertiesString.AUDIO_FORMAT_VALUE, resources.getString(R.string.audio_format_option_auto_value))
+
+        val useCustomFormat = (format != resources.getString(R.string.format_option_auto_value))
+        val useCustomAudioFormat = (audioFormat != resources.getString(R.string.format_option_auto_value))
+
+        var codec: String = resources.getString(R.string.codec_option_auto_value)
+        var audioCodec: String = resources.getString(R.string.audio_codec_option_auto_value)
+
+        if (useCustomFormat) {
+            when (format) {
+                MediaFormat.MIMETYPE_VIDEO_AVC -> {
+                    codec = this.appSettings!!.getStringProperty(GlobalProperties.PropertiesString.AVC_CODEC, resources.getString(R.string.codec_option_auto_value))
+                }
+                MediaFormat.MIMETYPE_VIDEO_HEVC -> {
+                    codec = this.appSettings!!.getStringProperty(GlobalProperties.PropertiesString.HEVC_CODEC, resources.getString(R.string.codec_option_auto_value))
+                }
+            }
+        }
+
+        if (useCustomAudioFormat) {
+            when (audioFormat) {
+                MediaFormat.MIMETYPE_AUDIO_AAC -> {
+                    audioCodec = this.appSettings!!.getStringProperty(GlobalProperties.PropertiesString.AAC_CODEC, resources.getString(R.string.audio_codec_option_auto_value))
+                }
+                else -> {}
+            }
+        }
+
+        val useCustomCodec = (codec != resources.getString(R.string.codec_option_auto_value))
+        val useCustomAudioCodec = (audioCodec != resources.getString(R.string.audio_codec_option_auto_value))
+
         if (!isRestarting) {
             forceOrientation = this.appSettings!!.getScreenOrientation()
             forcingOrientationAllowed = (forceOrientation == GlobalProperties.ScreenOrientationProperty.DEFAULT)
@@ -853,12 +886,22 @@ class ScreenRecorder : Service() {
             folderPath = this.appSettings!!.getStringProperty(GlobalProperties.PropertiesString.FOLDER_AUDIO_PATH, "")
         }
 
-        var fileExtension: String
-        var fileMimeType: String
+        var fileExtension: String = ".mp4"
+        var fileMimeType: String = "video/mp4"
         if (this.recordOnlyAudio) {
             recordingFileName = "AudioRecording_$recordingDate"
-            fileMimeType = "audio/mp4"
-            fileExtension = ".m4a"
+            if (!audioFormat.contentEquals(resources.getString(R.string.audio_format_option_auto_value))) {
+                when (audioFormat) {
+                    MediaFormat.MIMETYPE_AUDIO_AAC -> {
+                        fileMimeType = "audio/mp4"
+                        fileExtension = ".m4a"
+                    }
+                    else -> {}
+                }
+            } else {
+                fileMimeType = "audio/mp4"
+                fileExtension = ".m4a"
+            }
         } else {
             fileMimeType = "video/mp4"
             fileExtension = ".mp4"
@@ -880,46 +923,60 @@ class ScreenRecorder : Service() {
             }
         }
 
-        var file: File?
-        var fullFilePathCreateDocument: Uri?
-        var fullFilePathRenameDocument: Uri?
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            try {
-                fullFilePathCreateDocument = DocumentsContract.createDocument(contentResolver, documentParentPath, fileMimeType, recordingFileName)
-                if (!fullFilePathCreateDocument.toString().endsWith(".m4a") && this.recordOnlyAudio) {
-                    try {
-                        fullFilePathRenameDocument = DocumentsContract.renameDocument(contentResolver, fullFilePathCreateDocument!!, "$recordingFileName.m4a")
-                    } catch (exc: Exception) {
-                        fullFilePathRenameDocument = null
+        var file: File? = null
+        var fullFilePathCreateDocument: Uri? = null
+        var fullFilePathRenameDocument: Uri? = null
+        if (!enableStream || (enableStream && streamSave)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                try {
+                    fullFilePathCreateDocument = DocumentsContract.createDocument(
+                        contentResolver,
+                        documentParentPath,
+                        fileMimeType,
+                        recordingFileName
+                    )
+                    if (!fullFilePathCreateDocument.toString()
+                            .endsWith(fileExtension) && this.recordOnlyAudio
+                    ) {
+                        try {
+                            fullFilePathRenameDocument = DocumentsContract.renameDocument(
+                                contentResolver,
+                                fullFilePathCreateDocument!!,
+                                "$recordingFileName$fileExtension"
+                            )
+                        } catch (exc: Exception) {
+                            fullFilePathRenameDocument = null
+                        }
+                        if (fullFilePathRenameDocument == null) {
+                            fullFilePathRenameDocument =
+                                Uri.parse("$fullFilePathCreateDocument$fileExtension")
+                        }
+                        fullFilePathCreateDocument = fullFilePathRenameDocument
                     }
-                    if (fullFilePathRenameDocument == null) {
-                        fullFilePathRenameDocument = Uri.parse("$fullFilePathCreateDocument.m4a")
+                    file = null
+                } catch (exc: Exception) {
+                    Log.e("ScreenRecorder", "Invalid recording path: $documentParentPath")
+                    if (activityBinder != null) {
+                        this.errorDir = true
+                        this.activityBinder?.resetDir(this.recordOnlyAudio)
                     }
-                    fullFilePathCreateDocument = fullFilePathRenameDocument
+                    recordingError()
+                    stopSelf()
+                    return
                 }
-                file = null
-            } catch (exc: Exception) {
-                Log.e("ScreenRecorder", "Invalid recording path: $documentParentPath")
-                if (activityBinder != null) {
-                    this.errorDir = true
-                    this.activityBinder?.resetDir(this.recordOnlyAudio)
+            } else {
+                try {
+                    Log.v("ScreenRecorder", "File path: " + fullFilePath.toString())
+                    file = File(fullFilePath.toString())
+                    file.createNewFile()
+                    fullFilePathCreateDocument = null
+                } catch (exc: Exception) {
+                    file = null
+                    fullFilePathCreateDocument = null
                 }
-                recordingError()
-                stopSelf()
-                return
-            }
-        } else {
-            try {
-                Log.v("ScreenRecorder", "File path: " + fullFilePath.toString())
-                file = File(fullFilePath.toString())
-                file.createNewFile()
-                fullFilePathCreateDocument = null
-            } catch (exc: Exception) {
-                file = null
-                fullFilePathCreateDocument = null
             }
         }
-        if ((file == null && Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) || (fullFilePathCreateDocument == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)) {
+        if (((file == null && Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) || (fullFilePathCreateDocument == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)) && (!enableStream || (enableStream && streamSave))) {
             recordingError()
             this.activityBinder?.resetDir(this.recordOnlyAudio)
             stopSelf()
@@ -1050,8 +1107,6 @@ class ScreenRecorder : Service() {
             val fpsValue: Int = Integer.parseInt(this.appSettings!!.getStringProperty(GlobalProperties.PropertiesString.FPS_VALUE, "30"))
             val customBitrate: Boolean = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.CUSTOM_BITRATE, false)
             val bitrateValue: Int = Integer.parseInt(this.appSettings!!.getStringProperty(GlobalProperties.PropertiesString.BITRATE_VALUE, "0"))
-            val codec: String = this.appSettings!!.getStringProperty(GlobalProperties.PropertiesString.CODEC_VALUE, resources.getString(R.string.codec_option_auto_value))
-            val audioCodec: String = this.appSettings!!.getStringProperty(GlobalProperties.PropertiesString.AUDIO_CODEC_VALUE, resources.getString(R.string.audio_codec_option_auto_value))
 
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                 val mediaRecorder = MediaRecorder()
@@ -1105,14 +1160,18 @@ class ScreenRecorder : Service() {
                     this.recordingVirtualDisplay!!.surface = this.recordingMediaRecorder!!.surface
                 }
             } else {
-                try {
-                    val parcelFileDescriptorOpenFileDescriptor: ParcelFileDescriptor = contentResolver.openFileDescriptor(this.recordFilePath!!, "rw")!!
-                    this.recordingOpenFileDescriptor = parcelFileDescriptorOpenFileDescriptor
-                    this.recordingFileDescriptor = parcelFileDescriptorOpenFileDescriptor.fileDescriptor
-                } catch (exc: Exception) {
-                    recordingError()
+                if (!enableStream || (enableStream && streamSave)) {
+                    try {
+                        val parcelFileDescriptorOpenFileDescriptor: ParcelFileDescriptor =
+                            contentResolver.openFileDescriptor(this.recordFilePath!!, "rw")!!
+                        this.recordingOpenFileDescriptor = parcelFileDescriptorOpenFileDescriptor
+                        this.recordingFileDescriptor =
+                            parcelFileDescriptorOpenFileDescriptor.fileDescriptor
+                    } catch (exc: Exception) {
+                        recordingError()
+                    }
                 }
-                val playbackRecorder = PlaybackRecorder(applicationContext, this.recordOnlyAudio, this.recordingVirtualDisplay, this.recordingFileDescriptor!!, this.recordingMediaProjection, this.enableStream, this.streamURL, this.streamKey, this.streamSave,width, height, forceOrientation, forceRotation, scaleRatio, this.display!!.rotation, refreshRate, this.recordMicrophone, this.recordPlayback, drawOverlay, customQuality, qualityScale, customFps, fpsValue, customBitrate, bitrateValue, !codec.contentEquals(resources.getString(R.string.codec_option_auto_value)), codec, !audioCodec.contentEquals(resources.getString(R.string.audio_codec_option_auto_value)), audioCodec, this.customSampleRate, this.customChannelsCount, this.mediaAudioSource, this.gameAudioSource, this.unknownAudioSource)
+                val playbackRecorder = PlaybackRecorder(applicationContext, this.recordOnlyAudio, this.recordingVirtualDisplay, this.recordingFileDescriptor, this.recordingMediaProjection, this.enableStream, this.streamURL, this.streamKey, this.streamSave,width, height, forceOrientation, forceRotation, scaleRatio, this.display!!.rotation, refreshRate, this.recordMicrophone, this.recordPlayback, drawOverlay, customQuality, qualityScale, customFps, fpsValue, customBitrate, bitrateValue, useCustomFormat, format, useCustomCodec, codec, useCustomAudioFormat, audioFormat,useCustomAudioCodec, audioCodec, this.customSampleRate, this.customChannelsCount, this.mediaAudioSource, this.gameAudioSource, this.unknownAudioSource)
                 this.recorderPlayback = playbackRecorder
                 this.recorderPlayback?.recordingCallback = RecordingFinishedCallback()
                 playbackRecorder.start()
@@ -1473,10 +1532,13 @@ class ScreenRecorder : Service() {
                 if (!isRestarting) {
                     this.recordingVirtualDisplay?.release()
                 }
-                try {
-                    this.recordingOpenFileDescriptor!!.close()
-                } catch (exc: IOException) {
-                    Toast.makeText(this, R.string.error_recorder_failed, Toast.LENGTH_SHORT).show()
+                if (!enableStream || (enableStream && streamSave)) {
+                    try {
+                        this.recordingOpenFileDescriptor!!.close()
+                    } catch (exc: IOException) {
+                        Toast.makeText(this, R.string.error_recorder_failed, Toast.LENGTH_SHORT)
+                            .show()
+                    }
                 }
                 this.recorderPlayback = null
             }

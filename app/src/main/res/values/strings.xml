@@ -52,6 +52,12 @@
     <string name="capture_abort">Abort capture</string>
     <string name="capture_prepared_title">Prepared for capture</string>
     <string name="capture_prepared_description">Start or abort capture</string>
+    <string name="format_option">Choose custom video format</string>
+    <string name="format_option_description">Set custom video format</string>
+    <string name="format_option_auto">Default</string>
+    <string name="audio_format_option">Choose custom audio format</string>
+    <string name="audio_format_option_description">Set custom audio format</string>
+    <string name="audio_format_option_auto">Default</string>
     <string name="codec_option">Choose custom video codec</string>
     <string name="codec_option_description">Set custom video codec</string>
     <string name="codec_option_auto">Default</string>

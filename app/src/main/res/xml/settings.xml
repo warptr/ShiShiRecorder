@@ -63,6 +63,13 @@
             android:dialogTitle="@string/resolution_option"
             android:defaultValue="@string/resolution_option_auto_value" />
 
+        <com.yepgoryo.CaptureCap.FormatList
+            android:key="formatvalue"
+            android:summary="@string/format_option_description"
+            android:title="@string/format_option"
+            android:dialogTitle="@string/format_option"
+            android:defaultValue="@string/format_option_auto_value" />
+
         <com.yepgoryo.CaptureCap.CodecList
             android:key="codecvalue"
             android:summary="@string/codec_option_description"
@@ -80,6 +87,13 @@
             android:summary="@string/sound_control_notification_option_description"
             android:title="@string/sound_control_notification_option_title"
             android:defaultValue="false" />
+
+        <com.yepgoryo.CaptureCap.FormatList
+            android:key="audioformatvalue"
+            android:summary="@string/audio_format_option_description"
+            android:title="@string/audio_format_option"
+            android:dialogTitle="@string/audio_format_option"
+            android:defaultValue="@string/audio_format_option_auto_value" />
 
         <com.yepgoryo.CaptureCap.CodecList
             android:key="audiocodecvalue"

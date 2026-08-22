@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.res.Configuration
+import android.media.MediaFormat
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -34,6 +35,8 @@ class SettingsPanel : AppCompatActivity(), PreferenceFragmentCompat.OnPreference
     private var dialog: AlertDialog? = null
     private var settingsPanel: SettingsFragment? = null
     private var videoFolderPreference: Preference? = null
+    private var codecPreference: Preference? = null
+    private var audioCodecPreference: Preference? = null
 
     private var requestFolderPermission: ActivityResultLauncher<Intent> = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         this@SettingsPanel.requestFolder(result.resultCode, result.data!!.data!!, false)
@@ -109,6 +112,70 @@ class SettingsPanel : AppCompatActivity(), PreferenceFragmentCompat.OnPreference
         this.audioFolderPreference?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             this@SettingsPanel.chooseDir(true)
             true
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            this.codecPreference = this.settingsPanel!!.findPreference("codecvalue")
+            this.audioCodecPreference = this.settingsPanel!!.findPreference("audiocodecvalue")
+
+            var codecChangeListener = Preference.OnPreferenceChangeListener { pref, obj ->
+                var codecName = obj as String
+
+                if (pref.key == this@SettingsPanel.appSettings!!.getStringPropertyName(
+                        GlobalProperties.PropertiesString.AUDIO_CODEC_VALUE
+                    )
+                ) {
+                    when (this@SettingsPanel.appSettings!!.getStringProperty(
+                        GlobalProperties.PropertiesString.AUDIO_FORMAT_VALUE,
+                        resources.getString(R.string.audio_format_option_auto_value)
+                    )) {
+                        MediaFormat.MIMETYPE_AUDIO_AAC -> {
+                            this@SettingsPanel.appSettings!!.setStringProperty(
+                                GlobalProperties.PropertiesString.AAC_CODEC,
+                                codecName
+                            )
+                        }
+
+                        else -> {
+                            this@SettingsPanel.appSettings!!.setStringProperty(
+                                GlobalProperties.PropertiesString.AAC_CODEC,
+                                codecName
+                            )
+                        }
+                    }
+                } else {
+                    when (this@SettingsPanel.appSettings!!.getStringProperty(
+                        GlobalProperties.PropertiesString.FORMAT_VALUE,
+                        resources.getString(R.string.format_option_auto_value)
+                    )) {
+                        MediaFormat.MIMETYPE_VIDEO_AVC -> {
+                            this@SettingsPanel.appSettings!!.setStringProperty(
+                                GlobalProperties.PropertiesString.AVC_CODEC,
+                                codecName
+                            )
+                        }
+
+                        MediaFormat.MIMETYPE_VIDEO_HEVC -> {
+                            this@SettingsPanel.appSettings!!.setStringProperty(
+                                GlobalProperties.PropertiesString.HEVC_CODEC,
+                                codecName
+                            )
+                        }
+
+                        else -> {
+                            this@SettingsPanel.appSettings!!.setStringProperty(
+                                GlobalProperties.PropertiesString.AVC_CODEC,
+                                codecName
+                            )
+                        }
+                    }
+                }
+                true
+            }
+
+            this.codecPreference!!.onPreferenceChangeListener = codecChangeListener
+
+            this.audioCodecPreference!!.onPreferenceChangeListener = codecChangeListener
         }
 
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {

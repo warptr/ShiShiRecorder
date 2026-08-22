@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class PlaybackRecorder(private var context: Context,
         private var recordOnlyAudio: Boolean,
         private var virtualDisplay: VirtualDisplay?,
-        private var fileDescriptor: FileDescriptor,
+        private var fileDescriptor: FileDescriptor?,
         private var mediaProjection: MediaProjection?,
         private var enableStream: Boolean,
         private var streamUrl: String?,
@@ -48,8 +48,12 @@ class PlaybackRecorder(private var context: Context,
         fpsValue: Int,
         private var customBitrate: Boolean,
         bitrateValue: Int,
+        chooseCustomFormat: Boolean,
+        formatName: String,
         chooseCustomCodec: Boolean,
         codecName: String,
+        chooseCustomAudioFormat: Boolean,
+        audioFormatName: String,
         chooseCustomAudioCodec: Boolean,
         audioCodecName: String,
         private var customSampleRate: Int,
@@ -78,6 +82,10 @@ class PlaybackRecorder(private var context: Context,
     private var try60FPS: Boolean = true
     private var useCustomAudioCodec: Boolean = false
     private var useCustomCodec: Boolean = false
+    private var useCustomFormat: Boolean = false
+    private var useCustomAudioFormat: Boolean = false
+    private var customFormat: String = ""
+    private var customAudioFormat: String = ""
     private var mMuxerStarted: Boolean = false
     private var tryNormalFPS: Boolean = true
     private var tryNativeFPS: Boolean = true
@@ -107,6 +115,7 @@ class PlaybackRecorder(private var context: Context,
 
     private var sps: ByteArray? = null
     private var pps: ByteArray? = null
+    private var csd: ByteArray? = null
     private var asc: ByteArray? = null
 
     private var pollHandler: Handler? = null
@@ -134,6 +143,14 @@ class PlaybackRecorder(private var context: Context,
     }
 
     init {
+        if (chooseCustomFormat) {
+            this.useCustomFormat = chooseCustomFormat
+            this.customFormat = formatName
+        }
+        if (chooseCustomAudioFormat) {
+            this.useCustomAudioFormat = chooseCustomAudioFormat
+            this.customAudioFormat = audioFormatName
+        }
         getAllCodecs()
         getAllAudioCodecs()
         if (customQuality) {
@@ -208,10 +225,15 @@ class PlaybackRecorder(private var context: Context,
     }
 
     private fun getAllAudioCodecs() {
+        val useFormat = if (useCustomAudioFormat && recordOnlyAudio && !(!recordOnlyAudio && (customFormat == MediaFormat.MIMETYPE_VIDEO_AVC || customFormat == MediaFormat.MIMETYPE_VIDEO_HEVC))) {
+            customAudioFormat
+        } else {
+            MediaFormat.MIMETYPE_AUDIO_AAC
+        }
         for (mediaCodecInfo in MediaCodecList(MediaCodecList.ALL_CODECS).codecInfos) {
             if (mediaCodecInfo.isEncoder) {
                 for (type in mediaCodecInfo.getSupportedTypes()) {
-                    if (type.equals(MediaFormat.MIMETYPE_AUDIO_AAC, ignoreCase = true)) {
+                    if (type.equals(useFormat, ignoreCase = true)) {
                         this.codecsAudioList.add(mediaCodecInfo.name)
                     }
                 }
@@ -220,12 +242,17 @@ class PlaybackRecorder(private var context: Context,
     }
 
     private fun getAllCodecs() {
+        val useFormat = if (useCustomFormat) {
+            customFormat
+        } else {
+            MediaFormat.MIMETYPE_VIDEO_AVC
+        }
         for (mediaCodecInfo in MediaCodecList(MediaCodecList.ALL_CODECS).codecInfos) {
             if (mediaCodecInfo.isEncoder) {
                 for (type in mediaCodecInfo.getSupportedTypes()) {
-                    if (type.equals(MediaFormat.MIMETYPE_VIDEO_AVC, ignoreCase = true)) {
+                    if (type.equals(useFormat, ignoreCase = true)) {
                         this.codecsList.add(mediaCodecInfo.name)
-                        this.codecProfileLevels.add(mediaCodecInfo.getCapabilitiesForType(MediaFormat.MIMETYPE_VIDEO_AVC).profileLevels[0])
+                        this.codecProfileLevels.add(mediaCodecInfo.getCapabilitiesForType(useFormat).profileLevels[0])
                     }
                 }
             }
@@ -312,14 +339,14 @@ class PlaybackRecorder(private var context: Context,
             val bitmapBeforeCamera = VideoOverlay.BitmapSerializer.loadBitmapFromFile(context, bitmapBeforeCameraName)
             val bitmapAfterCamera = VideoOverlay.BitmapSerializer.loadBitmapFromFile(context, bitmapAfterCameraName)
 
-            this.mVideoEncoder = VideoEncoder(context, customWidth, customHeight, scaleRatio, rotation, this.nativeFramerate, this.recordQualityScale, drawOverlay, customBitrate, this.recordCustomBitrate, codec, this.currentProfileLevel!!, bitmapBeforeCamera, bitmapAfterCamera, cameraItem, virtualDisplay!!)
+            this.mVideoEncoder = VideoEncoder(context, customWidth, customHeight, scaleRatio, rotation, this.nativeFramerate, this.recordQualityScale, drawOverlay, customBitrate, this.recordCustomBitrate, codec, this.currentProfileLevel!!, bitmapBeforeCamera, bitmapAfterCamera, cameraItem, virtualDisplay!!, useCustomFormat, customFormat)
         } else {
             this.mVideoEncoder = null
         }
         if (!recordMicrophone && !recordPlayback) {
             this.mAudioEncoder = null
         } else {
-            this.mAudioEncoder = AudioPlaybackRecorder(recordMicrophone, recordPlayback, customSampleRate, customChannelsCount, mediaProjection, this.useCustomAudioCodec, this.customAudioCodec, context, mediaAudioSource, gameAudioSource, unknownAudioSource)
+            this.mAudioEncoder = AudioPlaybackRecorder(recordMicrophone, recordPlayback, customSampleRate, customChannelsCount, mediaProjection, this.useCustomAudioCodec, this.customAudioCodec, this.useCustomAudioFormat, this.customAudioFormat, recordOnlyAudio, context, mediaAudioSource, gameAudioSource, unknownAudioSource)
         }
         if (this.mWorker != null && !this.doRestart) {
             throw IllegalStateException()
@@ -411,12 +438,16 @@ class PlaybackRecorder(private var context: Context,
         this.mIsRunning.set(true)
         try {
             if (enableStream) {
-                this.sMuxer = RtmpMuxer(context, fullStreamPath, customSampleRate, customChannelsCount)
+                var streamFormat = MediaFormat.MIMETYPE_VIDEO_AVC
+                if (useCustomFormat) {
+                    streamFormat = customFormat
+                }
+                this.sMuxer = RtmpMuxer(context, fullStreamPath, customSampleRate, customChannelsCount, streamFormat)
                 if (saveStreamToFile) {
-                    this.mMuxer = MediaMuxer(fileDescriptor, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+                    this.mMuxer = MediaMuxer(fileDescriptor!!, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
                 }
             } else {
-                this.mMuxer = MediaMuxer(fileDescriptor, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+                this.mMuxer = MediaMuxer(fileDescriptor!!, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
             }
             if (!this.recordOnlyAudio) {
                 prepareVideoEncoder()
@@ -429,7 +460,7 @@ class PlaybackRecorder(private var context: Context,
 
     fun muxVideo(index: Int, bufferInfo: MediaCodec.BufferInfo) {
         if (this.mIsRunning.get()) {
-            if (!this.mMuxerStarted || this.mVideoTrackIndex == INVALID_INDEX) {
+            if (!this.mMuxerStarted || (!enableStream && this.mVideoTrackIndex == INVALID_INDEX) || (enableStream && this.sVideoTrackIndex == INVALID_INDEX)) {
                 this.mPendingVideoEncoderBufferIndices.add(index as Integer)
                 this.mPendingVideoEncoderBufferInfos.add(bufferInfo)
             } else {
@@ -450,7 +481,7 @@ class PlaybackRecorder(private var context: Context,
 
     fun muxAudio(index: Int, bufferInfo: MediaCodec.BufferInfo) {
         if (this.mIsRunning.get()) {
-            if (!this.mMuxerStarted || this.mAudioTrackIndex == INVALID_INDEX) {
+            if (!this.mMuxerStarted || (!enableStream && this.mAudioTrackIndex == INVALID_INDEX) || (enableStream && this.sAudioTrackIndex == INVALID_INDEX)) {
                 this.mPendingAudioEncoderBufferIndices.add(index as Integer)
                 this.mPendingAudioEncoderBufferInfos.add(bufferInfo)
             } else {
@@ -712,25 +743,175 @@ class PlaybackRecorder(private var context: Context,
             }
 
             override fun onOutputFormatChanged(videoEncoder: VideoEncoder, mediaFormat: MediaFormat) {
-                val spsBuffer = mediaFormat.getByteBuffer("csd-0")
-                val ppsBuffer = mediaFormat.getByteBuffer("csd-1")
+                if (mediaFormat.getString(MediaFormat.KEY_MIME) == MediaFormat.MIMETYPE_VIDEO_AVC) {
+                    val spsBuffer = mediaFormat.getByteBuffer("csd-0")
+                    val ppsBuffer = mediaFormat.getByteBuffer("csd-1")
 
-                if (spsBuffer != null) {
-                    sps = extractByteArray(spsBuffer)
-                    Log.d(TAG, "SPS output format init: ${sps!!.hex()}")
-                } else {
-                    Log.e(TAG, "spsBuffer is null!")
-                }
+                    if (spsBuffer != null) {
+                        sps = extractByteArray(spsBuffer)
+                        Log.d(TAG, "SPS output format init: ${sps!!.hex()}")
+                    } else {
+                        Log.e(TAG, "spsBuffer is null!")
+                    }
 
-                if (ppsBuffer != null) {
-                    pps = extractByteArray(ppsBuffer)
-                    Log.d(TAG, "PPS output format init: ${pps!!.hex()}")
-                } else {
-                    Log.e(TAG, "ppsBuffer is null!")
-                }
+                    if (ppsBuffer != null) {
+                        pps = extractByteArray(ppsBuffer)
+                        Log.d(TAG, "PPS output format init: ${pps!!.hex()}")
+                    } else {
+                        Log.e(TAG, "ppsBuffer is null!")
+                    }
 
-                if (enableStream && sps != null && pps != null) {
-                    this@PlaybackRecorder.sMuxer!!.setAVCConfig(sps!!, pps!!)
+                    if (enableStream && sps != null && pps != null) {
+                        this@PlaybackRecorder.sMuxer!!.setAVCConfig(sps!!, pps!!)
+                    }
+                } else if (mediaFormat.getString(MediaFormat.KEY_MIME) == MediaFormat.MIMETYPE_VIDEO_HEVC) {
+                    val csdBuffer = mediaFormat.getByteBuffer("csd-0")
+
+                    if (csdBuffer != null) {
+                        csd = extractByteArray(csdBuffer)
+                        Log.d(TAG, "CSD output format init: ${csd!!.hex()}")
+                    } else {
+                        Log.e(TAG, "csdBuffer is null!")
+                    }
+
+                    var tier = 0
+                    var level = 93
+
+                    when (mediaFormat.getInteger(MediaFormat.KEY_LEVEL)) {
+                        MediaCodecInfo.CodecProfileLevel.HEVCHighTierLevel1 -> {
+                            tier = 1
+                            level = 30
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCHighTierLevel2 -> {
+                            tier = 1
+                            level = 60
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCHighTierLevel21 -> {
+                            tier = 1
+                            level = 63
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCHighTierLevel3 -> {
+                            tier = 1
+                            level = 90
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCHighTierLevel31 -> {
+                            tier = 1
+                            level = 93
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCHighTierLevel4 -> {
+                            tier = 1
+                            level = 120
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCHighTierLevel41 -> {
+                            tier = 1
+                            level = 123
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCHighTierLevel5 -> {
+                            tier = 1
+                            level = 150
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCHighTierLevel51 -> {
+                            tier = 1
+                            level = 153
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCHighTierLevel52 -> {
+                            tier = 1
+                            level = 156
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCHighTierLevel6 -> {
+                            tier = 1
+                            level = 180
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCHighTierLevel61 -> {
+                            tier = 1
+                            level = 183
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCHighTierLevel62 -> {
+                            tier = 1
+                            level = 186
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCMainTierLevel1 -> {
+                            tier = 0
+                            level = 30
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCMainTierLevel2 -> {
+                            tier = 0
+                            level = 60
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCMainTierLevel21 -> {
+                            tier = 0
+                            level = 63
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCMainTierLevel3 -> {
+                            tier = 0
+                            level = 90
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCMainTierLevel31 -> {
+                            tier = 0
+                            level = 93
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCMainTierLevel4 -> {
+                            tier = 0
+                            level = 120
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCMainTierLevel41 -> {
+                            tier = 0
+                            level = 123
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCMainTierLevel5 -> {
+                            tier = 0
+                            level = 150
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCMainTierLevel51 -> {
+                            tier = 0
+                            level = 153
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCMainTierLevel52 -> {
+                            tier = 0
+                            level = 156
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCMainTierLevel6 -> {
+                            tier = 0
+                            level = 180
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCMainTierLevel61 -> {
+                            tier = 0
+                            level = 183
+                        }
+
+                        MediaCodecInfo.CodecProfileLevel.HEVCMainTierLevel62 -> {
+                            tier = 0
+                            level = 186
+                        }
+                    }
+
+                    if (enableStream && csd != null) {
+                        this@PlaybackRecorder.sMuxer!!.setHEVCConfig(csd!!, mediaFormat.getInteger(MediaFormat.KEY_PROFILE), tier, level)
+                    }
                 }
 
                 this@PlaybackRecorder.resetVideoOutputFormat(mediaFormat)

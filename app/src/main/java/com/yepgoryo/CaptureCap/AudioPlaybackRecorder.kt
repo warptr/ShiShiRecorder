@@ -35,6 +35,9 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
                             mediaProjection: MediaProjection?,
                             useCustomCodec: Boolean,
                             codecName: String,
+                            useCustomFormat: Boolean,
+                            formatName: String,
+                            recordOnlyAudio: Boolean,
                             context: Context,
                             private var sourceMedia: Boolean,
                             private var sourceGame: Boolean,
@@ -71,7 +74,7 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
     }
 
     init {
-        this.mEncoder = AudioEncoder(sampleRate, channels, useCustomCodec, codecName)
+        this.mEncoder = AudioEncoder(sampleRate, channels, useCustomCodec, codecName, useCustomFormat, formatName, recordOnlyAudio)
         this.mSampleRate = sampleRate
         this.mChannelsSampleRate = sampleRate * 2
         this.mChannelConfig = 12

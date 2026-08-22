@@ -13,7 +13,8 @@ class RtmpMuxer(
     private val context: Context,
     private val rtmpUrl: String,
     private var audioSampleRate: Int,
-    private var audioChannels: Int
+    private var audioChannels: Int,
+    private val videoFormat: String,
 ) {
 
     private val TAG = "RtmpMuxer"
@@ -21,9 +22,12 @@ class RtmpMuxer(
     private external fun nativeCreate(): Long
     private external fun nativeConnect(jContext: Long, url: String): Boolean
     private external fun nativeSetAVCConfig(jContext: Long, jSps: ByteArray, jPps: ByteArray)
+    private external fun nativeSetHEVCConfig(jContext: Long, jCsd: ByteArray, videoProfile: Int, videoTier: Int, videoLevel: Int)
     private external fun nativeSetAACConfig(jContext: Long, asc: ByteArray, sampleRate: Int, channelsCount: Int)
     private external fun nativeIsTimedOut(ctxPtr: Long): Boolean
     private external fun nativeWriteVideo(jContext: Long, data: ByteArray, timestampMs: Long, isKeyFrame: Boolean): Boolean
+    private external fun nativeWriteHEVCVideo(jContext: Long, data: ByteArray, timestampMs: Long, isKeyFrame: Boolean): Boolean
+
     private external fun nativeWriteAudio(jContext: Long, data: ByteArray, timestampMs: Long): Boolean
     private external fun nativeDisconnect(jContext: Long)
     private external fun nativeDestroy(jContext: Long)
@@ -33,6 +37,10 @@ class RtmpMuxer(
     private var mVideoTrackIndex: Int = -1
     private var mAudioTrackIndex: Int = -1
 
+    private var videoCsd: ByteArray? = null
+    private var videoProfile: Int = 1
+    private var videoTier: Int = 0
+    private var videoLevel: Int = 93
     private var videoSps: ByteArray? = null
 
     private var videoPps: ByteArray? = null
@@ -58,6 +66,15 @@ class RtmpMuxer(
         Log.d("RtmpMuxer", "videoPps: ${videoPps!!.hex()}")
     }
 
+    fun setHEVCConfig(csd: ByteArray, profile: Int, tier: Int, level: Int) {
+        videoCsd = csd
+        videoProfile = profile
+        videoTier = tier
+        videoLevel = level
+
+        Log.d("RtmpMuxer", "videoCsd: ${videoCsd!!.hex()}")
+    }
+
     fun setAACConfig(asc: ByteArray) {
         audioAsc = asc
 
@@ -71,13 +88,19 @@ class RtmpMuxer(
 
         val mime = format.getString(MediaFormat.KEY_MIME) ?: ""
         return when {
-            mime.startsWith("video/avc") -> {
+            mime.startsWith(MediaFormat.MIMETYPE_VIDEO_AVC) -> {
                 if (mVideoTrackIndex >= 0) throw IllegalStateException("Video track already added")
                 mVideoTrackIndex = 0
                 Log.d(TAG, "Added video track (index=$mVideoTrackIndex)")
                 mVideoTrackIndex
             }
-            mime.startsWith("audio/mp4a-latm") -> {
+            mime.startsWith(MediaFormat.MIMETYPE_VIDEO_HEVC) -> {
+                if (mVideoTrackIndex >= 0) throw IllegalStateException("Video track already added")
+                mVideoTrackIndex = 0
+                Log.d(TAG, "Added video track (index=$mVideoTrackIndex)")
+                mVideoTrackIndex
+            }
+            mime.startsWith(MediaFormat.MIMETYPE_AUDIO_AAC) -> {
                 if (mAudioTrackIndex >= 0) throw IllegalStateException("Audio track already added")
                 mAudioTrackIndex = 1
                 Log.d(TAG, "Added audio track (index=$mAudioTrackIndex)")
@@ -100,7 +123,11 @@ class RtmpMuxer(
         }
 
         if (mVideoTrackIndex != -1) {
-            nativeSetAVCConfig(mNativeContext, videoSps!!, videoPps!!)
+            if (videoFormat == MediaFormat.MIMETYPE_VIDEO_AVC) {
+                nativeSetAVCConfig(mNativeContext, videoSps!!, videoPps!!)
+            } else if (videoFormat == MediaFormat.MIMETYPE_VIDEO_HEVC) {
+                nativeSetHEVCConfig(mNativeContext, videoCsd!!, videoProfile, videoTier, videoLevel)
+            }
         }
 
         if (mAudioTrackIndex != -1) {
@@ -136,8 +163,14 @@ class RtmpMuxer(
                 val isConfig = info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG != 0
 
                 if (!isConfig) {
-                    if (!nativeWriteVideo(mNativeContext, data, timestampMs, isKeyFrame)) {
-                        Log.e(TAG, "Failed to write video frame (pts=$timestampMs ms)")
+                    if (videoFormat == MediaFormat.MIMETYPE_VIDEO_AVC) {
+                        if (!nativeWriteVideo(mNativeContext, data, timestampMs, isKeyFrame)) {
+                            Log.e(TAG, "Failed to write video frame (pts=$timestampMs ms)")
+                        }
+                    } else if (videoFormat == MediaFormat.MIMETYPE_VIDEO_HEVC) {
+                        if (!nativeWriteHEVCVideo(mNativeContext, data, timestampMs, isKeyFrame)) {
+                            Log.e(TAG, "Failed to write video frame (pts=$timestampMs ms)")
+                        }
                     }
                 }
             }

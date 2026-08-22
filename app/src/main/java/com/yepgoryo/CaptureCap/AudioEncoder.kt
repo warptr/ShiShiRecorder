@@ -12,7 +12,10 @@ open class AudioEncoder(
     private var sampleRate: Int,
     channels: Int,
     private var useCustomCodec: Boolean,
-    private var codecName: String
+    private var codecName: String,
+    private var useCustomFormat: Boolean,
+    private var formatName: String,
+    private var recordOnlyAudio: Boolean,
 ) : Encoder {
     private var channelsCount: Int = channels
     private var mCallback: Callback? = null
@@ -62,12 +65,22 @@ open class AudioEncoder(
     }
 
     protected fun createMediaFormat(): MediaFormat {
+        val useFormat = if (useCustomFormat && recordOnlyAudio) {
+            formatName
+        } else {
+            MediaFormat.MIMETYPE_AUDIO_AAC
+        }
         val mediaFormat = MediaFormat()
-        mediaFormat.setString(MediaFormat.KEY_MIME, MediaFormat.MIMETYPE_AUDIO_AAC)
+        mediaFormat.setString(MediaFormat.KEY_MIME, useFormat)
         mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, this.sampleRate * 16 * this.channelsCount)
         mediaFormat.setInteger(MediaFormat.KEY_CHANNEL_COUNT, this.channelsCount)
         mediaFormat.setInteger(MediaFormat.KEY_SAMPLE_RATE, this.sampleRate)
-        mediaFormat.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC)
+        if (useFormat == MediaFormat.MIMETYPE_AUDIO_AAC) {
+            mediaFormat.setInteger(
+                MediaFormat.KEY_AAC_PROFILE,
+                MediaCodecInfo.CodecProfileLevel.AACObjectLC
+            )
+        }
         return mediaFormat
     }
 
@@ -98,7 +111,7 @@ open class AudioEncoder(
 
     @Throws(IOException::class)
     fun prepare() {
-        var mediaCodecCreateByCodecName: MediaCodec 
+        var mediaCodecCreateByCodecName: MediaCodec
         if (Looper.myLooper() == null || Looper.myLooper() == Looper.getMainLooper() || this.mEncoder != null) {
             throw IllegalStateException()
         }

@@ -16,7 +16,7 @@ import android.view.Surface
 
 import java.nio.ByteBuffer
 
-class VideoEncoder(private val context: Context, customWidth: Int, customHeight: Int, scaleRatio: Float, private val rotation: Int, nativeFramerate: Int, recordQualityScale: Float, private val drawOverlay: Boolean, customBitrate: Boolean, recordCustomBitrate: Int, codec: String, codecProfileLevel: MediaCodecInfo.CodecProfileLevel, val bitmapBeforeCamera: Bitmap?, val bitmapAfterCamera: Bitmap?, var camera: VideoOverlay.CameraItem?, val vDisplay: VirtualDisplay) : Encoder {
+class VideoEncoder(private val context: Context, customWidth: Int, customHeight: Int, scaleRatio: Float, private val rotation: Int, nativeFramerate: Int, recordQualityScale: Float, private val drawOverlay: Boolean, customBitrate: Boolean, recordCustomBitrate: Int, codec: String, codecProfileLevel: MediaCodecInfo.CodecProfileLevel, val bitmapBeforeCamera: Bitmap?, val bitmapAfterCamera: Bitmap?, var camera: VideoOverlay.CameraItem?, val vDisplay: VirtualDisplay, val useCustomFormat: Boolean, val customFormat: String) : Encoder {
     private val BPP: Float = 0.25f
     private var height: Int = 1920
     private var scaleRatio: Float = 1.0f
@@ -125,7 +125,12 @@ class VideoEncoder(private val context: Context, customWidth: Int, customHeight:
     }
 
     private fun createMediaFormat(): MediaFormat {
-        val mediaFormatCreateVideoFormat: MediaFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, (width.toFloat() * this@VideoEncoder.scaleRatio).toInt(), (height * this@VideoEncoder.scaleRatio).toInt())
+        val useFormat = if (useCustomFormat) {
+            customFormat
+        } else {
+            MediaFormat.MIMETYPE_VIDEO_AVC
+        }
+        val mediaFormatCreateVideoFormat: MediaFormat = MediaFormat.createVideoFormat(useFormat, (width.toFloat() * this@VideoEncoder.scaleRatio).toInt(), (height * this@VideoEncoder.scaleRatio).toInt())
         mediaFormatCreateVideoFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
         mediaFormatCreateVideoFormat.setInteger(MediaFormat.KEY_BIT_RATE, this.usedBitrate)
         mediaFormatCreateVideoFormat.setInteger(MediaFormat.KEY_FRAME_RATE, this.screenFramerate)

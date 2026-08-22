@@ -122,7 +122,12 @@ class GlobalProperties(context: Context) {
         BITRATE_VALUE,
         CODEC_VALUE,
         AUDIO_CODEC_VALUE,
-        SAMPLE_RATE_VALUE
+        FORMAT_VALUE,
+        AUDIO_FORMAT_VALUE,
+        SAMPLE_RATE_VALUE,
+        AVC_CODEC,
+        HEVC_CODEC,
+        AAC_CODEC,
     }
 
     enum class ResolutionProperty {
