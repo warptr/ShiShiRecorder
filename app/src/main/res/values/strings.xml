@@ -66,6 +66,9 @@
     <string name="audio_codec_option">Choose custom audio codec</string>
     <string name="audio_codec_option_description">Set custom audio codec</string>
     <string name="audio_codec_option_auto">Default</string>
+    <string name="microphone_option">Select microphone</string>
+    <string name="microphone_option_description">Choose the microphone device</string>
+    <string name="microphone_option_auto">Default</string>
     <string name="samplerate_indicator_custom">Custom audio sample rate</string>
     <string name="samplerate_indicator_custom_description">Ignore default sample rate</string>
     <string name="samplerate_indicator">Audio sample rate</string>

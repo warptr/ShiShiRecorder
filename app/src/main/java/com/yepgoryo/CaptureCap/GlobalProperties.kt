@@ -128,6 +128,7 @@ class GlobalProperties(context: Context) {
         AVC_CODEC,
         HEVC_CODEC,
         AAC_CODEC,
+        SELECTED_MICROPHONE,
     }
 
     enum class ResolutionProperty {

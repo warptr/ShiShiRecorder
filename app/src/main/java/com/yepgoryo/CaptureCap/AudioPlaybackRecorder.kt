@@ -3,7 +3,9 @@ package com.yepgoryo.CaptureCap
 import android.Manifest
 import android.content.Context
 import android.media.AudioAttributes
+import android.media.AudioDeviceInfo
 import android.media.AudioFormat
+import android.media.AudioManager
 import android.media.AudioPlaybackCaptureConfiguration
 import android.media.AudioRecord
 import android.media.MediaCodec
@@ -16,6 +18,7 @@ import android.os.HandlerThread
 import android.os.Looper
 import android.os.Message
 import android.os.SystemClock
+import android.util.Log
 import android.util.SparseLongArray
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -38,7 +41,7 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
                             useCustomFormat: Boolean,
                             formatName: String,
                             recordOnlyAudio: Boolean,
-                            context: Context,
+                            private val context: Context,
                             private var sourceMedia: Boolean,
                             private var sourceGame: Boolean,
                             private var sourceUnknown: Boolean
@@ -63,6 +66,9 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
     private var mFramesUsCache: SparseLongArray = SparseLongArray(2)
     private var audioMuted: Boolean = false
     private var micMuted: Boolean = false
+    private var appSettings: GlobalProperties? = null
+    private var isDeviceBluetoothSCO = false
+    private var audioManager: AudioManager? = null
 
     enum class RecordMessage {
         MSG_PREPARE,
@@ -84,6 +90,8 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
         this.mProjection = mediaProjection
         this.mRecordThread = HandlerThread(TAG)
         this.mainContext = context
+        this.appSettings = GlobalProperties(context)
+        this.audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
 
     fun setCallback(callback: Encoder.Callback) {
@@ -182,6 +190,9 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
                         if (audioRecordCreateMicRecord == null) {
                             this@AudioPlaybackRecorder.mCallbackDelegate?.onError(this@AudioPlaybackRecorder, IllegalArgumentException())
                         } else {
+                            if (isDeviceBluetoothSCO) {
+                                audioManager!!.startBluetoothSco()
+                            }
                             audioRecordCreateMicRecord.startRecording()
                             this@AudioPlaybackRecorder.mMic = audioRecordCreateMicRecord
                         }
@@ -206,6 +217,9 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
                         this@AudioPlaybackRecorder.mPlayback?.stop()
                     }
                     if (this@AudioPlaybackRecorder.recordMicrophone && this@AudioPlaybackRecorder.mMic != null) {
+                        if (isDeviceBluetoothSCO) {
+                            audioManager!!.stopBluetoothSco()
+                        }
                         this@AudioPlaybackRecorder.mMic?.stop()
                     }
                     this@AudioPlaybackRecorder.mEncoder.stop()
@@ -218,6 +232,7 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
                     if (this@AudioPlaybackRecorder.recordMicrophone) {
                         this@AudioPlaybackRecorder.mMic?.release()
                         this@AudioPlaybackRecorder.mMic = null
+                        isDeviceBluetoothSCO = false
                     }
                     this@AudioPlaybackRecorder.mEncoder.release()
                 }
@@ -445,10 +460,38 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
         }
     }
 
+    fun findMicrophoneById(id: Int): AudioDeviceInfo? {
+        for (microphoneInfo in audioManager!!.getDevices(AudioManager.GET_DEVICES_INPUTS)) {
+            if (id == microphoneInfo.id) {
+                return microphoneInfo
+            }
+        }
+        return null
+    }
+
+    fun getMicrophone(): AudioDeviceInfo? {
+        val micValue = appSettings!!.getStringProperty(GlobalProperties.PropertiesString.SELECTED_MICROPHONE, context.resources.getString(R.string.microphone_option_auto_value))
+        if (micValue == context.resources.getString(R.string.microphone_option_auto_value)) {
+            return null
+        }
+        return findMicrophoneById(micValue.toInt())
+    }
+
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     fun createMicRecord(sampleRate: Int, channelConfig: Int, format: Int): AudioRecord? {
         try {
+            isDeviceBluetoothSCO = false
             val audioRecord = AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, channelConfig, format, audioBufLimit)
+            val customMic: AudioDeviceInfo? = getMicrophone()
+            if (customMic != null) {
+                if (customMic!!.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO) {
+                    isDeviceBluetoothSCO = true
+                }
+                Log.d(TAG, "Found custom microphone ${customMic!!.id}")
+                if (!audioRecord.setPreferredDevice(customMic!!)) {
+                    Log.e(TAG, "Error: couldn't select custom microphone ${customMic!!.id}")
+                }
+            }
             if (audioRecord.getState() == AudioRecord.STATE_UNINITIALIZED) {
                 return null
             }

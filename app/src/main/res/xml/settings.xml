@@ -126,6 +126,13 @@
             android:entryValues="@array/audio_channels_preferences_values"
             android:defaultValue="@string/audio_channels_preferences_option_default_value" />
 
+        <com.yepgoryo.CaptureCap.MicrophonesList
+            android:key="selectedmicrophone"
+            android:summary="@string/microphone_option_description"
+            android:title="@string/microphone_option"
+            android:dialogTitle="@string/microphone_option"
+            android:defaultValue="@string/microphone_option_auto_value" />
+
         <ListPreference
             android:key="screenorientation"
             android:summary="@string/screen_orientation_description"
