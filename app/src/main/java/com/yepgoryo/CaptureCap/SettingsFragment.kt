@@ -39,6 +39,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             val preferenceFindPreference17: Preference = findPreference("prerecording")!!
             val preferenceFindPreference18: Preference = findPreference("formatvalue")!!
             val preferenceFindPreference19: Preference = findPreference("audioformatvalue")!!
+            val preferenceFindPreference20: Preference = findPreference("selectedmicrophone")!!
 
             val preferenceCategory2: PreferenceCategory = findPreference("capturesettings")!!
             preferenceCategory2.removePreference(preferenceFindPreference5)
@@ -56,6 +57,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             preferenceCategory2.removePreference(preferenceFindPreference17)
             preferenceCategory2.removePreference(preferenceFindPreference18)
             preferenceCategory2.removePreference(preferenceFindPreference19)
+            preferenceCategory2.removePreference(preferenceFindPreference20)
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA) {
             val preferenceFindPreference14: Preference = findPreference("screenrotation")!!
