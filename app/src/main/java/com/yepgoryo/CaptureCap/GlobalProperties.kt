@@ -99,7 +99,9 @@ class GlobalProperties(context: Context) {
         PANEL_POSITION_VERTICAL_Y_LITTLE,
         FLOATING_CONTROLS_OPACITY,
         QUALITY_SCALE,
-        TIMER_SECONDS
+        TIMER_SECONDS,
+        AUDIO_VOLUME,
+        MICROPHONE_VOLUME,
     }
 
     enum class PropertiesSpecial {

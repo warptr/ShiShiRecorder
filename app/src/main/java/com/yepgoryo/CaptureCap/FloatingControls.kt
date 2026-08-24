@@ -10,6 +10,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.hardware.display.DisplayManager
 import android.os.Binder
+import android.os.Build
 import android.os.IBinder
 import android.os.SystemClock
 import android.util.DisplayMetrics
@@ -20,10 +21,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.Surface
+import android.widget.CheckBox
 import android.widget.Chronometer
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.SeekBar
+import android.widget.TextView
 import androidx.core.view.setPadding
 
 class FloatingControls : Service() {
@@ -40,6 +44,7 @@ class FloatingControls : Service() {
     private var displayHeight: Int = 0
     private var displayWidth: Int = 0
     private lateinit var panelLayout: LinearLayout
+    private lateinit var soundControlsLayout: LinearLayout
     private var panelScale: Float = 1.0f
     private var reduceToDot: Boolean = false
     private var floatWindowLayoutParam: WindowManager.LayoutParams? = null
@@ -48,10 +53,12 @@ class FloatingControls : Service() {
     private var layoutType: Int = 0
     private var orientationOnStart: Int = 0
     private var panelHeight: Int = 0
+    private var panelHeightPreserved: Int = 0
     private var panelSize: GlobalProperties.FloatingControlsSizeProperty? = null
     private var panelWeightHidden: Int = 0
     private var panelWidth: Int = 0
     private var panelWidthNormal: Int = 0
+    private var soundControlsWeight: Int = 0
     private var widthNormal: Int = 0
     private var pauseButton: ImageButton? = null
     private var recordingPanelBinder: ScreenRecorder.RecordingPanelBinder? = null
@@ -61,6 +68,17 @@ class FloatingControls : Service() {
     private var sensor: SensorManager? = null
     private var startAction: String? = null
     private var stopButton: ImageButton? = null
+    private var audioAdjustButton: ImageButton? = null
+    private var audioVolumePanel: LinearLayout? = null
+    private var micVolumePanel: LinearLayout? = null
+    private var audioMute: CheckBox? = null
+    private var micMute: CheckBox? = null
+    private var audioVolume: TextView? = null
+    private var audioSeekBar: SeekBar? = null
+    private var micVolume: TextView? = null
+    private var micSeekBar: SeekBar? = null
+    private var audioVolumeScale: Int = 100
+    private var micVolumeScale: Int = 100
     private var timerStart: Long = 0
     private var viewHandle: ImageView? = null
     private var viewHandlePadding: Int = 0
@@ -238,6 +256,26 @@ class FloatingControls : Service() {
             this@FloatingControls.recordingProgress?.visibility = View.INVISIBLE
             setControlState(true)
         }
+
+        fun setAudioMuted(mute: Boolean) {
+            audioMute!!.isChecked = mute
+        }
+
+        fun setMicMuted(mute: Boolean) {
+            micMute!!.isChecked = mute
+        }
+
+        fun setAudioVolume(vol: Int) {
+            audioSeekBar!!.progress = vol
+            audioVolume!!.text = vol.toString()
+            audioVolumeScale = vol
+        }
+
+        fun setMicVolume(vol: Int) {
+            micSeekBar!!.progress = vol
+            micVolume!!.text = vol.toString()
+            micVolumeScale = vol
+        }
     }
 
     inner class PanelPositionBinder : Binder() {
@@ -359,7 +397,7 @@ class FloatingControls : Service() {
                     newX = (this@FloatingControls.displayWidth / 2) - ((this@FloatingControls.panelWidth*panelScale).toInt() / 2)
                 }
                 if ((newY - ((this@FloatingControls.panelHeight*panelScale) / 2)) < -(this@FloatingControls.displayHeight / 2)) {
-                    newY = -(this@FloatingControls.displayHeight / 2)
+                    newY = -(this@FloatingControls.displayHeight / 2) + ((this@FloatingControls.panelHeight*panelScale).toInt() / 2)
                 } else if ((((this@FloatingControls.panelHeight*panelScale) / 2) + newY) > (this@FloatingControls.displayHeight / 2)) {
                     newY = (this@FloatingControls.displayHeight / 2) - ((this@FloatingControls.panelHeight*panelScale).toInt() / 2)
                 }
@@ -423,7 +461,9 @@ class FloatingControls : Service() {
             this@FloatingControls.resumeButton?.visibility = View.GONE
             this@FloatingControls.recordingProgress?.visibility = View.GONE
             panelWrapped!!.visibility = View.GONE
+            soundControlsLayout!!.visibility = View.GONE
             this@FloatingControls.panelWidth = this@FloatingControls.panelWeightHidden
+            this@FloatingControls.panelHeight = panelHeightPreserved
             if (this@FloatingControls.isHorizontal) {
                 newX += (this@FloatingControls.panelWidthNormal / 2) - (this@FloatingControls.panelWeightHidden / 2)
                 this@FloatingControls.floatWindowLayoutParam!!.width = (this@FloatingControls.panelWeightHidden*panelScale).toInt()
@@ -460,6 +500,45 @@ class FloatingControls : Service() {
 
         this@FloatingControls.floatWindowLayoutParam!!.x = newX
         this@FloatingControls.floatWindowLayoutParam!!.y = newY
+    }
+
+    fun toggleSoundControls() {
+        if (!this@FloatingControls.panelHidden && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (soundControlsLayout.visibility == View.VISIBLE) {
+                soundControlsLayout!!.visibility = View.GONE
+                if (this@FloatingControls.isHorizontal) {
+                    this@FloatingControls.panelHeight = panelHeightPreserved
+                    this@FloatingControls.floatWindowLayoutParam!!.width =
+                        (this@FloatingControls.panelWidth * panelScale).toInt()
+                    this@FloatingControls.floatWindowLayoutParam!!.height =
+                        (this@FloatingControls.panelHeight * panelScale).toInt()
+                } else {
+                    this@FloatingControls.panelWidth = panelWidthNormal
+                    this@FloatingControls.floatWindowLayoutParam!!.width =
+                        (this@FloatingControls.panelWidth * panelScale).toInt()
+                    this@FloatingControls.floatWindowLayoutParam!!.height =
+                        (this@FloatingControls.panelHeight * panelScale).toInt()
+                }
+            } else {
+                soundControlsLayout!!.visibility = View.VISIBLE
+                if (this@FloatingControls.isHorizontal) {
+                    this@FloatingControls.panelHeight = panelHeightPreserved + soundControlsWeight
+                    this@FloatingControls.floatWindowLayoutParam!!.width =
+                        (this@FloatingControls.panelWidth * panelScale).toInt()
+                    this@FloatingControls.floatWindowLayoutParam!!.height =
+                        (this@FloatingControls.panelHeight * panelScale).toInt()
+                } else {
+                    this@FloatingControls.panelWidth = panelWidthNormal + soundControlsWeight
+                    this@FloatingControls.floatWindowLayoutParam!!.width =
+                        (this@FloatingControls.panelWidth * panelScale).toInt()
+                    this@FloatingControls.floatWindowLayoutParam!!.height =
+                        (this@FloatingControls.panelHeight * panelScale).toInt()
+                }
+            }
+
+            this@FloatingControls.checkBoundaries()
+            this@FloatingControls.windowManager?.updateViewLayout(this@FloatingControls.floatingPanel, this@FloatingControls.floatWindowLayoutParam)
+        }
     }
 
     fun startRecord() {
@@ -519,15 +598,92 @@ class FloatingControls : Service() {
             }
         }
 
+
+        this.audioVolumeScale = this.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.AUDIO_VOLUME, 100)
+        this.micVolumeScale = this.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.MICROPHONE_VOLUME, 100)
+
+        audioVolume = this@FloatingControls.floatingPanel!!.findViewById(R.id.audio_volume_value)
+        audioSeekBar = this@FloatingControls.floatingPanel!!.findViewById(R.id.audio_volume_seek)
+        audioSeekBar!!.progress = this.audioVolumeScale
+        audioVolume!!.text = this.audioVolumeScale.toString()
+        audioSeekBar!!.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+            }
+
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                this@FloatingControls.audioVolumeScale = progress
+                audioVolume!!.text = this@FloatingControls.audioVolumeScale.toString()
+                this@FloatingControls.appSettings?.setIntProperty(GlobalProperties.PropertiesInt.AUDIO_VOLUME, this@FloatingControls.audioVolumeScale)
+            }
+        })
+
+        micVolume = this@FloatingControls.floatingPanel!!.findViewById(R.id.microphone_volume_value)
+        micSeekBar = this@FloatingControls.floatingPanel!!.findViewById(R.id.microphone_volume_seek)
+        micSeekBar!!.progress = this.micVolumeScale
+        micVolume!!.text = this.micVolumeScale.toString()
+        micSeekBar!!.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+            }
+
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                this@FloatingControls.micVolumeScale = progress
+                micVolume!!.text = this@FloatingControls.micVolumeScale.toString()
+                this@FloatingControls.appSettings?.setIntProperty(GlobalProperties.PropertiesInt.MICROPHONE_VOLUME, this@FloatingControls.micVolumeScale)
+            }
+        })
+
+        audioMute = this@FloatingControls.floatingPanel!!.findViewById(R.id.audio_mute)
+        micMute = this@FloatingControls.floatingPanel!!.findViewById(R.id.mic_mute)
+
+        audioMute!!.isChecked = recordingPanelBinder!!.audioMuted()
+
+        audioMute!!.setOnCheckedChangeListener { _, _ ->
+            if (recordingPanelBinder!!.recordAudio()) {
+                if (recordingPanelBinder!!.audioMuted()) {
+                    recordingPanelBinder!!.unmuteAudio()
+                    audioMute!!.isChecked = false
+                } else {
+                    recordingPanelBinder!!.muteAudio()
+                    audioMute!!.isChecked = true
+                }
+            } else {
+                audioMute!!.isChecked = false
+            }
+        }
+
+        micMute!!.isChecked = recordingPanelBinder!!.micMuted()
+
+        micMute!!.setOnCheckedChangeListener { _, _ ->
+            if (recordingPanelBinder!!.recordMic()) {
+                if (recordingPanelBinder!!.micMuted()) {
+                    recordingPanelBinder!!.unmuteMic()
+                    micMute!!.isChecked = false
+                } else {
+                    recordingPanelBinder!!.muteMic()
+                    micMute!!.isChecked = true
+                }
+            } else {
+                micMute!!.isChecked = false
+            }
+        }
+
         this@FloatingControls.layoutType = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         this@FloatingControls.viewHandle = this@FloatingControls.floatingPanel!!.findViewById(R.id.floatingpanelhandle)
         viewHandlePadding = viewHandle!!.paddingBottom
         panelLayout = this@FloatingControls.floatingPanel!!.findViewById(R.id.panelwithbackground)
+        soundControlsLayout = this@FloatingControls.floatingPanel!!.findViewById(R.id.soundoptions)
 
         panelLayout.setAlpha((this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.FLOATING_CONTROLS_OPACITY, 9) + 1) * 0.1f)
         panelLayout.measure(0, 0)
         this@FloatingControls.panelWidthNormal = panelLayout.measuredWidth
         this@FloatingControls.panelHeight = panelLayout.measuredHeight
+        this@FloatingControls.panelHeightPreserved = panelLayout.measuredHeight
 
         viewHandle!!.measure(0, 0)
 
@@ -564,18 +720,22 @@ class FloatingControls : Service() {
 
             when (this@FloatingControls.panelSize) {
                 GlobalProperties.FloatingControlsSizeProperty.LARGE -> {
+                    soundControlsWeight = (250*resources.displayMetrics.density).toInt()
                     this@FloatingControls.floatWindowLayoutParam!!.x = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_HORIZONTAL_X_BIG, (this@FloatingControls.displayWidth / 2) - (this@FloatingControls.panelWidth / 2))
                     this@FloatingControls.floatWindowLayoutParam!!.y = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_HORIZONTAL_Y_BIG, 0)
                 }
                 GlobalProperties.FloatingControlsSizeProperty.NORMAL -> {
+                    soundControlsWeight = (210*resources.displayMetrics.density).toInt()
                     this@FloatingControls.floatWindowLayoutParam!!.x = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_HORIZONTAL_X_NORMAL, (this@FloatingControls.displayWidth / 2) - (this@FloatingControls.panelWidth / 2))
                     this@FloatingControls.floatWindowLayoutParam!!.y = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_HORIZONTAL_Y_NORMAL, 0)
                 }
                 GlobalProperties.FloatingControlsSizeProperty.SMALL -> {
+                    soundControlsWeight = (200*resources.displayMetrics.density).toInt()
                     this@FloatingControls.floatWindowLayoutParam!!.x = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_HORIZONTAL_X_SMALL, (this@FloatingControls.displayWidth / 2) - (this@FloatingControls.panelWidth / 2))
                     this@FloatingControls.floatWindowLayoutParam!!.y = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_HORIZONTAL_Y_SMALL, 0)
                 }
                 GlobalProperties.FloatingControlsSizeProperty.TINY -> {
+                    soundControlsWeight = (180*resources.displayMetrics.density).toInt()
                     this@FloatingControls.floatWindowLayoutParam!!.x = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_HORIZONTAL_X_TINY, (this@FloatingControls.displayWidth / 2) - (this@FloatingControls.panelWidth / 2))
                     this@FloatingControls.floatWindowLayoutParam!!.y = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_HORIZONTAL_Y_TINY, 0)
                 }
@@ -585,18 +745,22 @@ class FloatingControls : Service() {
         } else {
             when (this@FloatingControls.panelSize) {
                 GlobalProperties.FloatingControlsSizeProperty.LARGE -> {
+                    soundControlsWeight = (250*resources.displayMetrics.density).toInt()
                     this@FloatingControls.floatWindowLayoutParam!!.x = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_VERTICAL_X_BIG, (this@FloatingControls.displayWidth / 2) - (this@FloatingControls.panelWidth / 2))
                     this@FloatingControls.floatWindowLayoutParam!!.y = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_VERTICAL_Y_BIG, 0)
                 }
                 GlobalProperties.FloatingControlsSizeProperty.NORMAL -> {
+                    soundControlsWeight = (210*resources.displayMetrics.density).toInt()
                     this@FloatingControls.floatWindowLayoutParam!!.x = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_VERTICAL_X_NORMAL, (this@FloatingControls.displayWidth / 2) - (this@FloatingControls.panelWidth / 2))
                     this@FloatingControls.floatWindowLayoutParam!!.y = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_VERTICAL_Y_NORMAL, 0)
                 }
                 GlobalProperties.FloatingControlsSizeProperty.SMALL -> {
+                    soundControlsWeight = (180*resources.displayMetrics.density).toInt()
                     this@FloatingControls.floatWindowLayoutParam!!.x = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_VERTICAL_X_SMALL, (this@FloatingControls.displayWidth / 2) - (this@FloatingControls.panelWidth / 2))
                     this@FloatingControls.floatWindowLayoutParam!!.y = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_VERTICAL_Y_SMALL, 0)
                 }
                 GlobalProperties.FloatingControlsSizeProperty.TINY -> {
+                    soundControlsWeight = (150*resources.displayMetrics.density).toInt()
                     this@FloatingControls.floatWindowLayoutParam!!.x = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_VERTICAL_X_TINY, (this@FloatingControls.displayWidth / 2) - (this@FloatingControls.panelWidth / 2))
                     this@FloatingControls.floatWindowLayoutParam!!.y = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_VERTICAL_Y_TINY, 0)
                 }
@@ -609,11 +773,34 @@ class FloatingControls : Service() {
         this@FloatingControls.pauseButton = this@FloatingControls.floatingPanel!!.findViewById(R.id.recordpausebuttonfloating)
         this@FloatingControls.stopButton = this@FloatingControls.floatingPanel!!.findViewById(R.id.recordstopbuttonfloating)
         this@FloatingControls.resumeButton = this@FloatingControls.floatingPanel!!.findViewById(R.id.recordresumebuttonfloating)
+        this@FloatingControls.audioAdjustButton = this@FloatingControls.floatingPanel!!.findViewById(R.id.recordaudioadjustbuttonfloating)
+        this@FloatingControls.audioVolumePanel = this@FloatingControls.floatingPanel!!.findViewById(R.id.audio_volume_panel)
+        this@FloatingControls.micVolumePanel = this@FloatingControls.floatingPanel!!.findViewById(R.id.mic_volume_panel)
         this@FloatingControls.recordingProgress = this@FloatingControls.floatingPanel!!.findViewById(R.id.timerrecordfloating)
         this@FloatingControls.recordingProgress?.visibility = View.VISIBLE
         if (this@FloatingControls.startAction == ACTION_PRERECORD_PANEL) {
             this@FloatingControls.recordingProgress!!.visibility = View.INVISIBLE
         }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || !(this.recordingPanelBinder!!.recordMic() || this.recordingPanelBinder!!.recordAudio())) {
+            audioAdjustButton!!.setImageDrawable(resources.getDrawable(R.drawable.icon_record_adjust_volume_nosound, theme))
+            audioAdjustButton!!.alpha = 0.5f
+        } else {
+            audioAdjustButton!!.setImageDrawable(resources.getDrawable(R.drawable.icon_record_adjust_volume, theme))
+            audioAdjustButton!!.alpha = 1f
+        }
+
+        if (this.recordingPanelBinder!!.recordMic()) {
+            micVolumePanel!!.visibility = View.VISIBLE
+        } else {
+            micVolumePanel!!.visibility = View.GONE
+        }
+
+        if (this.recordingPanelBinder!!.recordAudio()) {
+            audioVolumePanel!!.visibility = View.VISIBLE
+        } else {
+            audioVolumePanel!!.visibility = View.GONE
+        }
+
         this@FloatingControls.resumeButton?.visibility = View.GONE
         panelWrapped = floatingPanel!!.findViewById<LinearLayout>(R.id.panelwrapped)
         if (this@FloatingControls.panelHidden) {
@@ -663,6 +850,11 @@ class FloatingControls : Service() {
             }
             if (this@FloatingControls.startAction != ACTION_PRERECORD_PANEL) {
                 this@FloatingControls.recordingProgress?.start()
+            }
+        }
+        this@FloatingControls.audioAdjustButton?.setOnClickListener {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && (this.recordingPanelBinder!!.recordMic() || this.recordingPanelBinder!!.recordAudio())) {
+                this@FloatingControls.toggleSoundControls()
             }
         }
 

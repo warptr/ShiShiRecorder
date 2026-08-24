@@ -133,6 +133,12 @@
             android:dialogTitle="@string/microphone_option"
             android:defaultValue="@string/microphone_option_auto_value" />
 
+        <com.yepgoryo.CaptureCap.ParameterDialog
+            android:key="audiovolumeoption"
+            android:summary="@string/audio_volume_option_description"
+            android:title="@string/audio_volume_option"
+            android:dialogLayout="@layout/dialog_audio_volume" />
+
         <ListPreference
             android:key="screenorientation"
             android:summary="@string/screen_orientation_description"

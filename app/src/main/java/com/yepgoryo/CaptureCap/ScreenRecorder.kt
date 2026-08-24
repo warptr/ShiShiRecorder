@@ -347,6 +347,18 @@ class ScreenRecorder : Service() {
             this@ScreenRecorder.intentResult = resultCode
             this@ScreenRecorder.intentData = intent
         }
+
+        fun setAudioVolume(vol: Int) {
+            if (this@ScreenRecorder.panelBinder != null) {
+                this@ScreenRecorder.panelBinder!!.setAudioVolume(vol)
+            }
+        }
+
+        fun setMicVolume(vol: Int) {
+            if (this@ScreenRecorder.panelBinder != null) {
+                this@ScreenRecorder.panelBinder!!.setMicVolume(vol)
+            }
+        }
     }
 
     inner class RecordingTileBinder : Binder() {
@@ -402,6 +414,44 @@ class ScreenRecorder : Service() {
 
         fun abortPreRecord() {
             this@ScreenRecorder.abortPreRecord()
+        }
+
+        fun recordMic(): Boolean {
+            if (this@ScreenRecorder.recorderPlayback == null) {
+                return false
+            }
+            return this@ScreenRecorder.recordMicrophone
+        }
+
+        fun recordAudio(): Boolean {
+            if (this@ScreenRecorder.recorderPlayback == null) {
+                return false
+            }
+            return this@ScreenRecorder.recordPlayback
+        }
+
+        fun muteMic() {
+            this@ScreenRecorder.muteMic()
+        }
+
+        fun unmuteMic() {
+            this@ScreenRecorder.unmuteMic()
+        }
+
+        fun muteAudio() {
+            this@ScreenRecorder.muteAudio()
+        }
+
+        fun unmuteAudio() {
+            this@ScreenRecorder.unmuteAudio()
+        }
+
+        fun micMuted(): Boolean {
+            return this@ScreenRecorder.micMuted()
+        }
+
+        fun audioMuted(): Boolean {
+            return this@ScreenRecorder.audioMuted()
         }
     }
 
@@ -563,30 +613,50 @@ class ScreenRecorder : Service() {
     }
 
     fun muteMic() {
-        this.recorderPlayback?.setMicrophoneMuted(true)
-        if (enableSoundControlsNotification) {
-            refreshSoundControlsNotification()
+        if (this.recorderPlayback != null) {
+            if (this.panelBinder != null) {
+                this.panelBinder!!.setMicMuted(true)
+            }
+            this.recorderPlayback?.setMicrophoneMuted(true)
+            if (enableSoundControlsNotification && isActive) {
+                refreshSoundControlsNotification()
+            }
         }
     }
 
     fun unmuteMic() {
-        this.recorderPlayback?.setMicrophoneMuted(false)
-        if (enableSoundControlsNotification) {
-            refreshSoundControlsNotification()
+        if (this.recorderPlayback != null) {
+            if (this.panelBinder != null) {
+                this.panelBinder!!.setMicMuted(false)
+            }
+            this.recorderPlayback?.setMicrophoneMuted(false)
+            if (enableSoundControlsNotification && isActive) {
+                refreshSoundControlsNotification()
+            }
         }
     }
 
     fun muteAudio() {
-        this.recorderPlayback?.setAudioMuted(true)
-        if (enableSoundControlsNotification) {
-            refreshSoundControlsNotification()
+        if (this.recorderPlayback != null) {
+            if (this.panelBinder != null) {
+                this.panelBinder!!.setAudioMuted(true)
+            }
+            this.recorderPlayback?.setAudioMuted(true)
+            if (enableSoundControlsNotification && isActive) {
+                refreshSoundControlsNotification()
+            }
         }
     }
 
     fun unmuteAudio() {
-        this.recorderPlayback?.setAudioMuted(false)
-        if (enableSoundControlsNotification) {
-            refreshSoundControlsNotification()
+        if (this.recorderPlayback != null) {
+            if (this.panelBinder != null) {
+                this.panelBinder!!.setAudioMuted(false)
+            }
+            this.recorderPlayback?.setAudioMuted(false)
+            if (enableSoundControlsNotification && isActive) {
+                refreshSoundControlsNotification()
+            }
         }
     }
 

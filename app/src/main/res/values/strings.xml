@@ -69,6 +69,11 @@
     <string name="microphone_option">Select microphone</string>
     <string name="microphone_option_description">Choose the microphone device</string>
     <string name="microphone_option_auto">Default</string>
+    <string name="audio_volume_option">Audio volume</string>
+    <string name="audio_volume_option_description">Set volume for system audio or microphone</string>
+    <string name="audio_volume_audio">Audio volume</string>
+    <string name="audio_volume">Volume</string>
+    <string name="audio_volume_microphone">Microphone volume</string>
     <string name="samplerate_indicator_custom">Custom audio sample rate</string>
     <string name="samplerate_indicator_custom_description">Ignore default sample rate</string>
     <string name="samplerate_indicator">Audio sample rate</string>

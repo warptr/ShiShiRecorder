@@ -372,10 +372,16 @@ class PlaybackRecorder(private var context: Context,
     }
 
     fun microphoneMuted(): Boolean {
+        if (this.mAudioEncoder == null) {
+            return false
+        }
         return this.mAudioEncoder!!.microphoneMuted()
     }
 
     fun audioMuted(): Boolean {
+        if (this.mAudioEncoder == null) {
+            return false
+        }
         return this.mAudioEncoder!!.audioMuted()
     }
 

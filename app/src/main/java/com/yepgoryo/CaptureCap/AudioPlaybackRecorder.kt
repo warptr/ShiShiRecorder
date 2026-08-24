@@ -305,6 +305,9 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
         val offset: Int = mEncoder.getInputBuffer(index)!!.position()
         var read = 0
 
+        val audioVolumeScale = this.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.AUDIO_VOLUME, 100) / 100.0f
+        val micVolumeScale = this.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.MICROPHONE_VOLUME, 100) / 100.0f
+
         if (!eos) {
             if ((recordMicrophone || recordAudio) && ((!recordAudio || audioMuted) && (!recordMicrophone || micMuted))) {
                 val framePlayback = ByteArray(audioBufLimit)
@@ -341,7 +344,7 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
 
                 var i = 0
                 while (i < micRead) {
-                    framePlayback[i] = (framePlayback[i] + frameMic[i]).toByte()
+                    framePlayback[i] = ((framePlayback[i] * audioVolumeScale).toInt() + (frameMic[i] * micVolumeScale).toInt()).toByte()
                     i += 1
                 }
 
@@ -355,6 +358,13 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
             } else if ((recordMicrophone && !micMuted) && (!recordAudio || audioMuted)) {
                 val frameMic = ByteArray(audioBufLimit)
                 val micRead = mMic!!.read(frameMic, 0, audioBufLimit)
+
+                var i = 0
+                while (i < micRead) {
+                    frameMic[i] = (frameMic[i] * micVolumeScale).toInt().toByte()
+                    i += 1
+                }
+
                 mEncoder.getInputBuffer(index)?.put(frameMic)
 
                 if (micRead >= 0) {
@@ -365,6 +375,13 @@ class AudioPlaybackRecorder(private val recordMicrophone: Boolean,
             } else if ((!recordMicrophone || micMuted) && (recordAudio && !audioMuted)) {
                 val framePlayback = ByteArray(audioBufLimit)
                 val playbackRead = mPlayback!!.read(framePlayback, 0, audioBufLimit)
+
+                var i = 0
+                while (i < playbackRead) {
+                    framePlayback[i] = (framePlayback[i] * audioVolumeScale).toInt().toByte()
+                    i += 1
+                }
+
                 mEncoder.getInputBuffer(index)?.put(framePlayback)
 
                 if (playbackRead >= 0) {

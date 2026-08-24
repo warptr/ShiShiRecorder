@@ -32,6 +32,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.RelativeLayout.LayoutParams
+import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -44,7 +45,10 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.view.marginEnd
+import androidx.core.view.marginRight
 import androidx.core.view.updatePadding
+import com.google.android.flexbox.FlexboxLayout
 
 class MainActivity : AppCompatActivity() {
 
@@ -62,11 +66,12 @@ class MainActivity : AppCompatActivity() {
     var mainRecordingButton: RecordButton? = null
     var captureStartButton: Button? = null
     var recordOptionsPanel: LinearLayout? = null
-    var recordControls: LinearLayout? = null
+    var recordControls: FlexboxLayout? = null
     var recordControlMuteMic: Button? = null
     var recordControlMuteAudio: Button? = null
     var recordControlUnmuteMic: Button? = null
     var recordControlUnmuteAudio: Button? = null
+    var recordControlAdjustVolume: Button? = null
     var recordControlPause: Button? = null
     var recordControlResume: Button? = null
     var recordControlStop: Button? = null
@@ -292,6 +297,11 @@ class MainActivity : AppCompatActivity() {
                 captureStartButton!!.isVisible = false
                 mainRecordingButton!!.innerButton().isVisible = true
                 recordOptionsFullPanel!!.isVisible = false
+                if (this@MainActivity.recordingBinder!!.recordMic() || this@MainActivity.recordingBinder!!.recordAudio()) {
+                    recordControlAdjustVolume!!.visibility = View.VISIBLE
+                } else {
+                    recordControlAdjustVolume!!.visibility = View.GONE
+                }
                 if (this@MainActivity.recordingBinder!!.recordMic() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     if (this@MainActivity.recordingBinder!!.micMuted()) {
                         recordControlMuteMic!!.visibility = View.GONE
@@ -411,6 +421,7 @@ class MainActivity : AppCompatActivity() {
                 recordControlMuteAudio!!.visibility = View.GONE
                 recordControlUnmuteMic!!.visibility = View.GONE
                 recordControlUnmuteAudio!!.visibility = View.GONE
+                recordControlAdjustVolume!!.visibility = View.GONE
                 recordControlPause!!.visibility = View.GONE
                 recordControlResume!!.visibility = View.VISIBLE
                 this@MainActivity.recordingState = ActionState.RECORDING_PAUSED
@@ -450,6 +461,11 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         recordStatusMessage!!.setText(R.string.recording_started_text)
                     }
+                }
+                if (this@MainActivity.recordingBinder!!.recordMic() || this@MainActivity.recordingBinder!!.recordAudio()) {
+                    recordControlAdjustVolume!!.visibility = View.VISIBLE
+                } else {
+                    recordControlAdjustVolume!!.visibility = View.GONE
                 }
                 if (this@MainActivity.recordingBinder!!.recordMic() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     if (this@MainActivity.recordingBinder!!.micMuted()) {
@@ -504,6 +520,11 @@ class MainActivity : AppCompatActivity() {
 
         fun updateSoundSwitchButtons() {
             runOnUiThread {
+                if (this@MainActivity.recordingBinder!!.recordMic() || this@MainActivity.recordingBinder!!.recordAudio()) {
+                    recordControlAdjustVolume!!.visibility = View.VISIBLE
+                } else {
+                    recordControlAdjustVolume!!.visibility = View.GONE
+                }
                 if (this@MainActivity.recordingBinder!!.recordMic() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     if (this@MainActivity.recordingBinder!!.micMuted()) {
                         recordControlMuteMic!!.visibility = View.GONE
@@ -852,11 +873,12 @@ class MainActivity : AppCompatActivity() {
         }
         recordOptionsPanel = findViewById<LinearLayout>(R.id.record_options_panel)
 
-        recordControls = findViewById<LinearLayout>(R.id.record_controls)
+        recordControls = findViewById<FlexboxLayout>(R.id.record_controls)
         recordControlMuteMic = findViewById<Button>(R.id.record_controls_mute_microphone)
         recordControlMuteAudio = findViewById<Button>(R.id.record_controls_mute_audio)
         recordControlUnmuteMic = findViewById<Button>(R.id.record_controls_unmute_microphone)
         recordControlUnmuteAudio = findViewById<Button>(R.id.record_controls_unmute_audio)
+        recordControlAdjustVolume = findViewById<Button>(R.id.record_controls_adjust_volume)
         recordControlPause = findViewById<Button>(R.id.record_controls_pause)
         recordControlResume = findViewById<Button>(R.id.record_controls_resume)
         recordControlStop = findViewById<Button>(R.id.record_controls_stop)
@@ -932,6 +954,10 @@ class MainActivity : AppCompatActivity() {
                 recordControlMuteAudio!!.visibility = View.GONE
                 recordControlUnmuteAudio!!.visibility = View.GONE
             }
+        }
+
+        recordControlAdjustVolume!!.setOnClickListener {
+            showAudioVolumeDialog()
         }
 
         recordControlPause!!.setOnClickListener {
@@ -1149,6 +1175,83 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun showAudioVolumeDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_audio_volume, null)
+
+        var audioVolumeScale = this.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.AUDIO_VOLUME, 100)
+        var micVolumeScale = this.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.MICROPHONE_VOLUME, 100)
+
+        val audioPanel: LinearLayout = dialogView.findViewById(R.id.audio_volume_panel)
+        val audioVolume: TextView = dialogView.findViewById(R.id.audio_volume_value)
+        val audioSeekBar: SeekBar = dialogView.findViewById(R.id.audio_volume_seek)
+        audioSeekBar.progress = audioVolumeScale
+        audioVolume.text = audioVolumeScale.toString()
+        audioSeekBar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+            }
+
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                audioVolumeScale = progress
+                audioVolume.text = audioVolumeScale.toString()
+            }
+        })
+
+        if (recordPlayback) {
+            audioPanel.visibility = View.VISIBLE
+        } else {
+            audioPanel.visibility = View.GONE
+        }
+
+        val micPanel: LinearLayout = dialogView.findViewById(R.id.mic_volume_panel)
+        val micVolume: TextView = dialogView.findViewById(R.id.microphone_volume_value)
+        val micSeekBar: SeekBar = dialogView.findViewById(R.id.microphone_volume_seek)
+        micSeekBar.progress = micVolumeScale
+        micVolume.text = micVolumeScale.toString()
+        micSeekBar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+            }
+
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                micVolumeScale = progress
+                micVolume.text = micVolumeScale.toString()
+            }
+        })
+
+        if (recordMicrophone) {
+            micPanel.visibility = View.VISIBLE
+        } else {
+            micPanel.visibility = View.GONE
+        }
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(R.string.audio_volume_option)
+            .setView(dialogView)
+            .setPositiveButton(R.string.dialog_ok) { _, _ ->
+                this.appSettings?.setIntProperty(GlobalProperties.PropertiesInt.AUDIO_VOLUME, audioVolumeScale)
+                this.appSettings?.setIntProperty(GlobalProperties.PropertiesInt.MICROPHONE_VOLUME, micVolumeScale)
+                if (this.recordingBinder != null) {
+                    this.recordingBinder!!.setAudioVolume(audioVolumeScale)
+                    this.recordingBinder!!.setMicVolume(micVolumeScale)
+                }
+            }
+            .setNegativeButton(R.string.dialog_cancel) { dialog, _ ->
+                dialog.cancel()
+            }
+            .create()
+
+        dialog.show()
+    }
+
+    /*
+     * This function has been co-authored by an AI.
+     * Model name: Qwen 3 Coder Next
+     */
     fun showStreamCredentialsDialog(onDismiss: (StreamCredentialsData?) -> Unit) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_stream, null)
 

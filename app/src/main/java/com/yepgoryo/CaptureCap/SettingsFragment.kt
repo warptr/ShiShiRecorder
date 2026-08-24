@@ -40,6 +40,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             val preferenceFindPreference18: Preference = findPreference("formatvalue")!!
             val preferenceFindPreference19: Preference = findPreference("audioformatvalue")!!
             val preferenceFindPreference20: Preference = findPreference("selectedmicrophone")!!
+            val preferenceFindPreference21: Preference = findPreference("audiovolumeoption")!!
 
             val preferenceCategory2: PreferenceCategory = findPreference("capturesettings")!!
             preferenceCategory2.removePreference(preferenceFindPreference5)
@@ -58,6 +59,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             preferenceCategory2.removePreference(preferenceFindPreference18)
             preferenceCategory2.removePreference(preferenceFindPreference19)
             preferenceCategory2.removePreference(preferenceFindPreference20)
+            preferenceCategory2.removePreference(preferenceFindPreference21)
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA) {
             val preferenceFindPreference14: Preference = findPreference("screenrotation")!!
@@ -91,6 +93,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
             timerSecondsDialogFragmentNewInstance.setTargetFragment(this, 0)
             timerSecondsDialogFragmentNewInstance.setKeyName("timerseconds")
             timerSecondsDialogFragmentNewInstance.show(requireFragmentManager(), null)
+            return
+        }
+        if (preference.key.contentEquals("audiovolumeoption")) {
+            val audioVolumeDialogFragmentNewInstance: AudioVolumeDialogFragment = AudioVolumeDialogFragment.newInstance(preference.key)
+            audioVolumeDialogFragmentNewInstance.setTargetFragment(this, 0)
+            audioVolumeDialogFragmentNewInstance.setKeyName("audiovolumeoption")
+            audioVolumeDialogFragmentNewInstance.show(requireFragmentManager(), null)
             return
         }
         super.onDisplayPreferenceDialog(preference)

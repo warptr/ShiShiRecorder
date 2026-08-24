@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="512"
+   height="512"
+   viewBox="0 0 135.46666 135.46667"
+   version="1.1"
+   id="svg5"
+   sodipodi:docname="icon_record_sound_control_nosound.svg"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <title
+     id="title1">CaptureCap notification sound control nosound color icon</title>
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="px"
+     showgrid="false"
+     units="px"
+     width="512px"
+     inkscape:zoom="0.46512653"
+     inkscape:cx="-125.77223"
+     inkscape:cy="295.61848"
+     inkscape:window-width="1920"
+     inkscape:window-height="1001"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg5"
+     inkscape:lockguides="false"
+     showguides="true"
+     inkscape:showpageshadow="2"
+     inkscape:deskcolor="#d1d1d1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid2352"
+       originx="0"
+       originy="0"
+       spacingy="1"
+       spacingx="1"
+       units="px"
+       visible="false" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2" />
+  <metadata
+     id="metadata1">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Egor Olegovich Yakovlev</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:title>CaptureCap notification sound control nosound color icon</dc:title>
+        <cc:license
+           rdf:resource="http://creativecommons.org/publicdomain/zero/1.0/" />
+      </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/publicdomain/zero/1.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="g6">
+    <path
+       id="rect1"
+       style="fill:#484848;stroke-width:13.2292;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
+       d="M 97.643153,34.606673 68.616501,50.896634 H 48.979762 v 37.30935 h 19.636739 l 29.026652,21.217826 z"
+       sodipodi:nodetypes="ccccccc"
+       transform="translate(-29.368813,-4.2819089)" />
+    <path
+       id="path1"
+       style="baseline-shift:baseline;display:inline;overflow:visible;vector-effect:none;fill:#484848;stroke-linecap:round;stroke-linejoin:round;enable-background:accumulate;stop-color:#000000;stop-opacity:1;opacity:1"
+       d="M 74.312259 43.250589 A 3.3072915 3.3072915 0 0 0 71.974417 44.219006 A 3.3072915 3.3072915 0 0 0 71.974417 48.89624 L 88.113484 65.035306 L 71.974417 81.173856 A 3.3072901 3.3072901 0 0 0 71.974417 85.851606 A 3.3072901 3.3072901 0 0 0 76.650618 85.851606 L 92.790201 69.712023 L 108.92978 85.851606 A 3.3072915 3.3072915 0 0 0 113.60547 85.851606 A 3.3072915 3.3072915 0 0 0 113.60547 81.173856 L 97.466918 65.035306 L 113.60547 48.89624 A 3.3072901 3.3072901 0 0 0 113.60547 44.219006 A 3.3072901 3.3072901 0 0 0 108.92978 44.219006 L 92.790201 60.358589 L 76.650618 44.219006 A 3.3072915 3.3072915 0 0 0 74.312259 43.250589 z " />
+  </g>
+</svg>
