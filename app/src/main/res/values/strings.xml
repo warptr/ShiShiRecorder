@@ -74,6 +74,7 @@
     <string name="audio_volume_audio">Audio volume</string>
     <string name="audio_volume">Volume</string>
     <string name="audio_volume_microphone">Microphone volume</string>
+    <string name="audio_volume_phonecall">Phone call volume</string>
     <string name="samplerate_indicator_custom">Custom audio sample rate</string>
     <string name="samplerate_indicator_custom_description">Ignore default sample rate</string>
     <string name="samplerate_indicator">Audio sample rate</string>
@@ -104,6 +105,22 @@
     <string name="rotatehardwaresensor_option_description">Detect rotation by hardware sensors instead of display</string>
     <string name="prerecording_option">Pre-recording pause</string>
     <string name="prerecording_option_description">Start the recording whenever you need to</string>
+    <string name="shizuku_settings">Shizuku settings</string>
+    <string name="shizuku_enable_option">Enable Shizuku</string>
+    <string name="shizuku_enable_option_description">Enable Shizuku for phone call recording</string>
+    <string name="shizuku_phonecall_audio_source_option">Phone call source</string>
+    <string name="shizuku_phonecall_audio_source_option_description">Choose phone call recording audio source</string>
+    <array name="shizuku_phonecall_audio_source_preferences">
+        <item name="shizuku_phonecall_audio_source_voice">Record both sides</item>
+        <item name="shizuku_phonecall_audio_source_voice_uplink">Uplink</item>
+        <item name="shizuku_phonecall_audio_source_voice_downlink">Downlink</item>
+    </array>
+    <string name="shizuku_auto_manage_option">Auto-manage Shizuku</string>
+    <string name="shizuku_auto_manage_option_description">Enable automatically starting Shizuku</string>
+    <string name="shizuku_auth_key_option">Shizuku auth key</string>
+    <string name="shizuku_auth_key_option_description">Provide an auth key to automatically start/stop Shizuku</string>
+    <string name="shizuku_waiting">Waiting for Shizuku, please try again</string>
+    <string name="shizuku_unsupported">Shizuku version is unsupported</string>
     <string name="controls_settings">Controls settings</string>
     <string name="floating_controls_option">Enable floating controls</string>
     <string name="floating_controls_option_description">Show floating controls panel</string>
@@ -214,8 +231,10 @@
     <string name="sound_control_description">Set enabled audio sources</string>
     <string name="mute_microphone">Mute mic</string>
     <string name="mute_audio">Mute audio</string>
+    <string name="mute_phonecall">Mute phone call</string>
     <string name="unmute_microphone">Unmute mic</string>
     <string name="unmute_audio">Unmute audio</string>
+    <string name="unmute_phonecall">Unmute phone call</string>
     <string name="timer_wait_title">Timer is ticking</string>
     <string name="timer_wait_description">The recording will start shortly</string>
     <string name="timer_abort">Abort timer</string>
@@ -223,6 +242,7 @@
     <string name="error_storage_select_folder">Error: Select recordings folder</string>
     <string name="error_audio_required">Error: Allow recording audio</string>
     <string name="error_camera_required">Error: Camera overlay needs permissions</string>
+    <string name="error_shizuku_required">Error: Shizuku permission required</string>
     <string name="error_notifications_required">Error: Allow sending notifications</string>
     <string name="error_invalid_folder">Error: Invalid recordings folder</string>
     <string name="error_recorder_failed">Error: Recording failed</string>
@@ -238,6 +258,7 @@
     <string name="setting_record_option_screen">Screen</string>
     <string name="setting_record_option_audio">Audio</string>
     <string name="setting_record_option_microphone">Microphone</string>
+    <string name="setting_record_option_phonecall">Phone call</string>
     <string name="setting_record_screen">Record screen</string>
     <string name="setting_record_type_video">Video</string>
     <string name="setting_record_type_audio">Audio only</string>

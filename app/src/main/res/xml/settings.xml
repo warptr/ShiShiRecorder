@@ -244,6 +244,42 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:title="@string/shizuku_settings"
+        android:key="shizukusettings">
+
+        <SwitchPreferenceCompat
+            android:key="shizukuenable"
+            android:summary="@string/shizuku_enable_option_description"
+            android:title="@string/shizuku_enable_option"
+            android:defaultValue="false" />
+
+        <ListPreference
+            android:key="shizukuphonecallaudiosource"
+            android:summary="@string/shizuku_phonecall_audio_source_option_description"
+            android:title="@string/shizuku_phonecall_audio_source_option"
+            android:dependency="shizukuenable"
+            android:dialogTitle="@string/shizuku_phonecall_audio_source_option"
+            android:entries="@array/shizuku_phonecall_audio_source_preferences"
+            android:entryValues="@array/shizuku_phonecall_audio_source_preferences_values"
+            android:defaultValue="@string/shizuku_phonecall_audio_source_preferences_auto_value" />
+
+        <SwitchPreferenceCompat
+            android:key="shizukuautomanage"
+            android:summary="@string/shizuku_auto_manage_option_description"
+            android:title="@string/shizuku_auto_manage_option"
+            android:dependency="shizukuenable"
+            android:defaultValue="false" />
+
+        <EditTextPreference
+            android:key="shizukuauthkey"
+            android:summary="@string/shizuku_auth_key_option_description"
+            android:title="@string/shizuku_auth_key_option"
+            android:dependency="shizukuautomanage"
+            android:defaultValue="" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
         android:title="@string/controls_settings"
         android:key="controlssettings">
 

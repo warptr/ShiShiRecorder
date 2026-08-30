@@ -41,6 +41,9 @@ class PlaybackRecorder(private var context: Context,
         refreshRate: Int,
         private var recordMicrophone: Boolean,
         private var recordPlayback: Boolean,
+        private var shizukuRecordPhoneCall: Boolean,
+        var shizukuRecordService: IShizukuRecordService?,
+        private var shizukuAudioSource: GlobalProperties.ShizukuPhoneCallAudioSource,
         private val drawOverlay: Boolean,
         customQuality: Boolean,
         qualityScale: Float,
@@ -343,10 +346,10 @@ class PlaybackRecorder(private var context: Context,
         } else {
             this.mVideoEncoder = null
         }
-        if (!recordMicrophone && !recordPlayback) {
+        if (!recordMicrophone && !recordPlayback && !shizukuRecordPhoneCall) {
             this.mAudioEncoder = null
         } else {
-            this.mAudioEncoder = AudioPlaybackRecorder(recordMicrophone, recordPlayback, customSampleRate, customChannelsCount, mediaProjection, this.useCustomAudioCodec, this.customAudioCodec, this.useCustomAudioFormat, this.customAudioFormat, recordOnlyAudio, context, mediaAudioSource, gameAudioSource, unknownAudioSource)
+            this.mAudioEncoder = AudioPlaybackRecorder(recordMicrophone, recordPlayback, customSampleRate, customChannelsCount, mediaProjection, this.useCustomAudioCodec, this.customAudioCodec, this.useCustomAudioFormat, this.customAudioFormat, recordOnlyAudio, shizukuRecordPhoneCall, shizukuRecordService, shizukuAudioSource, context, mediaAudioSource, gameAudioSource, unknownAudioSource)
         }
         if (this.mWorker != null && !this.doRestart) {
             throw IllegalStateException()
@@ -371,6 +374,10 @@ class PlaybackRecorder(private var context: Context,
         this.mAudioEncoder?.setAudioMuted(audio)
     }
 
+    fun setShizukuPhoneCallMuted(phonecall: Boolean) {
+        this.mAudioEncoder?.setShizukuPhoneCallMuted(phonecall)
+    }
+
     fun microphoneMuted(): Boolean {
         if (this.mAudioEncoder == null) {
             return false
@@ -383,6 +390,13 @@ class PlaybackRecorder(private var context: Context,
             return false
         }
         return this.mAudioEncoder!!.audioMuted()
+    }
+
+    fun shizukuPhoneCallMuted(): Boolean {
+        if (this.mAudioEncoder == null) {
+            return false
+        }
+        return this.mAudioEncoder!!.shizukuPhoneCallMuted()
     }
 
     private inner class CallbackHandler(looper: Looper) : Handler(looper) {

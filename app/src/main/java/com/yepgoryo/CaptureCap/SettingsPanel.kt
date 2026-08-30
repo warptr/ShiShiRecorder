@@ -1,19 +1,19 @@
 package com.yepgoryo.CaptureCap
 
 import android.app.AlertDialog
-import android.content.DialogInterface
+import android.content.ComponentName
 import android.content.Intent
-import android.content.res.Configuration
+import android.content.ServiceConnection
+import android.content.pm.PackageManager
 import android.media.MediaFormat
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.provider.Settings
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.Toast
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -26,6 +26,9 @@ import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SwitchPreferenceCompat
+import rikka.shizuku.Shizuku
+
 import java.io.File
 
 class SettingsPanel : AppCompatActivity(), PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
@@ -37,12 +40,50 @@ class SettingsPanel : AppCompatActivity(), PreferenceFragmentCompat.OnPreference
     private var videoFolderPreference: Preference? = null
     private var codecPreference: Preference? = null
     private var audioCodecPreference: Preference? = null
+    private var shizukuEnabledPreference: SwitchPreferenceCompat? = null
+    private var shizukuAutoManageEnabledPreference: SwitchPreferenceCompat? = null
+    private var shizukuAuthKeyPreference: EditTextPreference? = null
+
+    companion object {
+        const val ACTION_SETTINGS_PANEL_CONNECT: String = MainActivity.appName + ".SETTINGS_PANEL_CONNECT"
+    }
 
     private var requestFolderPermission: ActivityResultLauncher<Intent> = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         this@SettingsPanel.requestFolder(result.resultCode, result.data!!.data!!, false)
     }
     private var requestAudioFolderPermission: ActivityResultLauncher<Intent> = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         this@SettingsPanel.requestFolder(result.resultCode, result.data!!.data!!, true)
+    }
+
+    private val shizukuPermissionListener = object : Shizuku.OnRequestPermissionResultListener {
+        override fun onRequestPermissionResult(requestCode: Int, grantResult: Int) {
+            if (requestCode == MainActivity.RecordingPermissionRequest.REQUEST_SHIZUKU.ordinal) {
+                Shizuku.removeRequestPermissionResultListener(this)
+
+                val enabledPreference = shizukuEnabledPreference as SwitchPreferenceCompat
+                if (grantResult == PackageManager.PERMISSION_GRANTED) {
+                    enabledPreference.isChecked = true
+                    if (shizukuAutoManageEnabledPreference!!.isChecked) {
+                        startShizukuOnService()
+                    } else {
+                        connectShizukuOnService()
+                    }
+                } else {
+                    enabledPreference.isChecked = false
+                    Toast.makeText(this@SettingsPanel, R.string.error_shizuku_required, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+    private var settingsPanelBinder: ScreenRecorder.SettingsPanelBinder? = null
+    private var mConnection: ServiceConnection = object: ServiceConnection {
+        override fun onServiceConnected(componentName: ComponentName, iBinder: IBinder) {
+            settingsPanelBinder = iBinder as ScreenRecorder.SettingsPanelBinder
+        }
+
+        override fun onServiceDisconnected(componentName: ComponentName) {
+            settingsPanelBinder = null
+        }
     }
 
     override fun onPreferenceStartFragment(preferenceFragmentCompat: PreferenceFragmentCompat, preference: Preference): Boolean {
@@ -101,6 +142,7 @@ class SettingsPanel : AppCompatActivity(), PreferenceFragmentCompat.OnPreference
 
     override fun onStart() {
         super.onStart()
+        doBindService()
         this.videoFolderPreference = this.settingsPanel!!.findPreference("folderpathpref")
         this.audioFolderPreference = this.settingsPanel!!.findPreference("folderaudiopathpref")
         this.videoFolderPreference?.setSummary(getRealPath(this.appSettings!!.getStringProperty(GlobalProperties.PropertiesString.FOLDER_PATH, "None")))
@@ -270,6 +312,107 @@ class SettingsPanel : AppCompatActivity(), PreferenceFragmentCompat.OnPreference
                 Toast.LENGTH_SHORT
             ).show()
             true
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            this.shizukuEnabledPreference = this.settingsPanel!!.findPreference("shizukuenable")
+            this.shizukuAutoManageEnabledPreference =
+                this.settingsPanel!!.findPreference("shizukuautomanage")
+            this.shizukuAuthKeyPreference = this.settingsPanel!!.findPreference("shizukuauthkey")
+
+            this.shizukuEnabledPreference!!.onPreferenceChangeListener =
+                Preference.OnPreferenceChangeListener { preference, obj ->
+                    val shizukuEnabled = obj as Boolean
+                    val shizukuSwitch = preference as SwitchPreferenceCompat
+                    if (shizukuEnabled) {
+                        if (ShizukuConnectionHelper.shizukuAvailable()) {
+                            if (!ShizukuConnectionHelper.hasShizukuPermission(this)) {
+                                Shizuku.addRequestPermissionResultListener(shizukuPermissionListener)
+                                Shizuku.requestPermission(MainActivity.RecordingPermissionRequest.REQUEST_SHIZUKU.ordinal)
+                                shizukuSwitch.isChecked = false
+                            } else {
+                                connectShizukuOnService()
+                            }
+                        } else if (shizukuAutoManageEnabledPreference!!.isChecked) {
+                            startShizukuOnService()
+                        }
+                    } else {
+                        if (ShizukuConnectionHelper.shizukuAvailable()) {
+                            disconnectShizukuOnService()
+                            if (shizukuAutoManageEnabledPreference!!.isChecked) {
+                                stopShizukuOnService()
+                            }
+                        }
+                    }
+                    true
+                }
+
+            this.shizukuAutoManageEnabledPreference!!.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, obj ->
+                val shizukuAutoManageEnabled = obj as Boolean
+
+                if (shizukuAutoManageEnabled) {
+                    if (shizukuEnabledPreference!!.isChecked) {
+                        if (!ShizukuConnectionHelper.shizukuAvailable()) {
+                            startShizukuOnService()
+                        }
+                    }
+                }
+                true
+            }
+
+            this.shizukuAuthKeyPreference!!.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, obj ->
+                val shizukuAuthKey = obj as String
+
+                if (!shizukuAuthKey.isEmpty()) {
+                    if (shizukuEnabledPreference!!.isChecked) {
+                        if (!ShizukuConnectionHelper.shizukuAvailable()) {
+                            startShizukuOnService()
+                        }
+                    }
+                }
+                true
+            }
+        }
+    }
+
+    fun startShizukuOnService() {
+        val shizukuServiceIntent = Intent(this, ScreenRecorder::class.java)
+        shizukuServiceIntent.setAction(ScreenRecorder.ACTION_START_SHIZUKU)
+        startService(shizukuServiceIntent)
+    }
+
+    fun stopShizukuOnService() {
+        val shizukuServiceIntent = Intent(this, ScreenRecorder::class.java)
+        shizukuServiceIntent.setAction(ScreenRecorder.ACTION_STOP_SHIZUKU)
+        startService(shizukuServiceIntent)
+    }
+
+    fun connectShizukuOnService() {
+        val shizukuServiceIntent = Intent(this, ScreenRecorder::class.java)
+        shizukuServiceIntent.setAction(ScreenRecorder.ACTION_CONNECT_SHIZUKU)
+        startService(shizukuServiceIntent)
+    }
+
+    fun disconnectShizukuOnService() {
+        val shizukuServiceIntent = Intent(this, ScreenRecorder::class.java)
+        shizukuServiceIntent.setAction(ScreenRecorder.ACTION_DISCONNECT_SHIZUKU)
+        startService(shizukuServiceIntent)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        doUnbindService()
+    }
+
+    fun doBindService() {
+        val intent = Intent(this, ScreenRecorder::class.java)
+        intent.action = ACTION_SETTINGS_PANEL_CONNECT
+        bindService(intent, this.mConnection, 1)
+    }
+
+    fun doUnbindService() {
+        if (this.settingsPanelBinder != null) {
+            unbindService(this.mConnection)
         }
     }
 

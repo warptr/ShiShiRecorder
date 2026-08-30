@@ -17,6 +17,12 @@
     <string name="format_option_auto_value">Default</string>
     <string name="audio_format_option_auto_value">Default</string>
     <string name="microphone_option_auto_value">Default</string>
+    <array name="shizuku_phonecall_audio_source_preferences_values">
+        <item name="shizuku_phonecall_audio_source_voice">Voice call</item>
+        <item name="shizuku_phonecall_audio_source_voice_uplink">Voice call uplink</item>
+        <item name="shizuku_phonecall_audio_source_voice_downlink">Voice call downlink</item>
+    </array>
+    <string name="shizuku_phonecall_audio_source_preferences_auto_value">Voice call</string>
     <array name="floating_controls_size_preferences_values">
         <item name="floating_controls_size_option_large">Large</item>
         <item name="floating_controls_size_option_normal">Normal</item>

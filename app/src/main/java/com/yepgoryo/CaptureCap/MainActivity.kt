@@ -37,6 +37,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -45,10 +46,9 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
-import androidx.core.view.marginEnd
-import androidx.core.view.marginRight
 import androidx.core.view.updatePadding
 import com.google.android.flexbox.FlexboxLayout
+import rikka.shizuku.Shizuku
 
 class MainActivity : AppCompatActivity() {
 
@@ -69,8 +69,10 @@ class MainActivity : AppCompatActivity() {
     var recordControls: FlexboxLayout? = null
     var recordControlMuteMic: Button? = null
     var recordControlMuteAudio: Button? = null
+    var recordControlMuteShizukuPhoneCall: Button? = null
     var recordControlUnmuteMic: Button? = null
     var recordControlUnmuteAudio: Button? = null
+    var recordControlUnmuteShizukuPhoneCall: Button? = null
     var recordControlAdjustVolume: Button? = null
     var recordControlPause: Button? = null
     var recordControlResume: Button? = null
@@ -104,11 +106,13 @@ class MainActivity : AppCompatActivity() {
     var captureOptionRecord: ImageView? = null
     var captureOptionScreen: ImageView? = null
     var captureOptionMicrophone: ImageView? = null
+    var captureOptionPhonecall: ImageView? = null
     var captureOptionAudio: ImageView? = null
     var captureModeMenu: LinearLayout? = null
     var recordOptionScreen: RecordSettingButton? = null
     var recordOptionSound: RecordSettingButton? = null
     var recordOptionMicrophone: RecordSettingButton? = null
+    var recordOptionPhoneCall: RecordSettingButton? = null
     private var recordingState: ActionState = ActionState.RECORDING_STOPPED
     private var screenRecorderStarted: Boolean = false
     private var stateActivated: Boolean = false
@@ -118,6 +122,8 @@ class MainActivity : AppCompatActivity() {
     private var recordStream: Boolean = false
     private var saveStreamToFile: Boolean = false
     private var recordOnlyAudio: Boolean = false
+    private var enableShizuku: Boolean = false
+    private var shizukuRecordPhoneCall: Boolean = false
 
     data class StreamCredentialsData(
         val url: String,
@@ -163,6 +169,19 @@ class MainActivity : AppCompatActivity() {
         this@MainActivity.requestFolder(result.resultCode, result.data!!.data!!, true, true)
     }
 
+    private val shizukuPermissionListener = object : Shizuku.OnRequestPermissionResultListener {
+        override fun onRequestPermissionResult(requestCode: Int, grantResult: Int) {
+            if (requestCode == RecordingPermissionRequest.REQUEST_SHIZUKU.ordinal) {
+                Shizuku.removeRequestPermissionResultListener(this)
+
+                if (grantResult == PackageManager.PERMISSION_GRANTED) {
+                } else {
+                    Toast.makeText(this@MainActivity, R.string.error_shizuku_required, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
     enum class ActionState {
         RECORDING_STOPPED,
         RECORDING_IN_PROGRESS,
@@ -170,7 +189,7 @@ class MainActivity : AppCompatActivity() {
         RECORDING_ENDED
     }
 
-    private enum class RecordingPermissionRequest {
+    enum class RecordingPermissionRequest {
         REQUEST_MICROPHONE,
         REQUEST_MICROPHONE_PLAYBACK,
         REQUEST_MICROPHONE_RECORD,
@@ -178,7 +197,8 @@ class MainActivity : AppCompatActivity() {
         REQUEST_STORAGE,
         REQUEST_STORAGE_AUDIO,
         REQUEST_MODE_CHANGE,
-        REQUEST_POST_NOTIFICATIONS
+        REQUEST_POST_NOTIFICATIONS,
+        REQUEST_SHIZUKU,
     }
 
     fun showCounter(starting: Boolean, buttonState: RecordButton.ButtonState) {
@@ -224,6 +244,7 @@ class MainActivity : AppCompatActivity() {
         captureOptionScreen?.isVisible = !this.recordOnlyAudio
         captureOptionAudio?.isVisible = this.recordPlayback
         captureOptionMicrophone?.isVisible = this.recordMicrophone
+        captureOptionPhonecall?.isVisible = (this.shizukuRecordPhoneCall && this.enableShizuku)
     }
 
     private fun updateRecordModeData() {
@@ -236,6 +257,8 @@ class MainActivity : AppCompatActivity() {
             this.recordStream = false
         }
         this.recordOnlyAudio = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.RECORD_MODE, false)
+        this.enableShizuku = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.SHIZUKU_ENABLE, false)
+        this.shizukuRecordPhoneCall = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.SHIZUKU_RECORD_PHONECALL, false)
         if (this.recordOnlyAudio && !this.recordPlayback && !this.recordMicrophone) {
             this.recordOnlyAudio = false
         }
@@ -325,6 +348,18 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     recordControlMuteAudio!!.visibility = View.GONE
                     recordControlUnmuteAudio!!.visibility = View.GONE
+                }
+                if (this@MainActivity.recordingBinder!!.recordShizukuPhoneCall() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    if (this@MainActivity.recordingBinder!!.shizukuPhoneCallMuted()) {
+                        recordControlMuteShizukuPhoneCall!!.visibility = View.GONE
+                        recordControlUnmuteShizukuPhoneCall!!.visibility = View.VISIBLE
+                    } else {
+                        recordControlMuteShizukuPhoneCall!!.visibility = View.VISIBLE
+                        recordControlUnmuteShizukuPhoneCall!!.visibility = View.GONE
+                    }
+                } else {
+                    recordControlMuteShizukuPhoneCall!!.visibility = View.GONE
+                    recordControlUnmuteShizukuPhoneCall!!.visibility = View.GONE
                 }
                 if (recordStream) {
                     if (recordOnlyAudio) {
@@ -419,8 +454,10 @@ class MainActivity : AppCompatActivity() {
                 recordControls!!.visibility = View.VISIBLE
                 recordControlMuteMic!!.visibility = View.GONE
                 recordControlMuteAudio!!.visibility = View.GONE
+                recordControlMuteShizukuPhoneCall!!.visibility = View.GONE
                 recordControlUnmuteMic!!.visibility = View.GONE
                 recordControlUnmuteAudio!!.visibility = View.GONE
+                recordControlUnmuteShizukuPhoneCall!!.visibility = View.GONE
                 recordControlAdjustVolume!!.visibility = View.GONE
                 recordControlPause!!.visibility = View.GONE
                 recordControlResume!!.visibility = View.VISIBLE
@@ -491,6 +528,18 @@ class MainActivity : AppCompatActivity() {
                     recordControlMuteAudio!!.visibility = View.GONE
                     recordControlUnmuteAudio!!.visibility = View.GONE
                 }
+                if (this@MainActivity.recordingBinder!!.recordShizukuPhoneCall() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    if (this@MainActivity.recordingBinder!!.shizukuPhoneCallMuted()) {
+                        recordControlMuteShizukuPhoneCall!!.visibility = View.GONE
+                        recordControlUnmuteShizukuPhoneCall!!.visibility = View.VISIBLE
+                    } else {
+                        recordControlMuteShizukuPhoneCall!!.visibility = View.VISIBLE
+                        recordControlUnmuteShizukuPhoneCall!!.visibility = View.GONE
+                    }
+                } else {
+                    recordControlMuteShizukuPhoneCall!!.visibility = View.GONE
+                    recordControlUnmuteShizukuPhoneCall!!.visibility = View.GONE
+                }
                 recordControlPause!!.visibility = View.VISIBLE
                 recordControlResume!!.visibility = View.GONE
                 this@MainActivity.mainRecordingButton!!.transitionToButtonState(RecordButton.ButtonState.TRANSITION_FROM_PAUSE)
@@ -549,6 +598,18 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     recordControlMuteAudio!!.visibility = View.GONE
                     recordControlUnmuteAudio!!.visibility = View.GONE
+                }
+                if (this@MainActivity.recordingBinder!!.recordShizukuPhoneCall() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    if (this@MainActivity.recordingBinder!!.shizukuPhoneCallMuted()) {
+                        recordControlMuteShizukuPhoneCall!!.visibility = View.GONE
+                        recordControlUnmuteShizukuPhoneCall!!.visibility = View.VISIBLE
+                    } else {
+                        recordControlMuteShizukuPhoneCall!!.visibility = View.VISIBLE
+                        recordControlUnmuteShizukuPhoneCall!!.visibility = View.GONE
+                    }
+                } else {
+                    recordControlMuteShizukuPhoneCall!!.visibility = View.GONE
+                    recordControlUnmuteShizukuPhoneCall!!.visibility = View.GONE
                 }
             }
         }
@@ -789,6 +850,7 @@ class MainActivity : AppCompatActivity() {
         captureOptionScreen = findViewById<ImageView>(R.id.record_options_button_icon_screen)!!
         captureOptionAudio = findViewById<ImageView>(R.id.record_options_button_icon_audio_playback)!!
         captureOptionMicrophone = findViewById<ImageView>(R.id.record_options_button_icon_microphone)!!
+        captureOptionPhonecall = findViewById<ImageView>(R.id.record_options_button_icon_phonecall)!!
 
         updateCaptureOptionsIcons()
 
@@ -876,8 +938,10 @@ class MainActivity : AppCompatActivity() {
         recordControls = findViewById<FlexboxLayout>(R.id.record_controls)
         recordControlMuteMic = findViewById<Button>(R.id.record_controls_mute_microphone)
         recordControlMuteAudio = findViewById<Button>(R.id.record_controls_mute_audio)
+        recordControlMuteShizukuPhoneCall = findViewById<Button>(R.id.record_controls_mute_phonecall)
         recordControlUnmuteMic = findViewById<Button>(R.id.record_controls_unmute_microphone)
         recordControlUnmuteAudio = findViewById<Button>(R.id.record_controls_unmute_audio)
+        recordControlUnmuteShizukuPhoneCall = findViewById<Button>(R.id.record_controls_unmute_phonecall)
         recordControlAdjustVolume = findViewById<Button>(R.id.record_controls_adjust_volume)
         recordControlPause = findViewById<Button>(R.id.record_controls_pause)
         recordControlResume = findViewById<Button>(R.id.record_controls_resume)
@@ -922,6 +986,23 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        recordControlMuteShizukuPhoneCall!!.setOnClickListener {
+            if (this@MainActivity.recordingBinder!!.recordShizukuPhoneCall()) {
+                if (this@MainActivity.recordingBinder!!.shizukuPhoneCallMuted()) {
+                    this@MainActivity.recordingBinder!!.unmuteShizukuPhoneCall()
+                    recordControlMuteShizukuPhoneCall!!.visibility = View.VISIBLE
+                    recordControlUnmuteShizukuPhoneCall!!.visibility = View.GONE
+                } else {
+                    this@MainActivity.recordingBinder!!.muteShizukuPhoneCall()
+                    recordControlMuteShizukuPhoneCall!!.visibility = View.GONE
+                    recordControlUnmuteShizukuPhoneCall!!.visibility = View.VISIBLE
+                }
+            } else {
+                recordControlMuteShizukuPhoneCall!!.visibility = View.GONE
+                recordControlUnmuteShizukuPhoneCall!!.visibility = View.GONE
+            }
+        }
+
         recordControlUnmuteMic!!.setOnClickListener {
             if (this@MainActivity.recordingBinder!!.recordMic()) {
                 if (this@MainActivity.recordingBinder!!.micMuted()) {
@@ -956,6 +1037,23 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        recordControlUnmuteShizukuPhoneCall!!.setOnClickListener {
+            if (this@MainActivity.recordingBinder!!.recordShizukuPhoneCall()) {
+                if (this@MainActivity.recordingBinder!!.shizukuPhoneCallMuted()) {
+                    this@MainActivity.recordingBinder!!.unmuteShizukuPhoneCall()
+                    recordControlMuteShizukuPhoneCall!!.visibility = View.VISIBLE
+                    recordControlUnmuteShizukuPhoneCall!!.visibility = View.GONE
+                } else {
+                    this@MainActivity.recordingBinder!!.muteShizukuPhoneCall()
+                    recordControlMuteShizukuPhoneCall!!.visibility = View.GONE
+                    recordControlUnmuteShizukuPhoneCall!!.visibility = View.VISIBLE
+                }
+            } else {
+                recordControlMuteShizukuPhoneCall!!.visibility = View.GONE
+                recordControlUnmuteShizukuPhoneCall!!.visibility = View.GONE
+            }
+        }
+
         recordControlAdjustVolume!!.setOnClickListener {
             showAudioVolumeDialog()
         }
@@ -984,22 +1082,24 @@ class MainActivity : AppCompatActivity() {
         recordOptionScreen = findViewById<RecordSettingButton>(R.id.record_option_screen)
         recordOptionSound = findViewById<RecordSettingButton>(R.id.record_option_audio)
         recordOptionMicrophone = findViewById<RecordSettingButton>(R.id.record_option_microphone)
+        recordOptionPhoneCall = findViewById<RecordSettingButton>(R.id.record_option_phonecall)
 
         recordOptionScreen!!.setSwitchChecked(!recordOnlyAudio)
         recordOptionSound!!.setSwitchChecked(recordPlayback)
         recordOptionMicrophone!!.setSwitchChecked(recordMicrophone)
+        recordOptionPhoneCall!!.setSwitchChecked(shizukuRecordPhoneCall)
 
         recordOptionScreen!!.setOnToggleListener(object: RecordSettingButton.OnToggleListener {
             override fun onToggle(isChecked: Boolean) {
                 this@MainActivity.mainRecordingButton!!.releaseFocus()
 
-                if (!isChecked && !this@MainActivity.recordMicrophone && (!this@MainActivity.recordPlayback || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)) {
+                if (!isChecked && !((this@MainActivity.shizukuRecordPhoneCall && this@MainActivity.enableShizuku) || this@MainActivity.recordMicrophone || (this@MainActivity.recordPlayback || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q))) {
                     recordOptionScreen!!.setSwitchChecked(true)
                 } else {
                     if (this@MainActivity.recordOnlyAudio) {
                         this@MainActivity.recordOnlyAudio = false
                         this@MainActivity.setRecordMode(false)
-                    } else if (!this@MainActivity.recordOnlyAudio && (this@MainActivity.recordMicrophone || this@MainActivity.recordPlayback)) {
+                    } else if (!this@MainActivity.recordOnlyAudio && (this@MainActivity.recordMicrophone || this@MainActivity.recordPlayback || (this@MainActivity.shizukuRecordPhoneCall && this@MainActivity.enableShizuku))) {
                         if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && this@MainActivity.checkSelfPermission(
                                 Manifest.permission.RECORD_AUDIO
                             ) == PackageManager.PERMISSION_GRANTED) || Build.VERSION.SDK_INT < Build.VERSION_CODES.M
@@ -1023,14 +1123,14 @@ class MainActivity : AppCompatActivity() {
             override fun onToggle(isChecked: Boolean) {
                 this@MainActivity.mainRecordingButton!!.releaseFocus()
 
-                if (!isChecked && this@MainActivity.recordOnlyAudio && (!this@MainActivity.recordPlayback || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)) {
+                if (!isChecked && this@MainActivity.recordOnlyAudio && !((this@MainActivity.shizukuRecordPhoneCall && this@MainActivity.enableShizuku) || (this@MainActivity.recordPlayback && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q))) {
                     recordOptionMicrophone!!.setSwitchChecked(true)
                 } else {
                     if (((Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && this@MainActivity.checkSelfPermission(
                             Manifest.permission.RECORD_AUDIO
                         ) == PackageManager.PERMISSION_GRANTED) || Build.VERSION.SDK_INT < Build.VERSION_CODES.M) || this@MainActivity.recordMicrophone
                     ) {
-                        if (!this@MainActivity.recordOnlyAudio || this@MainActivity.recordPlayback) {
+                        if (!this@MainActivity.recordOnlyAudio || this@MainActivity.recordPlayback || (this@MainActivity.shizukuRecordPhoneCall && this@MainActivity.enableShizuku)) {
                             this@MainActivity.recordMicrophone = !this@MainActivity.recordMicrophone
                             this@MainActivity.appSettings!!.setBooleanProperty(
                                 GlobalProperties.PropertiesBoolean.CHECK_SOUND_MIC,
@@ -1053,14 +1153,14 @@ class MainActivity : AppCompatActivity() {
             override fun onToggle(isChecked: Boolean) {
                 this@MainActivity.mainRecordingButton!!.releaseFocus()
 
-                if (!isChecked && this@MainActivity.recordOnlyAudio && !this@MainActivity.recordMicrophone) {
+                if (!isChecked && this@MainActivity.recordOnlyAudio && !(this@MainActivity.recordMicrophone || (this@MainActivity.shizukuRecordPhoneCall && this@MainActivity.enableShizuku))) {
                     recordOptionSound!!.setSwitchChecked(true)
                 } else {
                     if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && this@MainActivity.checkSelfPermission(
                             Manifest.permission.RECORD_AUDIO
                         ) == PackageManager.PERMISSION_GRANTED) || this@MainActivity.recordPlayback
                     ) {
-                        if (!this@MainActivity.recordOnlyAudio || this@MainActivity.recordMicrophone) {
+                        if (!this@MainActivity.recordOnlyAudio || this@MainActivity.recordMicrophone || (this@MainActivity.shizukuRecordPhoneCall && this@MainActivity.enableShizuku)) {
                             this@MainActivity.recordPlayback = !this@MainActivity.recordPlayback
                             this@MainActivity.appSettings!!.setBooleanProperty(
                                 GlobalProperties.PropertiesBoolean.CHECK_SOUND_PLAYBACK,
@@ -1079,7 +1179,40 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
+        recordOptionPhoneCall!!.setOnToggleListener(object: RecordSettingButton.OnToggleListener {
+            @RequiresApi(Build.VERSION_CODES.R)
+            override fun onToggle(isChecked: Boolean) {
+                this@MainActivity.mainRecordingButton!!.releaseFocus()
 
+                var hasShizukuPermission = false
+                if (ShizukuConnectionHelper.shizukuAvailable()) {
+                    if (ShizukuConnectionHelper.hasShizukuPermission(this@MainActivity)) {
+                        hasShizukuPermission = true
+                    }
+                }
+
+                if (!isChecked && this@MainActivity.recordOnlyAudio && !(this@MainActivity.recordPlayback || this@MainActivity.recordMicrophone)) {
+                    recordOptionPhoneCall!!.setSwitchChecked(true)
+                } else {
+                    if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && hasShizukuPermission) || (this@MainActivity.shizukuRecordPhoneCall && this@MainActivity.enableShizuku)) {
+                        if (!this@MainActivity.recordOnlyAudio || this@MainActivity.recordPlayback || this@MainActivity.recordMicrophone) {
+                            this@MainActivity.shizukuRecordPhoneCall = !this@MainActivity.shizukuRecordPhoneCall
+                            this@MainActivity.appSettings!!.setBooleanProperty(
+                                GlobalProperties.PropertiesBoolean.SHIZUKU_RECORD_PHONECALL,
+                                this@MainActivity.shizukuRecordPhoneCall
+                            )
+                        }
+                    } else {
+                        this@MainActivity.shizukuRecordPhoneCall = false
+                        if (!hasShizukuPermission) {
+                            Shizuku.addRequestPermissionResultListener(shizukuPermissionListener)
+                            Shizuku.requestPermission(RecordingPermissionRequest.REQUEST_SHIZUKU.ordinal)
+                        }
+                    }
+                }
+                this@MainActivity.updateRecordButtonConditions()
+            }
+        })
 
         this.recordInfo!!.let { TooltipCompat.setTooltipText(it, getResources().getString(R.string.info_title)) }
         this.recordSettings!!.let { TooltipCompat.setTooltipText(it, getResources().getString(R.string.settings_title)) }
@@ -1180,6 +1313,7 @@ class MainActivity : AppCompatActivity() {
 
         var audioVolumeScale = this.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.AUDIO_VOLUME, 100)
         var micVolumeScale = this.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.MICROPHONE_VOLUME, 100)
+        var shizukuPhoneCallVolumeScale = this.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.SHIZUKU_PHONE_CALL_VOLUME, 100)
 
         val audioPanel: LinearLayout = dialogView.findViewById(R.id.audio_volume_panel)
         val audioVolume: TextView = dialogView.findViewById(R.id.audio_volume_value)
@@ -1229,15 +1363,42 @@ class MainActivity : AppCompatActivity() {
             micPanel.visibility = View.GONE
         }
 
+        val shizukuPhoneCallPanel: LinearLayout = dialogView.findViewById(R.id.phonecall_volume_panel)
+        val shizukuPhoneCallVolume: TextView = dialogView.findViewById(R.id.phonecall_volume_value)
+        val shizukuPhoneCallSeekBar: SeekBar = dialogView.findViewById(R.id.phonecall_volume_seek)
+        shizukuPhoneCallSeekBar.progress = shizukuPhoneCallVolumeScale
+        shizukuPhoneCallVolume.text = shizukuPhoneCallVolumeScale.toString()
+        shizukuPhoneCallSeekBar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+            }
+
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                shizukuPhoneCallVolumeScale = progress
+                shizukuPhoneCallVolume.text = shizukuPhoneCallVolumeScale.toString()
+            }
+        })
+
+        if (enableShizuku && shizukuRecordPhoneCall) {
+            shizukuPhoneCallPanel.visibility = View.VISIBLE
+        } else {
+            shizukuPhoneCallPanel.visibility = View.GONE
+        }
+
         val dialog = AlertDialog.Builder(this)
             .setTitle(R.string.audio_volume_option)
             .setView(dialogView)
             .setPositiveButton(R.string.dialog_ok) { _, _ ->
                 this.appSettings?.setIntProperty(GlobalProperties.PropertiesInt.AUDIO_VOLUME, audioVolumeScale)
                 this.appSettings?.setIntProperty(GlobalProperties.PropertiesInt.MICROPHONE_VOLUME, micVolumeScale)
+                this.appSettings?.setIntProperty(GlobalProperties.PropertiesInt.SHIZUKU_PHONE_CALL_VOLUME, shizukuPhoneCallVolumeScale)
+
                 if (this.recordingBinder != null) {
                     this.recordingBinder!!.setAudioVolume(audioVolumeScale)
                     this.recordingBinder!!.setMicVolume(micVolumeScale)
+                    this.recordingBinder!!.setShizukuPhoneCallVolume(micVolumeScale)
                 }
             }
             .setNegativeButton(R.string.dialog_cancel) { dialog, _ ->
@@ -1359,6 +1520,17 @@ class MainActivity : AppCompatActivity() {
         optionsPanel?.setLayoutParams(optionslayoutparams)
     }
 
+    override fun onResume() {
+        super.onResume()
+        updateRecordModeData()
+        updateCaptureOptionsIcons()
+        if (!enableShizuku || Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            recordOptionPhoneCall!!.visibility = View.GONE
+        } else {
+            recordOptionPhoneCall!!.visibility = View.VISIBLE
+        }
+    }
+
     override fun onStart() {
         super.onStart()
         if (this.recordingBinder == null) {
@@ -1399,6 +1571,17 @@ class MainActivity : AppCompatActivity() {
 
             val drawOverlay: Boolean = this.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.DRAW_OVERLAY, false)
 
+            if (shizukuRecordPhoneCall && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                if (ShizukuConnectionHelper.shizukuAvailable()) {
+                    if (!ShizukuConnectionHelper.hasShizukuPermission(this)) {
+                        Shizuku.addRequestPermissionResultListener(shizukuPermissionListener)
+                        Shizuku.requestPermission(RecordingPermissionRequest.REQUEST_SHIZUKU.ordinal)
+                        return
+                    }
+                } else {
+                    return
+                }
+            }
             if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && VideoOverlay.getCameraItem(baseContext, isHorizontal) != null && drawOverlay) {
                 requestPermissions(arrayOf(Manifest.permission.CAMERA), RecordingPermissionRequest.REQUEST_CAMERA.ordinal)
                 return
@@ -1559,6 +1742,7 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, R.string.error_notifications_required, Toast.LENGTH_SHORT).show()
                 }
             }
+            else -> {}
         }
     }
 }

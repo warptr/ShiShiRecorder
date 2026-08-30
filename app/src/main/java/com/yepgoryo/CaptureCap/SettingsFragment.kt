@@ -61,6 +61,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
             preferenceCategory2.removePreference(preferenceFindPreference20)
             preferenceCategory2.removePreference(preferenceFindPreference21)
         }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            val preferenceFindPreference21: PreferenceCategory = findPreference("shizukusettings")!!
+            preferenceScreen.removePreference(preferenceFindPreference21)
+        }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA) {
             val preferenceFindPreference14: Preference = findPreference("screenrotation")!!
             val preferenceCategory4: PreferenceCategory = findPreference("capturesettings")!!

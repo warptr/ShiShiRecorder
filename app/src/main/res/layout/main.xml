@@ -140,8 +140,17 @@
                                 android:src="@drawable/icon_record_mic"
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
+                                android:layout_marginLeft="4dp"
                                 android:layout_centerVertical="true"
                                 android:layout_toRightOf="@+id/record_options_button_icon_audio_playback" />
+
+                            <ImageView
+                                android:id="@+id/record_options_button_icon_phonecall"
+                                android:src="@drawable/icon_record_phonecall"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_centerVertical="true"
+                                android:layout_toRightOf="@+id/record_options_button_icon_microphone" />
 
                         </RelativeLayout>
 
@@ -314,6 +323,7 @@
                                     android:id="@+id/record_option_microphone"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
+                                    android:layout_marginBottom="8dp"
                                     android:paddingLeft="8dp"
                                     android:paddingRight="8dp">
 
@@ -354,6 +364,52 @@
                                         android:layout_alignParentRight="true"
                                         />
 
+
+                                </com.yepgoryo.CaptureCap.RecordSettingButton>
+
+                                <com.yepgoryo.CaptureCap.RecordSettingButton
+                                    android:id="@+id/record_option_phonecall"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:paddingLeft="8dp"
+                                    android:paddingRight="8dp">
+
+                                    <ImageView
+                                        android:id="@+id/record_options_icon_phonecall"
+                                        android:src="@drawable/icon_record_phonecall"
+                                        android:layout_width="24dp"
+                                        android:layout_height="24dp"
+                                        android:layout_marginLeft="4dp"
+                                        android:layout_alignParentLeft="true"
+                                        android:layout_centerVertical="true" />
+
+                                    <ImageView
+                                        android:id="@+id/record_options_icon_phonecall_dark"
+                                        android:src="@drawable/icon_record_phonecall_inverse"
+                                        android:layout_width="24dp"
+                                        android:layout_height="24dp"
+                                        android:visibility="gone"
+                                        android:layout_toRightOf="@+id/record_options_icon_phonecall"
+                                        android:layout_marginLeft="4dp"
+                                        android:layout_alignParentLeft="true"
+                                        android:layout_centerVertical="true" />
+
+                                    <TextView
+                                        android:id="@+id/record_options_text_phonecall"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/setting_record_option_phonecall"
+                                        android:textSize="12sp"
+                                        android:layout_toRightOf="@+id/record_options_icon_phonecall_dark"
+                                        android:layout_marginLeft="4dp"
+                                        android:textColor="?android:attr/textColorPrimary"
+                                        android:layout_centerVertical="true" />
+
+                                    <androidx.appcompat.widget.SwitchCompat
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_alignParentRight="true"
+                                        />
 
                                 </com.yepgoryo.CaptureCap.RecordSettingButton>
 
@@ -600,6 +656,40 @@
                         android:contentDescription="@string/unmute_audio"
                         android:drawableLeft="@drawable/icon_record_audio_disabled"
                         android:text="@string/unmute_audio"
+                        android:textSize="12sp"
+                        android:textColor="?attr/colorOnPrimary"
+                        android:background="@drawable/bg_rounded_button"
+                        android:paddingLeft="16dp"
+                        android:paddingRight="16dp"
+                        android:drawablePadding="16dp"
+                        android:layout_centerVertical="true"
+                        android:layout_centerHorizontal="true" />
+
+                    <Button
+                        android:id="@+id/record_controls_mute_phonecall"
+                        android:layout_width="160dp"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="6dp"
+                        android:contentDescription="@string/mute_phonecall"
+                        android:drawableLeft="@drawable/icon_record_phonecall"
+                        android:text="@string/mute_phonecall"
+                        android:textSize="12sp"
+                        android:textColor="?attr/colorOnPrimary"
+                        android:background="@drawable/bg_rounded_button"
+                        android:paddingLeft="16dp"
+                        android:paddingRight="16dp"
+                        android:drawablePadding="16dp"
+                        android:layout_centerVertical="true"
+                        android:layout_centerHorizontal="true" />
+
+                    <Button
+                        android:id="@+id/record_controls_unmute_phonecall"
+                        android:layout_width="160dp"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="6dp"
+                        android:contentDescription="@string/unmute_phonecall"
+                        android:drawableLeft="@drawable/icon_record_phonecall_disabled"
+                        android:text="@string/unmute_phonecall"
                         android:textSize="12sp"
                         android:textColor="?attr/colorOnPrimary"
                         android:background="@drawable/bg_rounded_button"

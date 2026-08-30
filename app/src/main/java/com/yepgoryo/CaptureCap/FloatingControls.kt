@@ -46,6 +46,7 @@ class FloatingControls : Service() {
     private lateinit var panelLayout: LinearLayout
     private lateinit var soundControlsLayout: LinearLayout
     private var panelScale: Float = 1.0f
+    private var noRotate: Boolean = false
     private var reduceToDot: Boolean = false
     private var floatWindowLayoutParam: WindowManager.LayoutParams? = null
     private var floatingPanel: ViewGroup? = null
@@ -71,14 +72,19 @@ class FloatingControls : Service() {
     private var audioAdjustButton: ImageButton? = null
     private var audioVolumePanel: LinearLayout? = null
     private var micVolumePanel: LinearLayout? = null
+    private var shizukuPhoneCallVolumePanel: LinearLayout? = null
     private var audioMute: CheckBox? = null
     private var micMute: CheckBox? = null
+    private var shizukuPhoneCallMute: CheckBox? = null
     private var audioVolume: TextView? = null
     private var audioSeekBar: SeekBar? = null
     private var micVolume: TextView? = null
     private var micSeekBar: SeekBar? = null
+    private var shizukuPhoneCallVolume: TextView? = null
+    private var shizukuPhoneCallSeekBar: SeekBar? = null
     private var audioVolumeScale: Int = 100
     private var micVolumeScale: Int = 100
+    private var shizukuPhoneCallVolumeScale: Int = 100
     private var timerStart: Long = 0
     private var viewHandle: ImageView? = null
     private var viewHandlePadding: Int = 0
@@ -113,7 +119,9 @@ class FloatingControls : Service() {
                 } else if (this@FloatingControls.startAction == ACTION_RECORD_PANEL) {
                     this@FloatingControls.timerStart = this@FloatingControls.recordingProgress!!.base
                     this@FloatingControls.closePanel()
-                    this@FloatingControls.startRecord()
+                    if (noRotate) {
+                        this@FloatingControls.startRecord()
+                    }
                 } else if (this@FloatingControls.startAction == ACTION_PRERECORD_PANEL) {
                     this@FloatingControls.timerStart = 0
                     this@FloatingControls.closePanel()
@@ -265,6 +273,10 @@ class FloatingControls : Service() {
             micMute!!.isChecked = mute
         }
 
+        fun setShizukuPhoneCallMuted(mute: Boolean) {
+            shizukuPhoneCallMute!!.isChecked = mute
+        }
+
         fun setAudioVolume(vol: Int) {
             audioSeekBar!!.progress = vol
             audioVolume!!.text = vol.toString()
@@ -275,6 +287,12 @@ class FloatingControls : Service() {
             micSeekBar!!.progress = vol
             micVolume!!.text = vol.toString()
             micVolumeScale = vol
+        }
+
+        fun setShizukuPhoneCallVolume(vol: Int) {
+            shizukuPhoneCallSeekBar!!.progress = vol
+            shizukuPhoneCallVolume!!.text = vol.toString()
+            shizukuPhoneCallVolumeScale = vol
         }
     }
 
@@ -555,6 +573,7 @@ class FloatingControls : Service() {
         this@FloatingControls.appSettings = globalProperties
         this@FloatingControls.panelSize = globalProperties.getFloatingControlsSize()
         reduceToDot = this@FloatingControls.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.FLOATING_CONTROLS_REDUCE_TO_DOT, false)
+        noRotate = this@FloatingControls.appSettings!!.getBooleanProperty(GlobalProperties.PropertiesBoolean.NO_ROTATE, false)
 
         if (this@FloatingControls.isHorizontal) {
             when (this@FloatingControls.panelSize) {
@@ -638,8 +657,27 @@ class FloatingControls : Service() {
             }
         })
 
+        shizukuPhoneCallVolume = this@FloatingControls.floatingPanel!!.findViewById(R.id.phonecall_volume_value)
+        shizukuPhoneCallSeekBar = this@FloatingControls.floatingPanel!!.findViewById(R.id.phonecall_volume_seek)
+        shizukuPhoneCallSeekBar!!.progress = this.shizukuPhoneCallVolumeScale
+        shizukuPhoneCallVolume!!.text = this.shizukuPhoneCallVolumeScale.toString()
+        shizukuPhoneCallSeekBar!!.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+            }
+
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                this@FloatingControls.shizukuPhoneCallVolumeScale = progress
+                micVolume!!.text = this@FloatingControls.shizukuPhoneCallVolumeScale.toString()
+                this@FloatingControls.appSettings?.setIntProperty(GlobalProperties.PropertiesInt.SHIZUKU_PHONE_CALL_VOLUME, this@FloatingControls.shizukuPhoneCallVolumeScale)
+            }
+        })
+
         audioMute = this@FloatingControls.floatingPanel!!.findViewById(R.id.audio_mute)
         micMute = this@FloatingControls.floatingPanel!!.findViewById(R.id.mic_mute)
+        shizukuPhoneCallMute = this@FloatingControls.floatingPanel!!.findViewById(R.id.phonecall_mute)
 
         audioMute!!.isChecked = recordingPanelBinder!!.audioMuted()
 
@@ -652,6 +690,7 @@ class FloatingControls : Service() {
                     recordingPanelBinder!!.muteAudio()
                     audioMute!!.isChecked = true
                 }
+                recordingPanelBinder?.mainActivityUpdateSoundSwitchButtons()
             } else {
                 audioMute!!.isChecked = false
             }
@@ -668,8 +707,26 @@ class FloatingControls : Service() {
                     recordingPanelBinder!!.muteMic()
                     micMute!!.isChecked = true
                 }
+                recordingPanelBinder?.mainActivityUpdateSoundSwitchButtons()
             } else {
                 micMute!!.isChecked = false
+            }
+        }
+
+        shizukuPhoneCallMute!!.isChecked = recordingPanelBinder!!.shizukuPhoneCallMuted()
+
+        shizukuPhoneCallMute!!.setOnCheckedChangeListener { _, _ ->
+            if (recordingPanelBinder!!.recordShizukuPhoneCall()) {
+                if (recordingPanelBinder!!.shizukuPhoneCallMuted()) {
+                    recordingPanelBinder!!.unmuteShizukuPhoneCall()
+                    shizukuPhoneCallMute!!.isChecked = false
+                } else {
+                    recordingPanelBinder!!.muteShizukuPhoneCall()
+                    shizukuPhoneCallMute!!.isChecked = true
+                }
+                recordingPanelBinder?.mainActivityUpdateSoundSwitchButtons()
+            } else {
+                shizukuPhoneCallMute!!.isChecked = false
             }
         }
 
@@ -725,17 +782,17 @@ class FloatingControls : Service() {
                     this@FloatingControls.floatWindowLayoutParam!!.y = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_HORIZONTAL_Y_BIG, 0)
                 }
                 GlobalProperties.FloatingControlsSizeProperty.NORMAL -> {
-                    soundControlsWeight = (210*resources.displayMetrics.density).toInt()
+                    soundControlsWeight = (230*resources.displayMetrics.density).toInt()
                     this@FloatingControls.floatWindowLayoutParam!!.x = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_HORIZONTAL_X_NORMAL, (this@FloatingControls.displayWidth / 2) - (this@FloatingControls.panelWidth / 2))
                     this@FloatingControls.floatWindowLayoutParam!!.y = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_HORIZONTAL_Y_NORMAL, 0)
                 }
                 GlobalProperties.FloatingControlsSizeProperty.SMALL -> {
-                    soundControlsWeight = (200*resources.displayMetrics.density).toInt()
+                    soundControlsWeight = (210*resources.displayMetrics.density).toInt()
                     this@FloatingControls.floatWindowLayoutParam!!.x = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_HORIZONTAL_X_SMALL, (this@FloatingControls.displayWidth / 2) - (this@FloatingControls.panelWidth / 2))
                     this@FloatingControls.floatWindowLayoutParam!!.y = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_HORIZONTAL_Y_SMALL, 0)
                 }
                 GlobalProperties.FloatingControlsSizeProperty.TINY -> {
-                    soundControlsWeight = (180*resources.displayMetrics.density).toInt()
+                    soundControlsWeight = (190*resources.displayMetrics.density).toInt()
                     this@FloatingControls.floatWindowLayoutParam!!.x = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_HORIZONTAL_X_TINY, (this@FloatingControls.displayWidth / 2) - (this@FloatingControls.panelWidth / 2))
                     this@FloatingControls.floatWindowLayoutParam!!.y = this@FloatingControls.appSettings!!.getIntProperty(GlobalProperties.PropertiesInt.PANEL_POSITION_HORIZONTAL_Y_TINY, 0)
                 }
@@ -776,12 +833,13 @@ class FloatingControls : Service() {
         this@FloatingControls.audioAdjustButton = this@FloatingControls.floatingPanel!!.findViewById(R.id.recordaudioadjustbuttonfloating)
         this@FloatingControls.audioVolumePanel = this@FloatingControls.floatingPanel!!.findViewById(R.id.audio_volume_panel)
         this@FloatingControls.micVolumePanel = this@FloatingControls.floatingPanel!!.findViewById(R.id.mic_volume_panel)
+        this@FloatingControls.shizukuPhoneCallVolumePanel = this@FloatingControls.floatingPanel!!.findViewById(R.id.phonecall_volume_panel)
         this@FloatingControls.recordingProgress = this@FloatingControls.floatingPanel!!.findViewById(R.id.timerrecordfloating)
         this@FloatingControls.recordingProgress?.visibility = View.VISIBLE
         if (this@FloatingControls.startAction == ACTION_PRERECORD_PANEL) {
             this@FloatingControls.recordingProgress!!.visibility = View.INVISIBLE
         }
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || !(this.recordingPanelBinder!!.recordMic() || this.recordingPanelBinder!!.recordAudio())) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || !(this.recordingPanelBinder!!.recordMic() || this.recordingPanelBinder!!.recordAudio() || this.recordingPanelBinder!!.recordShizukuPhoneCall())) {
             audioAdjustButton!!.setImageDrawable(resources.getDrawable(R.drawable.icon_record_adjust_volume_nosound, theme))
             audioAdjustButton!!.alpha = 0.5f
         } else {
@@ -799,6 +857,12 @@ class FloatingControls : Service() {
             audioVolumePanel!!.visibility = View.VISIBLE
         } else {
             audioVolumePanel!!.visibility = View.GONE
+        }
+
+        if (this.recordingPanelBinder!!.recordShizukuPhoneCall()) {
+            shizukuPhoneCallVolumePanel!!.visibility = View.VISIBLE
+        } else {
+            shizukuPhoneCallVolumePanel!!.visibility = View.GONE
         }
 
         this@FloatingControls.resumeButton?.visibility = View.GONE
@@ -853,7 +917,7 @@ class FloatingControls : Service() {
             }
         }
         this@FloatingControls.audioAdjustButton?.setOnClickListener {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && (this.recordingPanelBinder!!.recordMic() || this.recordingPanelBinder!!.recordAudio())) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && (this.recordingPanelBinder!!.recordMic() || this.recordingPanelBinder!!.recordAudio() || this.recordingPanelBinder!!.recordShizukuPhoneCall())) {
                 this@FloatingControls.toggleSoundControls()
             }
         }

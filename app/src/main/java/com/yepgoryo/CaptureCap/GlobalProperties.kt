@@ -74,6 +74,9 @@ class GlobalProperties(context: Context) {
         DRAW_OVERLAY,
         SOUND_CONTROL_NOTIFICATION,
         PRE_RECORDING,
+        SHIZUKU_ENABLE,
+        SHIZUKU_RECORD_PHONECALL,
+        SHIZUKU_AUTO_MANAGE,
     }
 
     enum class PropertiesInt {
@@ -102,6 +105,7 @@ class GlobalProperties(context: Context) {
         TIMER_SECONDS,
         AUDIO_VOLUME,
         MICROPHONE_VOLUME,
+        SHIZUKU_PHONE_CALL_VOLUME,
     }
 
     enum class PropertiesSpecial {
@@ -112,7 +116,8 @@ class GlobalProperties(context: Context) {
         AUDIO_CHANNELS,
         ON_SHAKE,
         SCREEN_ORIENTATION,
-        SCREEN_ROTATION
+        SCREEN_ROTATION,
+        SHIZUKU_PHONE_CALL_AUDIO_SOURCE,
     }
 
     enum class PropertiesString {
@@ -131,6 +136,7 @@ class GlobalProperties(context: Context) {
         HEVC_CODEC,
         AAC_CODEC,
         SELECTED_MICROPHONE,
+        SHIZUKU_AUTH_KEY,
     }
 
     enum class ResolutionProperty {
@@ -146,6 +152,12 @@ class GlobalProperties(context: Context) {
         FORCE_LANDSCAPE,
         FORCE_PORTRAIT,
         DEFAULT
+    }
+
+    enum class ShizukuPhoneCallAudioSource {
+        VOICE_CALL,
+        VOICE_CALL_UPLINK,
+        VOICE_CALL_DOWNLINK,
     }
 
     enum class ScreenRotationProperty {
@@ -205,6 +217,21 @@ class GlobalProperties(context: Context) {
 
     fun setScreenOrientation(screenOrientationProperty: ScreenOrientationProperty) {
         this.propertiesListEditor.putString(convertFromPropertyName(PropertiesSpecial.SCREEN_ORIENTATION.toString()), convertFromValueName(screenOrientationProperty.toString()))
+        this.propertiesListEditor.commit()
+    }
+
+    fun getShizukuPhoneCallSource(): ShizukuPhoneCallAudioSource {
+        val audioSource: String = convertToValueName(propertiesList.getString(convertFromPropertyName(PropertiesSpecial.SHIZUKU_PHONE_CALL_AUDIO_SOURCE.toString()), convertFromValueName(ShizukuPhoneCallAudioSource.VOICE_CALL.toString()))!!)
+        for (i in ShizukuPhoneCallAudioSource.entries) {
+            if (audioSource.contentEquals(i.toString())) {
+                return i
+            }
+        }
+        return ShizukuPhoneCallAudioSource.VOICE_CALL
+    }
+
+    fun setShizukuPhoneCallSource(shizukuPhoneCallAudioSource: ShizukuPhoneCallAudioSource) {
+        this.propertiesListEditor.putString(convertFromPropertyName(PropertiesSpecial.SHIZUKU_PHONE_CALL_AUDIO_SOURCE.toString()), convertFromValueName(shizukuPhoneCallAudioSource.toString()))
         this.propertiesListEditor.commit()
     }
 
