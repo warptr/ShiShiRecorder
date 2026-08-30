@@ -85,8 +85,8 @@ android {
         applicationId = "com.yepgoryo.CaptureCap"
         minSdk = 24
         targetSdk = 36
-        versionCode = 40
-        versionName = "3.9.6.5"
+        versionCode = 41
+        versionName = "3.9.7"
 
         buildConfigField("String", "SCRCPY_SERVER_VERSION", "\"$scrcpyServerVersion\"")
         buildConfigField("String", "SCRCPY_SERVER_SHA256", "\"$scrcpyServerSha256\"")

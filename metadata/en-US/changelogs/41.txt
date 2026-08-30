@@ -1,0 +1,15 @@
+ * Added H.265 support for both recording and streaming.
+
+ * Fixed streaming not working without recording it to a file.
+
+ * Added AI notice with clarifying comments about AI usage in about section.
+
+ * Added changelog in about section.
+
+ * Added option to select microphone device.
+
+ * Added option to adjust audio volume before and during the recording.
+
+ * Added option for recording phone calls audio through Shizuku on Android 11+.
+
+ * Set minimal required Android version to 7+.
