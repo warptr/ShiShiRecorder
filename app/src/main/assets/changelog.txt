@@ -1,9 +1,9 @@
-Version code 40
+Version 3.9.6.5 code 40
 ---
  * Switched rtmpdump's mirror.
 
 
-Version code 39
+Version 3.9.6.4 code 39
 ---
  * Fixed crash when recording only audio.
 
@@ -14,7 +14,7 @@ Version code 39
  * Added an option to collapse the floating panel to a dot.
 
 
-Version code 38
+Version 3.9.6 code 38
 ---
  * Fixed audio recording logic.
 
@@ -29,12 +29,12 @@ Version code 38
  * Added an option to detect screen rotation based on hardware sensors.
 
 
-Version code 37
+Version 3.9.5.1 code 37
 ---
  * Fixed adding microphone foreground permission for system audio too.
 
 
-Version code 36
+Version 3.9.5 code 36
 ---
  * Added video overlay support and canvas editor for Android 10+.
 
@@ -43,7 +43,7 @@ Version code 36
  * Added notification to control sound sources while recording for Android 10+.
 
 
-Version code 35
+Version 3.9.2 code 35
 ---
  * Timer option before recording.
 
@@ -52,41 +52,48 @@ Version code 35
  * French translations and Makefile (Paul BOREL).
 
 
-Version code 34
+Version 3.9 code 34
 ---
  * Redesigned the app's interface.
 
 
-Version code 33
+Version 3.8.8.1 code 33
 ---
  * Fixed reproducible builds for native libraries.
 
 
-Version code 32
+Version 3.8.8 code 32
 ---
  * Added RTMP and RTMPS streaming support for Android 10+.
  * Fixed some miscellaneous issues with app's theme.
  * Added disable notification vibration option for Android 8 and below.
 
 
-Version code 31
+Version 3.8.5 code 31
 ---
  * Added a recording crop option for Android 10+.
  * Fixed main activity not starting the recording animation, created a new application dark theme.
  * Added donate button, fixed about section a bit.
 
 
-Version code 30
+Version 3.8.1 code 30
 ---
  * Quick fix for quick tile crashing on Android versions below 14.
 
 
-Version code 29
+Version 3.8 code 29 [March 1, 2026] - Released the first version of CaptureCap
 ---
  * Update to latest Android 15 SDK, abandon Android Lollipop support.
 
  * Remove recording restart function, cannot reuse intent.
 
+------------------------
+| NEW APP - CaptureCap |
+------------------------
+
+---------------------------
+| PREVIOUS APP - DroidRec |
+---------------------------
 
 Version code 28
 ---
@@ -309,11 +316,10 @@ Version code 2
  * Hebrew translation
 
 
-Version code 1
+Version code 1 [April 6, 2022] - Released the first version of DroidRec
 ---
  * Record screen and microphone
 
  * Pause and resume recording
 
  * Save recording to directory
-
