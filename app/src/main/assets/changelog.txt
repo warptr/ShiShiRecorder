@@ -100,19 +100,16 @@ Version 3.8.1 code 30
  * Quick fix for quick tile crashing on Android versions below 14.
 
 
-Version 3.8 code 29 [March 1, 2026] - Released the first version of CaptureCap
+Version 3.8 code 29
+[March 1, 2026] - Released the first version of CaptureCap
 ---
  * Update to latest Android 15 SDK, abandon Android Lollipop support.
 
  * Remove recording restart function, cannot reuse intent.
 
-------------------------
-| NEW APP - CaptureCap |
-------------------------
+[NEW APP] - CaptureCap
 
----------------------------
-| PREVIOUS APP - DroidRec |
----------------------------
+[PREVIOUS APP] - DroidRec
 
 Version code 28
 ---
@@ -335,7 +332,8 @@ Version code 2
  * Hebrew translation
 
 
-Version code 1 [April 6, 2022] - Released the first version of DroidRec
+Version code 1
+[April 6, 2022] - Released the first version of DroidRec
 ---
  * Record screen and microphone
 
