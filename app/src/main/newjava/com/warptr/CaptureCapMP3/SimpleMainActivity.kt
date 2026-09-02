@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Typeface
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
@@ -126,7 +127,7 @@ class SimpleMainActivity : AppCompatActivity() {
         content.addView(TextView(this).apply {
             text = "柿柿录音"
             textSize = 28f
-            setTypeface(typeface, 1)
+            setTypeface(typeface, Typeface.BOLD)
         })
         content.addView(TextView(this).apply {
             text = "内部音频录制 · MP3"
@@ -338,7 +339,7 @@ class SimpleMainActivity : AppCompatActivity() {
     private fun label(text: String) = TextView(this).apply {
         this.text = text
         textSize = 18f
-        setTypeface(typeface, 1)
+        setTypeface(typeface, Typeface.BOLD)
         setPadding(0, dp(24), 0, dp(8))
     }
 
