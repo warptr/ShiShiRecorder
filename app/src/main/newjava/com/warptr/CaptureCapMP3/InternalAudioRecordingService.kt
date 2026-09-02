@@ -71,6 +71,8 @@ class InternalAudioRecordingService : Service() {
         return START_NOT_STICKY
     }
 
+    override fun onBind(intent: Intent?): IBinder? = null
+
     @Suppress("DEPRECATION")
     private fun startRecording(intent: Intent) {
         val resultCode = intent.getIntExtra(EXTRA_RESULT_CODE, Int.MIN_VALUE)
@@ -84,13 +86,14 @@ class InternalAudioRecordingService : Service() {
         startForeground(NOTIFICATION_ID, buildNotification())
         try {
             val manager = getSystemService(MediaProjectionManager::class.java)
-            projection = manager.getMediaProjection(resultCode, projectionData).also { mediaProjection ->
-                mediaProjection.registerCallback(object : MediaProjection.Callback() {
-                    override fun onStop() {
-                        stopRecording(publish = true)
-                    }
-                }, mainHandler)
-            }
+            val mediaProjection = manager.getMediaProjection(resultCode, projectionData)
+                ?: error("无法创建内部音频捕获会话")
+            projection = mediaProjection
+            mediaProjection.registerCallback(object : MediaProjection.Callback() {
+                override fun onStop() {
+                    stopRecording(publish = true)
+                }
+            }, mainHandler)
             target = catalog.createTarget()
             output = contentResolver.openOutputStream(target!!.uri, "w")
                 ?: error("无法打开录音文件")
