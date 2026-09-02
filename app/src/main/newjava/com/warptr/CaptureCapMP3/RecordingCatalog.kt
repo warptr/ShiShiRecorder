@@ -150,6 +150,7 @@ class RecordingCatalog(private val context: Context) {
     companion object {
         const val PREFERENCES = "shishi_recorder"
         const val KEY_ACTIVE = "recording_active"
+        const val KEY_PREPARED = "recording_prepared"
         const val KEY_STARTED_AT = "recording_started_at"
         const val KEY_BIT_RATE = "bit_rate"
         const val KEY_CUSTOM_FOLDER = "custom_folder"

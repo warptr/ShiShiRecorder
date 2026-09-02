@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- 标准超椭圆圆角裁剪 -->
+    <clipPath id="iconClip">
+      <rect x="0" y="0" width="512" height="512" rx="115" ry="115"/>
+    </clipPath>
+  </defs>
+
+  <!-- 图标主体（圆角裁剪） -->
+  <g clip-path="url(#iconClip)">
+    <!-- 白色背景 -->
+    <rect width="512" height="512" fill="#FFFFFF"/>
+    <!-- 浅灰边框 -->
+    <rect width="512" height="512" fill="none" stroke="#E5E7EB" stroke-width="2"/>
+
+    <!-- 底部蓝色弧形底栏 -->
+    <path d="M -10 422 Q 256 392 522 422 L 522 522 L -10 522 Z" fill="#208BF4"/>
+
+    <!-- 底部文字：柿柿录音 -->
+    <text x="256" y="475" 
+          text-anchor="middle" 
+          fill="#FFFFFF" 
+          font-family="system-ui, -apple-system, 'SF Pro Display', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" 
+          font-weight="900" 
+          font-size="44" 
+          letter-spacing="5">柿柿录音</text>
+
+    <!-- 整体主体图形组合 -->
+    <g transform="translate(0, -6)">
+      <!-- 1. 橙色耳机头梁 -->
+      <path d="M 84 236 C 84 96, 428 96, 428 236" 
+            fill="none" 
+            stroke="#FF6600" 
+            stroke-width="32" 
+            stroke-linecap="round"/>
+
+      <!-- 2. 橙色柿子主体 -->
+      <ellipse cx="256" cy="236" rx="168" ry="158" fill="#FF6600"/>
+
+      <!-- 3. 绿色柿蒂与柿柄（向上提半片叶子距离，约-22px） -->
+      <g fill="#1EAC52" transform="translate(0, -22)">
+        <!-- 柿柄 -->
+        <path d="M 247 106 C 247 80, 251 64, 256 50 C 261 64, 265 80, 265 106 Z"/>
+        <!-- 柿柄顶端横头 -->
+        <ellipse cx="256" cy="50" rx="14" ry="7"/>
+
+        <!-- 4片柿蒂叶片 -->
+        <path d="M 256 112 
+                 C 234 84, 174 84, 154 116 
+                 C 142 132, 160 156, 198 144 
+                 C 230 134, 246 132, 256 146 
+                 C 266 132, 282 134, 314 144 
+                 C 352 156, 370 132, 358 116 
+                 C 338 84, 278 84, 256 112 Z"/>
+        
+        <path d="M 210 140 
+                 C 186 154, 184 186, 212 198 
+                 C 234 206, 248 184, 256 156 
+                 C 264 184, 278 206, 300 198 
+                 C 328 186, 326 154, 302 140 
+                 C 280 128, 232 128, 210 140 Z"/>
+      </g>
+
+      <!-- 4. 左右耳机耳罩 -->
+      <!-- 左耳罩 -->
+      <g fill="#FF6600">
+        <rect x="46" y="172" width="50" height="128" rx="25"/>
+        <rect x="74" y="184" width="30" height="104" rx="15" fill="#FF5500"/>
+      </g>
+      <!-- 右耳罩 -->
+      <g fill="#FF6600">
+        <rect x="416" y="172" width="50" height="128" rx="25"/>
+        <rect x="408" y="184" width="30" height="104" rx="15" fill="#FF5500"/>
+      </g>
+
+      <!-- 5. 声波条（向上提半片叶子距离，位于两侧中上方） -->
+      <g id="sound-waves">
+        <!-- 左侧 3 根声波条 (上提) -->
+        <rect x="142" y="222" width="11" height="42" rx="5.5" fill="#FFFFFF"/>
+        <rect x="166" y="200" width="11" height="84" rx="5.5" fill="#FFFFFF"/>
+        <rect x="190" y="214" width="11" height="56" rx="5.5" fill="#FFFFFF"/>
+
+        <!-- 右侧 3 根声波条 (上提) -->
+        <rect x="311" y="214" width="11" height="56" rx="5.5" fill="#FFFFFF"/>
+        <rect x="335" y="200" width="11" height="84" rx="5.5" fill="#FFFFFF"/>
+        <rect x="359" y="222" width="11" height="42" rx="5.5" fill="#FFFFFF"/>
+      </g>
+
+      <!-- 6. 中心白色录音麦克风（向下移动半片叶子距离，位于中央下方） -->
+      <g id="microphone">
+        <!-- 麦克风顶部胶囊 (下移至 y=232) -->
+        <rect x="236" y="232" width="40" height="70" rx="20" fill="#FFFFFF"/>
+        
+        <!-- 麦克风横向切线（橙色） -->
+        <line x1="242" y1="264" x2="270" y2="264" stroke="#FF6600" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="242" y1="274" x2="270" y2="274" stroke="#FF6600" stroke-width="3.5" stroke-linecap="round"/>
+
+        <!-- 麦克风 U 型支架 -->
+        <path d="M 222 268 C 222 314, 290 314, 290 268" 
+              fill="none" 
+              stroke="#FFFFFF" 
+              stroke-width="8" 
+              stroke-linecap="round"/>
+        
+        <!-- 麦克风立杆 -->
+        <line x1="256" y1="313" x2="256" y2="338" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+        
+        <!-- 麦克风底座 -->
+        <line x1="232" y1="338" x2="280" y2="338" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+      </g>
+
+    </g>
+  </g>
+</svg>

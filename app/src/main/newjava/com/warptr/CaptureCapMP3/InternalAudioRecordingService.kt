@@ -9,9 +9,10 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.PixelFormat
 import android.graphics.drawable.GradientDrawable
 import android.media.AudioAttributes
 import android.media.AudioFormat
@@ -35,6 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class InternalAudioRecordingService : Service() {
     private val mainHandler = Handler(Looper.getMainLooper())
+    private val prepared = AtomicBoolean(false)
     private val running = AtomicBoolean(false)
     private val stopping = AtomicBoolean(false)
     private lateinit var catalog: RecordingCatalog
@@ -68,8 +70,9 @@ class InternalAudioRecordingService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_STOP -> stopRecording(publish = true)
-            ACTION_START -> if (!running.get()) startRecording(intent)
+            ACTION_PREPARE -> if (!prepared.get() && !running.get()) prepareRecording(intent)
+            ACTION_START -> if (prepared.get() && !running.get()) beginRecording()
+            ACTION_STOP -> if (running.get()) stopRecording() else cancelPreparation()
         }
         return START_NOT_STICKY
     }
@@ -77,7 +80,7 @@ class InternalAudioRecordingService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     @Suppress("DEPRECATION")
-    private fun startRecording(intent: Intent) {
+    private fun prepareRecording(intent: Intent) {
         val resultCode = intent.getIntExtra(EXTRA_RESULT_CODE, Int.MIN_VALUE)
         val projectionData = intent.getParcelableExtra<Intent>(EXTRA_PROJECTION_DATA)
         if (resultCode == Int.MIN_VALUE || projectionData == null) {
@@ -88,7 +91,10 @@ class InternalAudioRecordingService : Service() {
             finishWithError("未授予录音权限")
             return
         }
-        startedAtElapsed = SystemClock.elapsedRealtime()
+        if (!Settings.canDrawOverlays(this)) {
+            finishWithError("请先允许悬浮窗权限")
+            return
+        }
         startedAtWallClock = System.currentTimeMillis()
         startForeground(NOTIFICATION_ID, buildNotification())
         try {
@@ -98,23 +104,49 @@ class InternalAudioRecordingService : Service() {
             projection = mediaProjection
             mediaProjection.registerCallback(object : MediaProjection.Callback() {
                 override fun onStop() {
-                    stopRecording(publish = true)
+                    if (running.get()) stopRecording() else cancelPreparation()
                 }
             }, mainHandler)
+            prepared.set(true)
+            stopping.set(false)
+            preferences.edit()
+                .putBoolean(RecordingCatalog.KEY_PREPARED, true)
+                .putBoolean(RecordingCatalog.KEY_ACTIVE, false)
+                .apply()
+            maybeShowOverlay()
+            broadcastState(active = false, isPrepared = true)
+        } catch (error: Exception) {
+            finishWithError(error.message ?: "无法准备内部录音")
+        }
+    }
+
+    private fun beginRecording() {
+        val mediaProjection = projection ?: run {
+            finishWithError("录制准备已失效，请重新准备")
+            return
+        }
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            finishWithError("未授予录音权限")
+            return
+        }
+        try {
+            startedAtElapsed = SystemClock.elapsedRealtime()
+            startedAtWallClock = System.currentTimeMillis()
             target = catalog.createTarget()
             output = contentResolver.openOutputStream(target!!.uri, "w")
                 ?: error("无法打开录音文件")
             encoder = Mp3Encoder(bitRateKbps = catalog.getBitRate())
-            audioRecord = createPlaybackRecord(projection!!).also { it.startRecording() }
+            audioRecord = createPlaybackRecord(mediaProjection).also { it.startRecording() }
             running.set(true)
-            stopping.set(false)
             preferences.edit()
                 .putBoolean(RecordingCatalog.KEY_ACTIVE, true)
                 .putLong(RecordingCatalog.KEY_STARTED_AT, startedAtWallClock)
                 .apply()
+            getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, buildNotification())
+            hideOverlay()
             maybeShowOverlay()
             mainHandler.post(tick)
-            broadcastState(active = true)
+            broadcastState(active = true, isPrepared = true)
             worker = Thread(::encodeLoop, "柿柿录音编码").apply { start() }
         } catch (error: Exception) {
             finishWithError(error.message ?: "无法开始内部录音")
@@ -155,9 +187,7 @@ class InternalAudioRecordingService : Service() {
                 val read = audioRecord?.read(pcm, 0, pcm.size, AudioRecord.READ_BLOCKING) ?: break
                 if (read > 0) {
                     val usable = read - (read % Mp3Encoder.CHANNELS)
-                    if (usable > 0) {
-                        encoder?.encode(pcm, usable)?.takeIf { it.isNotEmpty() }?.let(output!!::write)
-                    }
+                    if (usable > 0) encoder?.encode(pcm, usable)?.takeIf { it.isNotEmpty() }?.let(output!!::write)
                 } else if (read != AudioRecord.ERROR_DEAD_OBJECT && read != AudioRecord.ERROR_INVALID_OPERATION) {
                     throw IllegalStateException("内部音频读取失败：$read")
                 }
@@ -165,65 +195,70 @@ class InternalAudioRecordingService : Service() {
         } catch (error: Exception) {
             failure = error
         } finally {
-            if (failure != null) {
-                mainHandler.post { finishWithError(failure!!.message ?: "MP3 编码失败") }
-            } else if (!stopping.get()) {
-                mainHandler.post { stopRecording(publish = true) }
-            }
+            if (failure != null) mainHandler.post { finishWithError(failure!!.message ?: "MP3 编码失败") }
+            else if (!stopping.get()) mainHandler.post { stopRecording() }
         }
     }
 
-    private fun stopRecording(publish: Boolean) {
+    private fun stopRecording() {
         if (!stopping.compareAndSet(false, true)) return
         running.set(false)
+        prepared.set(false)
         mainHandler.removeCallbacks(tick)
         runCatching { audioRecord?.stop() }
         worker?.takeIf { it !== Thread.currentThread() }?.join(2_000)
         runCatching { encoder?.flush()?.takeIf { it.isNotEmpty() }?.let(output!!::write) }
         runCatching { output?.flush() }
         runCatching { output?.close() }
-        if (publish) {
-            runCatching { catalog.publish(target!!, SystemClock.elapsedRealtime() - startedAtElapsed) }
-                .onFailure { catalog.discard(target) }
-        } else {
-            catalog.discard(target)
-        }
-        releaseCapture()
-        preferences.edit().putBoolean(RecordingCatalog.KEY_ACTIVE, false).remove(RecordingCatalog.KEY_STARTED_AT).apply()
-        hideOverlay()
-        broadcastState(active = false)
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
+        runCatching { target?.let { catalog.publish(it, SystemClock.elapsedRealtime() - startedAtElapsed) } }
+            .onFailure { catalog.discard(target) }
+        closeSession()
+        broadcastState(active = false, isPrepared = false)
+    }
+
+    private fun cancelPreparation() {
+        if (!stopping.compareAndSet(false, true)) return
+        running.set(false)
+        prepared.set(false)
+        mainHandler.removeCallbacks(tick)
+        catalog.discard(target)
+        closeSession()
+        broadcastState(active = false, isPrepared = false)
     }
 
     private fun finishWithError(message: String) {
-        if (stopping.compareAndSet(false, true)) {
-            running.set(false)
-            mainHandler.removeCallbacks(tick)
-            runCatching { audioRecord?.stop() }
-            runCatching { output?.close() }
-            catalog.discard(target)
-            releaseCapture()
-            preferences.edit().putBoolean(RecordingCatalog.KEY_ACTIVE, false).remove(RecordingCatalog.KEY_STARTED_AT).apply()
-            hideOverlay()
-            broadcastState(active = false, error = message)
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
-        }
+        if (!stopping.compareAndSet(false, true)) return
+        running.set(false)
+        prepared.set(false)
+        mainHandler.removeCallbacks(tick)
+        runCatching { audioRecord?.stop() }
+        catalog.discard(target)
+        closeSession()
+        broadcastState(active = false, isPrepared = false, error = message)
     }
 
-    private fun releaseCapture() {
+    private fun closeSession() {
         runCatching { audioRecord?.release() }
         audioRecord = null
         runCatching { encoder?.close() }
         encoder = null
+        runCatching { output?.close() }
         output = null
         target = null
         runCatching { projection?.stop() }
         projection = null
+        preferences.edit()
+            .putBoolean(RecordingCatalog.KEY_ACTIVE, false)
+            .putBoolean(RecordingCatalog.KEY_PREPARED, false)
+            .remove(RecordingCatalog.KEY_STARTED_AT)
+            .apply()
+        hideOverlay()
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
     }
 
     private fun buildNotification(): Notification {
+        val isRecording = running.get()
         val stopIntent = PendingIntent.getService(
             this,
             0,
@@ -232,25 +267,26 @@ class InternalAudioRecordingService : Service() {
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_recording)
-            .setContentTitle("柿柿录音正在录制内部音频")
-            .setContentText("MP3 · ${catalog.getBitRate()} kbps")
+            .setContentTitle(if (isRecording) "柿柿录音正在录制内部音频" else "柿柿录音已准备录制")
+            .setContentText(if (isRecording) "MP3 · ${catalog.getBitRate()} kbps" else "点击悬浮窗中的开始录制")
             .setOngoing(true)
-            .setUsesChronometer(true)
+            .setUsesChronometer(isRecording)
             .setWhen(startedAtWallClock)
-            .addAction(0, "停止", stopIntent)
+            .addAction(0, if (isRecording) "停止录制" else "取消准备", stopIntent)
             .build()
     }
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(CHANNEL_ID, "内部录音", NotificationManager.IMPORTANCE_LOW).apply {
-            description = "内部音频录制进行中"
+            description = "内部音频录制状态"
         }
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
     private fun maybeShowOverlay() {
-        if (!catalog.isOverlayEnabled() || !Settings.canDrawOverlays(this)) return
+        if (!Settings.canDrawOverlays(this)) return
         windowManager = getSystemService(WindowManager::class.java)
+        val isRecording = running.get()
         overlayView = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
@@ -262,12 +298,12 @@ class InternalAudioRecordingService : Service() {
             overlayTime = TextView(context).apply {
                 setTextColor(Color.WHITE)
                 textSize = 14f
-                text = "正在录音 00:00"
+                text = if (isRecording) "正在录音 00:00" else "已准备录制"
             }
             addView(overlayTime)
             addView(Button(context).apply {
-                text = "停止"
-                setOnClickListener { stopRecording(publish = true) }
+                text = if (isRecording) "停止录制" else "开始录制"
+                setOnClickListener { if (running.get()) stopRecording() else beginRecording() }
             })
         }
         val params = WindowManager.LayoutParams(
@@ -275,7 +311,7 @@ class InternalAudioRecordingService : Service() {
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-            android.graphics.PixelFormat.TRANSLUCENT,
+            PixelFormat.TRANSLUCENT,
         ).apply {
             gravity = Gravity.TOP or Gravity.END
             x = dp(12)
@@ -291,9 +327,10 @@ class InternalAudioRecordingService : Service() {
         windowManager = null
     }
 
-    private fun broadcastState(active: Boolean, error: String? = null) {
+    private fun broadcastState(active: Boolean, isPrepared: Boolean, error: String? = null) {
         sendBroadcast(Intent(ACTION_STATE_CHANGED).setPackage(packageName).apply {
             putExtra(EXTRA_ACTIVE, active)
+            putExtra(EXTRA_PREPARED, isPrepared)
             if (error != null) putExtra(EXTRA_ERROR, error)
         })
     }
@@ -301,17 +338,21 @@ class InternalAudioRecordingService : Service() {
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     override fun onDestroy() {
-        if (running.get() && !stopping.get()) stopRecording(publish = true)
+        if (!stopping.get() && (running.get() || prepared.get())) {
+            if (running.get()) stopRecording() else cancelPreparation()
+        }
         super.onDestroy()
     }
 
     companion object {
+        const val ACTION_PREPARE = "com.warptr.CaptureCapMP3.PREPARE"
         const val ACTION_START = "com.warptr.CaptureCapMP3.START"
         const val ACTION_STOP = "com.warptr.CaptureCapMP3.STOP"
         const val ACTION_STATE_CHANGED = "com.warptr.CaptureCapMP3.STATE_CHANGED"
         const val EXTRA_RESULT_CODE = "result_code"
         const val EXTRA_PROJECTION_DATA = "projection_data"
         const val EXTRA_ACTIVE = "active"
+        const val EXTRA_PREPARED = "prepared"
         const val EXTRA_ERROR = "error"
         private const val CHANNEL_ID = "internal_recording"
         private const val NOTIFICATION_ID = 1001

@@ -16,7 +16,8 @@ class InternalAudioTileService : TileService() {
 
     override fun onClick() {
         val preferences = getSharedPreferences(RecordingCatalog.PREFERENCES, Context.MODE_PRIVATE)
-        if (preferences.getBoolean(RecordingCatalog.KEY_ACTIVE, false)) {
+        if (preferences.getBoolean(RecordingCatalog.KEY_ACTIVE, false) ||
+            preferences.getBoolean(RecordingCatalog.KEY_PREPARED, false)) {
             startService(Intent(this, InternalAudioRecordingService::class.java).setAction(InternalAudioRecordingService.ACTION_STOP))
         } else {
             val launchIntent = Intent(this, SimpleMainActivity::class.java).apply {
@@ -41,8 +42,9 @@ class InternalAudioTileService : TileService() {
     private fun refreshTile() {
         qsTile?.apply {
             label = "内部录音"
-            state = if (getSharedPreferences(RecordingCatalog.PREFERENCES, Context.MODE_PRIVATE)
-                    .getBoolean(RecordingCatalog.KEY_ACTIVE, false)) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
+            val preferences = getSharedPreferences(RecordingCatalog.PREFERENCES, Context.MODE_PRIVATE)
+            state = if (preferences.getBoolean(RecordingCatalog.KEY_ACTIVE, false) ||
+                preferences.getBoolean(RecordingCatalog.KEY_PREPARED, false)) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
             updateTile()
         }
     }

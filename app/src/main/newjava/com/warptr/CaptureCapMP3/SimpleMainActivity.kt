@@ -16,7 +16,6 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.view.Gravity
-import android.view.MenuItem
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
@@ -38,12 +37,12 @@ class SimpleMainActivity : AppCompatActivity() {
     private lateinit var catalog: RecordingCatalog
     private lateinit var projectionManager: MediaProjectionManager
     private lateinit var statusText: TextView
-    private lateinit var recordButton: Button
+    private lateinit var prepareButton: Button
     private lateinit var folderText: TextView
     private lateinit var recordingsPanel: LinearLayout
     private lateinit var bitRateSpinner: Spinner
     private val handler = Handler(Looper.getMainLooper())
-    private var startAfterPermission = false
+    private var prepareAfterPermission = false
 
     private val refreshTicker = object : Runnable {
         override fun run() {
@@ -55,7 +54,7 @@ class SimpleMainActivity : AppCompatActivity() {
     private val projectionLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK && result.data != null) {
             val serviceIntent = Intent(this, InternalAudioRecordingService::class.java).apply {
-                action = InternalAudioRecordingService.ACTION_START
+                action = InternalAudioRecordingService.ACTION_PREPARE
                 putExtra(InternalAudioRecordingService.EXTRA_RESULT_CODE, result.resultCode)
                 putExtra(InternalAudioRecordingService.EXTRA_PROJECTION_DATA, result.data)
             }
@@ -94,7 +93,7 @@ class SimpleMainActivity : AppCompatActivity() {
         setContentView(createContent())
         registerStateReceiver()
         if (intent.getBooleanExtra(EXTRA_TILE_START, false)) {
-            recordButton.post { startOrStopRecording() }
+            prepareButton.post { prepareOrCancelRecording() }
         }
     }
 
@@ -140,11 +139,11 @@ class SimpleMainActivity : AppCompatActivity() {
             setPadding(0, dp(22), 0, dp(14))
         }
         content.addView(statusText, fullWidth())
-        recordButton = Button(this).apply {
+        prepareButton = Button(this).apply {
             textSize = 18f
-            setOnClickListener { startOrStopRecording() }
+            setOnClickListener { prepareOrCancelRecording() }
         }
-        content.addView(recordButton, fullWidth())
+        content.addView(prepareButton, fullWidth())
         content.addView(label("录音设置"))
         content.addView(settingRow("音源", "内部音频"))
         content.addView(settingRow("格式", "MP3"))
@@ -154,8 +153,11 @@ class SimpleMainActivity : AppCompatActivity() {
             addView(TextView(context).apply { text = "码率" }, LinearLayout.LayoutParams(0, -2, 1f))
         }
         bitRateSpinner = Spinner(this).apply {
-            adapter = ArrayAdapter(this@SimpleMainActivity, android.R.layout.simple_spinner_dropdown_item,
-                RecordingCatalog.BIT_RATES.map { "$it kbps" })
+            adapter = ArrayAdapter(
+                this@SimpleMainActivity,
+                android.R.layout.simple_spinner_dropdown_item,
+                RecordingCatalog.BIT_RATES.map { "$it kbps" },
+            )
             setSelection(RecordingCatalog.BIT_RATES.indexOf(catalog.getBitRate()).coerceAtLeast(0), false)
             onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
                 override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
@@ -181,8 +183,8 @@ class SimpleMainActivity : AppCompatActivity() {
             }
         }, fullWidth())
         content.addView(Button(this).apply {
-            text = "${if (catalog.isOverlayEnabled()) "关闭" else "开启"}录音悬浮窗"
-            setOnClickListener { configureOverlay(this) }
+            text = "设置悬浮窗权限"
+            setOnClickListener { openOverlaySettings() }
         }, fullWidth())
         content.addView(label("录音文件"))
         recordingsPanel = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -190,56 +192,66 @@ class SimpleMainActivity : AppCompatActivity() {
         return scroll
     }
 
-    private fun configureOverlay(button: Button) {
-        if (!Settings.canDrawOverlays(this)) {
-            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
-            return
-        }
-        val enabled = !catalog.isOverlayEnabled()
-        catalog.setOverlayEnabled(enabled)
-        button.text = "${if (enabled) "关闭" else "开启"}录音悬浮窗"
-        toast(if (enabled) "录音时将显示悬浮窗" else "已关闭录音悬浮窗")
-    }
-
-    private fun startOrStopRecording() {
-        if (isRecording()) {
+    private fun prepareOrCancelRecording() {
+        if (isRecording() || isPrepared()) {
             startService(Intent(this, InternalAudioRecordingService::class.java).setAction(InternalAudioRecordingService.ACTION_STOP))
             return
         }
+        if (!Settings.canDrawOverlays(this)) {
+            toast("请先允许悬浮窗权限，再准备录制")
+            openOverlaySettings()
+            return
+        }
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            startAfterPermission = true
+            prepareAfterPermission = true
             requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), REQUEST_RECORD_AUDIO)
             return
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            startAfterPermission = true
+            prepareAfterPermission = true
             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
             return
         }
         projectionLauncher.launch(projectionManager.createScreenCaptureIntent())
     }
 
+    private fun openOverlaySettings() {
+        if (!Settings.canDrawOverlays(this)) {
+            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+        } else {
+            toast("悬浮窗权限已允许")
+        }
+    }
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (startAfterPermission) {
-            startAfterPermission = false
-            if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) startOrStopRecording()
+        if (prepareAfterPermission) {
+            prepareAfterPermission = false
+            if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) prepareOrCancelRecording()
             else toast("未授予所需权限")
         }
     }
 
     private fun refreshState() {
-        if (isRecording()) {
-            val startedAt = getSharedPreferences(RecordingCatalog.PREFERENCES, Context.MODE_PRIVATE)
-                .getLong(RecordingCatalog.KEY_STARTED_AT, System.currentTimeMillis())
-            statusText.text = "● 正在录音 ${InternalAudioRecordingService.formatDuration(System.currentTimeMillis() - startedAt)}"
-            recordButton.text = "停止录音"
-            bitRateSpinner.isEnabled = false
-        } else {
-            statusText.text = "● 未录音"
-            recordButton.text = "开始录音"
-            bitRateSpinner.isEnabled = true
+        when {
+            isRecording() -> {
+                val startedAt = getSharedPreferences(RecordingCatalog.PREFERENCES, Context.MODE_PRIVATE)
+                    .getLong(RecordingCatalog.KEY_STARTED_AT, System.currentTimeMillis())
+                statusText.text = "● 正在录音 ${InternalAudioRecordingService.formatDuration(System.currentTimeMillis() - startedAt)}"
+                prepareButton.text = "停止录音"
+                bitRateSpinner.isEnabled = false
+            }
+            isPrepared() -> {
+                statusText.text = "● 已准备录制\n请点击悬浮窗“开始录制”"
+                prepareButton.text = "取消准备"
+                bitRateSpinner.isEnabled = false
+            }
+            else -> {
+                statusText.text = "● 未录音"
+                prepareButton.text = "准备录制"
+                bitRateSpinner.isEnabled = true
+            }
         }
     }
 
@@ -257,20 +269,18 @@ class SimpleMainActivity : AppCompatActivity() {
         entries.forEach { entry -> recordingsPanel.addView(recordingRow(entry), fullWidth()) }
     }
 
-    private fun recordingRow(entry: RecordingEntry): View {
-        return LinearLayout(this).apply {
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(6), 0, dp(6))
-            addView(Button(context).apply {
-                text = "${entry.name}\n${formatDate(entry.createdAt)} · ${InternalAudioRecordingService.formatDuration(entry.durationMs)}"
-                gravity = Gravity.START or Gravity.CENTER_VERTICAL
-                setOnClickListener { play(entry) }
-            }, LinearLayout.LayoutParams(0, -2, 1f))
-            addView(Button(context).apply {
-                text = "⋮"
-                setOnClickListener { showRecordingMenu(this, entry) }
-            })
-        }
+    private fun recordingRow(entry: RecordingEntry): View = LinearLayout(this).apply {
+        gravity = Gravity.CENTER_VERTICAL
+        setPadding(0, dp(6), 0, dp(6))
+        addView(Button(context).apply {
+            text = "${entry.name}\n${formatDate(entry.createdAt)} · ${InternalAudioRecordingService.formatDuration(entry.durationMs)}"
+            gravity = Gravity.START or Gravity.CENTER_VERTICAL
+            setOnClickListener { play(entry) }
+        }, LinearLayout.LayoutParams(0, -2, 1f))
+        addView(Button(context).apply {
+            text = "⋮"
+            setOnClickListener { showRecordingMenu(this, entry) }
+        })
     }
 
     private fun showRecordingMenu(anchor: View, entry: RecordingEntry) {
@@ -348,6 +358,8 @@ class SimpleMainActivity : AppCompatActivity() {
     private fun toast(message: String) = Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     private fun isRecording() = getSharedPreferences(RecordingCatalog.PREFERENCES, Context.MODE_PRIVATE)
         .getBoolean(RecordingCatalog.KEY_ACTIVE, false)
+    private fun isPrepared() = getSharedPreferences(RecordingCatalog.PREFERENCES, Context.MODE_PRIVATE)
+        .getBoolean(RecordingCatalog.KEY_PREPARED, false)
     private fun formatDate(value: Long) = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.CHINA).format(Date(value))
 
     private fun registerStateReceiver() {

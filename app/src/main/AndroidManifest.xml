@@ -8,7 +8,7 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_stat_recording"
+        android:icon="@drawable/shishi_recording_icon"
         android:label="柿柿录音"
         android:supportsRtl="true"
         android:theme="@style/Theme.ShishiRecorder">
@@ -29,7 +29,7 @@
         <service
             android:name="com.warptr.CaptureCapMP3.InternalAudioTileService"
             android:exported="true"
-            android:icon="@drawable/ic_stat_recording"
+            android:icon="@drawable/shishi_recording_icon"
             android:label="内部录音"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter>
