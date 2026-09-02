@@ -1,3 +1,0 @@
-Opptak av lydavspilling krever Android 10 eller nyere. Root ikke nødvendig.
-
-(ADVARSEL: Noen telefonprodusenter tillater ikke opptak av enkelte eller alle lydavspilling kilder)

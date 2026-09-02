@@ -1,1 +1,0 @@
- * Redesigned the app's interface.

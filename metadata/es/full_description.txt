@@ -1,3 +1,0 @@
-La grabación de reproducción de audio requiere Android 10 o más reciente. No se necesita root.
-
-(ADVERTENCIA: Es posible que algunos vendedores de dispositivos no permitan grabar algunas fuentes de reproducción de audio, o incluso no permitir grabarlas en absoluto)

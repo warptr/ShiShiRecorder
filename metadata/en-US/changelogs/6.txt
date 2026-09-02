@@ -1,3 +1,0 @@
- * Another fix for crashing on recording start for Android 8 or lower.
-
- * Fix application not installing on Android 12+.
