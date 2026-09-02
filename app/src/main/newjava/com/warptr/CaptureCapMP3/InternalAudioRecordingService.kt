@@ -1,5 +1,7 @@
 package com.warptr.CaptureCapMP3
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -7,6 +9,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
@@ -81,6 +84,10 @@ class InternalAudioRecordingService : Service() {
             finishWithError("未获得内部音频授权")
             return
         }
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            finishWithError("未授予录音权限")
+            return
+        }
         startedAtElapsed = SystemClock.elapsedRealtime()
         startedAtWallClock = System.currentTimeMillis()
         startForeground(NOTIFICATION_ID, buildNotification())
@@ -114,6 +121,7 @@ class InternalAudioRecordingService : Service() {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private fun createPlaybackRecord(mediaProjection: MediaProjection): AudioRecord {
         val format = AudioFormat.Builder()
             .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
