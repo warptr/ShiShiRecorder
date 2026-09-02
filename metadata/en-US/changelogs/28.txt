@@ -1,3 +1,0 @@
- * Fix the Android 14 crash.
-
- * Update Hebrew translations.

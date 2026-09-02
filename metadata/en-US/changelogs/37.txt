@@ -1,1 +1,0 @@
- * Fixed adding microphone foreground permission for system audio too.

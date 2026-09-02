@@ -1,3 +1,0 @@
- * Added RTMP and RTMPS streaming support for Android 10+.
- * Fixed some miscellaneous issues with app's theme.
- * Added disable notification vibration option for Android 8 and below.

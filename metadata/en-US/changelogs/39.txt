@@ -1,7 +1,0 @@
- * Fixed crash when recording only audio.
-
- * Added auto-closing the activity started from a tile.
-
- * Added an option to start recording from panel or notification after giving permission to record screen.
-
- * Added an option to collapse the floating panel to a dot.
