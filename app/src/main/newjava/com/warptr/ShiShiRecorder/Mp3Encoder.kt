@@ -1,4 +1,4 @@
-package com.warptr.CaptureCapMP3
+package com.warptr.ShiShiRecorder
 
 /** Thin, stateful wrapper around the bundled LGPL LAME encoder. */
 class Mp3Encoder(

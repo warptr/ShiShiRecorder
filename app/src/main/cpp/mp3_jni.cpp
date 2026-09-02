@@ -8,7 +8,7 @@ extern "C" {
 }
 
 namespace {
-constexpr const char* TAG = "CaptureCapMp3";
+constexpr const char* TAG = "ShiShiRecorderMp3";
 
 void throwIllegalState(JNIEnv* env, const char* message) {
     jclass type = env->FindClass("java/lang/IllegalStateException");
@@ -35,7 +35,7 @@ jbyteArray encodeResult(JNIEnv* env, int written, const std::vector<unsigned cha
 }
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_com_warptr_CaptureCapMP3_Mp3Encoder_nativeCreate(
+Java_com_warptr_ShiShiRecorder_Mp3Encoder_nativeCreate(
         JNIEnv* env,
         jobject,
         jint sampleRate,
@@ -71,7 +71,7 @@ Java_com_warptr_CaptureCapMP3_Mp3Encoder_nativeCreate(
 }
 
 extern "C" JNIEXPORT jbyteArray JNICALL
-Java_com_warptr_CaptureCapMP3_Mp3Encoder_nativeEncode(
+Java_com_warptr_ShiShiRecorder_Mp3Encoder_nativeEncode(
         JNIEnv* env,
         jobject,
         jlong handle,
@@ -106,7 +106,7 @@ Java_com_warptr_CaptureCapMP3_Mp3Encoder_nativeEncode(
 }
 
 extern "C" JNIEXPORT jbyteArray JNICALL
-Java_com_warptr_CaptureCapMP3_Mp3Encoder_nativeFlush(JNIEnv* env, jobject, jlong handle) {
+Java_com_warptr_ShiShiRecorder_Mp3Encoder_nativeFlush(JNIEnv* env, jobject, jlong handle) {
     lame_t encoder = fromHandle(handle);
     if (encoder == nullptr) {
         return env->NewByteArray(0);
@@ -116,7 +116,7 @@ Java_com_warptr_CaptureCapMP3_Mp3Encoder_nativeFlush(JNIEnv* env, jobject, jlong
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_warptr_CaptureCapMP3_Mp3Encoder_nativeClose(JNIEnv*, jobject, jlong handle) {
+Java_com_warptr_ShiShiRecorder_Mp3Encoder_nativeClose(JNIEnv*, jobject, jlong handle) {
     lame_t encoder = fromHandle(handle);
     if (encoder != nullptr) {
         lame_close(encoder);

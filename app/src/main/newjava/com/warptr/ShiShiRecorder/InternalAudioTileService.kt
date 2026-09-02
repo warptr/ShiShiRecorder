@@ -1,4 +1,4 @@
-package com.warptr.CaptureCapMP3
+package com.warptr.ShiShiRecorder
 
 import android.annotation.SuppressLint
 import android.app.PendingIntent

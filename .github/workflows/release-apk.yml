@@ -28,14 +28,14 @@ jobs:
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          key_store=".ci-capturecap-release.p12"
+          key_store=".ci-shishirecorder-release.p12"
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$key_store"
       - name: Build signed APK
         env:
-          CAPTURECAP_KEYSTORE_FILE: ../.ci-capturecap-release.p12
-          CAPTURECAP_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          CAPTURECAP_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          CAPTURECAP_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          SHISHIRECORDER_KEYSTORE_FILE: ../.ci-shishirecorder-release.p12
+          SHISHIRECORDER_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          SHISHIRECORDER_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          SHISHIRECORDER_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: ./gradlew :app:assembleRelease --no-daemon
       - name: Verify APK signature
         run: |

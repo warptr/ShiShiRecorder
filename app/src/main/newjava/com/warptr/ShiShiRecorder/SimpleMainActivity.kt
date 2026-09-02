@@ -1,4 +1,4 @@
-package com.warptr.CaptureCapMP3
+package com.warptr.ShiShiRecorder
 
 import android.Manifest
 import android.app.AlertDialog
@@ -123,11 +123,24 @@ class SimpleMainActivity : AppCompatActivity() {
             setPadding(padding, padding, padding, padding)
         }
         val scroll = ScrollView(this).apply { addView(content) }
-        content.addView(TextView(this).apply {
-            text = "柿柿录音"
-            textSize = 28f
-            setTypeface(typeface, Typeface.BOLD)
-        })
+        content.addView(LinearLayout(this).apply {
+            gravity = Gravity.CENTER_VERTICAL
+            addView(TextView(context).apply {
+                text = "柿柿录音"
+                textSize = 28f
+                setTypeface(typeface, Typeface.BOLD)
+            }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            addView(Button(context).apply {
+                text = "i"
+                textSize = 20f
+                contentDescription = "应用使用说明"
+                minWidth = dp(48)
+                minimumWidth = dp(48)
+                minHeight = dp(48)
+                minimumHeight = dp(48)
+                setOnClickListener { showAppInfo() }
+            }, LinearLayout.LayoutParams(dp(48), dp(48)))
+        }, fullWidth())
         content.addView(TextView(this).apply {
             text = "内部音频录制 · MP3"
             textSize = 15f
@@ -190,6 +203,41 @@ class SimpleMainActivity : AppCompatActivity() {
         recordingsPanel = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         content.addView(recordingsPanel, fullWidth())
         return scroll
+    }
+
+    private fun showAppInfo() {
+        val dialogContent = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(24), dp(8), dp(24), dp(8))
+            addView(TextView(context).apply {
+                text = """
+                    ShiShiRecorder 是一款安卓内部音频 MP3 录音工具，只录制其他应用允许捕获的播放声音，不会录制麦克风或屏幕画面。
+
+                    使用步骤
+                    1. 首次使用，点击“设置悬浮窗权限”并允许显示在其他应用上层。
+                    2. 返回主界面，选择所需码率和保存目录，然后点击“准备录制”。
+                    3. 按系统提示授予录音、通知和内部音频捕获权限。
+                    4. 出现悬浮窗后，点击“开始录制”；再次点击即可停止并保存 MP3。
+                    5. 录音完成后，可在主界面的录音列表中播放、分享、重命名或删除文件。
+
+                    注意：部分应用或设备不允许捕获内部音频，因此可能无法录到对应声音。默认保存目录为 Music/MP3。
+                """.trimIndent()
+                textSize = 16f
+                setLineSpacing(0f, 1.15f)
+            }, fullWidth())
+            addView(TextView(context).apply {
+                text = "献给我想录音去跳广场舞的母亲"
+                textSize = 15f
+                gravity = Gravity.CENTER
+                setTypeface(typeface, Typeface.ITALIC)
+                setPadding(0, dp(24), 0, dp(8))
+            }, fullWidth())
+        }
+        AlertDialog.Builder(this)
+            .setTitle("ShiShiRecorder 使用说明")
+            .setView(ScrollView(this).apply { addView(dialogContent) })
+            .setPositiveButton("知道了", null)
+            .show()
     }
 
     private fun prepareOrCancelRecording() {

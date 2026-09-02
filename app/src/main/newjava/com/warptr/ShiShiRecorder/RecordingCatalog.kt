@@ -1,4 +1,4 @@
-package com.warptr.CaptureCapMP3
+package com.warptr.ShiShiRecorder
 
 import android.content.ContentResolver
 import android.content.ContentValues

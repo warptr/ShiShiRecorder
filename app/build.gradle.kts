@@ -3,21 +3,21 @@ plugins {
     alias(libs.plugins.kotlin.android)
 }
 
-val signingStoreFile = providers.gradleProperty("CAPTURECAP_KEYSTORE_FILE").orNull
-    ?: System.getenv("CAPTURECAP_KEYSTORE_FILE")
-val signingStorePassword = providers.gradleProperty("CAPTURECAP_KEYSTORE_PASSWORD").orNull
-    ?: System.getenv("CAPTURECAP_KEYSTORE_PASSWORD")
-val signingKeyAlias = providers.gradleProperty("CAPTURECAP_KEY_ALIAS").orNull
-    ?: System.getenv("CAPTURECAP_KEY_ALIAS")
-val signingKeyPassword = providers.gradleProperty("CAPTURECAP_KEY_PASSWORD").orNull
-    ?: System.getenv("CAPTURECAP_KEY_PASSWORD")
+val signingStoreFile = providers.gradleProperty("SHISHIRECORDER_KEYSTORE_FILE").orNull
+    ?: System.getenv("SHISHIRECORDER_KEYSTORE_FILE")
+val signingStorePassword = providers.gradleProperty("SHISHIRECORDER_KEYSTORE_PASSWORD").orNull
+    ?: System.getenv("SHISHIRECORDER_KEYSTORE_PASSWORD")
+val signingKeyAlias = providers.gradleProperty("SHISHIRECORDER_KEY_ALIAS").orNull
+    ?: System.getenv("SHISHIRECORDER_KEY_ALIAS")
+val signingKeyPassword = providers.gradleProperty("SHISHIRECORDER_KEY_PASSWORD").orNull
+    ?: System.getenv("SHISHIRECORDER_KEY_PASSWORD")
 
 android {
-    namespace = "com.warptr.CaptureCapMP3"
+    namespace = "com.warptr.ShiShiRecorder"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.warptr.CaptureCapMP3"
+        applicationId = "com.warptr.ShiShiRecorder"
         minSdk = 29
         targetSdk = 36
         versionCode = 1

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22.1)
-project("capturecap_mp3")
+project("shishirecorder_mp3")
 
 set(LAME_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/lame/jni)
 

@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ShishiRecorder">
         <activity
-            android:name="com.warptr.CaptureCapMP3.SimpleMainActivity"
+            android:name="com.warptr.ShiShiRecorder.SimpleMainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -22,12 +22,12 @@
         </activity>
 
         <service
-            android:name="com.warptr.CaptureCapMP3.InternalAudioRecordingService"
+            android:name="com.warptr.ShiShiRecorder.InternalAudioRecordingService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection" />
 
         <service
-            android:name="com.warptr.CaptureCapMP3.InternalAudioTileService"
+            android:name="com.warptr.ShiShiRecorder.InternalAudioTileService"
             android:exported="true"
             android:icon="@drawable/shishi_recording_icon"
             android:label="内部录音"

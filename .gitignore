@@ -29,7 +29,7 @@ render.experimental.xml
 *.jks
 *.keystore
 .signing/
-.ci-capturecap-release.p12
+.ci-shishirecorder-release.p12
 
 # Google Services (e.g. APIs or Firebase)
 google-services.json

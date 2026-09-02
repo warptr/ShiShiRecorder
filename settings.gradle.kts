@@ -19,6 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CaptureCap"
+rootProject.name = "ShiShiRecorder"
 include(":app")
- 

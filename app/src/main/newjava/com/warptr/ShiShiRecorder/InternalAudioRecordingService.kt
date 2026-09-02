@@ -1,4 +1,4 @@
-package com.warptr.CaptureCapMP3
+package com.warptr.ShiShiRecorder
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -345,10 +345,10 @@ class InternalAudioRecordingService : Service() {
     }
 
     companion object {
-        const val ACTION_PREPARE = "com.warptr.CaptureCapMP3.PREPARE"
-        const val ACTION_START = "com.warptr.CaptureCapMP3.START"
-        const val ACTION_STOP = "com.warptr.CaptureCapMP3.STOP"
-        const val ACTION_STATE_CHANGED = "com.warptr.CaptureCapMP3.STATE_CHANGED"
+        const val ACTION_PREPARE = "com.warptr.ShiShiRecorder.PREPARE"
+        const val ACTION_START = "com.warptr.ShiShiRecorder.START"
+        const val ACTION_STOP = "com.warptr.ShiShiRecorder.STOP"
+        const val ACTION_STATE_CHANGED = "com.warptr.ShiShiRecorder.STATE_CHANGED"
         const val EXTRA_RESULT_CODE = "result_code"
         const val EXTRA_PROJECTION_DATA = "projection_data"
         const val EXTRA_ACTIVE = "active"
