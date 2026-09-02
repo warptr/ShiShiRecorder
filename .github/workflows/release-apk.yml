@@ -32,7 +32,7 @@ jobs:
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$key_store"
       - name: Build signed APK
         env:
-          CAPTURECAP_KEYSTORE_FILE: .ci-capturecap-release.p12
+          CAPTURECAP_KEYSTORE_FILE: ../.ci-capturecap-release.p12
           CAPTURECAP_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           CAPTURECAP_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           CAPTURECAP_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
