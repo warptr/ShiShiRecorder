@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: 允许执行 Gradle Wrapper
+        run: chmod +x gradlew
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

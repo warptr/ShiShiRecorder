@@ -20,6 +20,8 @@ jobs:
       ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
     steps:
       - uses: actions/checkout@v4
+      - name: 允许执行 Gradle Wrapper
+        run: chmod +x gradlew
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
