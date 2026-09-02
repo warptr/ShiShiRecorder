@@ -1,7 +1,7 @@
 name: Android Release
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
   push:
     tags:
       - "v*"
@@ -12,11 +12,6 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    env:
-      CAPTURECAP_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-      CAPTURECAP_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-      CAPTURECAP_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
     steps:
       - uses: actions/checkout@v4
       - name: Enable Gradle Wrapper
@@ -30,11 +25,17 @@ jobs:
       - name: Install Android build tools
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;27.0.12077973" "cmake;3.22.1"
       - name: Restore release signing key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          key_store="$RUNNER_TEMP/capturecap-release.p12"
+          key_store=".ci-capturecap-release.p12"
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$key_store"
-          echo "CAPTURECAP_KEYSTORE_FILE=$key_store" >> "$GITHUB_ENV"
       - name: Build signed APK
+        env:
+          CAPTURECAP_KEYSTORE_FILE: .ci-capturecap-release.p12
+          CAPTURECAP_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          CAPTURECAP_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          CAPTURECAP_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: ./gradlew :app:assembleRelease --no-daemon
       - name: Verify APK signature
         run: "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk
