@@ -7,7 +7,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
@@ -132,14 +134,20 @@ class SimpleMainActivity : AppCompatActivity() {
             }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
             addView(Button(context).apply {
                 text = "i"
-                textSize = 20f
+                textSize = 18f
                 contentDescription = "应用使用说明"
-                minWidth = dp(48)
-                minimumWidth = dp(48)
-                minHeight = dp(48)
-                minimumHeight = dp(48)
+                minWidth = 0
+                minimumWidth = 0
+                minHeight = 0
+                minimumHeight = 0
+                setPadding(0, 0, 0, 0)
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(Color.TRANSPARENT)
+                    setStroke(dp(1), 0xFF858B94.toInt())
+                }
                 setOnClickListener { showAppInfo() }
-            }, LinearLayout.LayoutParams(dp(48), dp(48)))
+            }, LinearLayout.LayoutParams(dp(36), dp(36)))
         }, fullWidth())
         content.addView(TextView(this).apply {
             text = "内部音频录制 · MP3"
@@ -211,9 +219,6 @@ class SimpleMainActivity : AppCompatActivity() {
             setPadding(dp(24), dp(8), dp(24), dp(8))
             addView(TextView(context).apply {
                 text = """
-                    ShiShiRecorder 是一款安卓内部音频 MP3 录音工具，只录制其他应用允许捕获的播放声音，不会录制麦克风或屏幕画面。
-
-                    使用步骤
                     1. 首次使用，点击“设置悬浮窗权限”并允许显示在其他应用上层。
                     2. 返回主界面，选择所需码率和保存目录，然后点击“准备录制”。
                     3. 按系统提示授予录音、通知和内部音频捕获权限。
@@ -230,11 +235,20 @@ class SimpleMainActivity : AppCompatActivity() {
                 textSize = 15f
                 gravity = Gravity.CENTER
                 setTypeface(typeface, Typeface.ITALIC)
+                alpha = 0.62f
                 setPadding(0, dp(24), 0, dp(8))
+            }, fullWidth())
+            addView(TextView(context).apply {
+                text = "--peng"
+                textSize = 15f
+                gravity = Gravity.END
+                setTypeface(typeface, Typeface.ITALIC)
+                alpha = 0.62f
+                setPadding(0, 0, 0, dp(8))
             }, fullWidth())
         }
         AlertDialog.Builder(this)
-            .setTitle("ShiShiRecorder 使用说明")
+            .setTitle("使用说明")
             .setView(ScrollView(this).apply { addView(dialogContent) })
             .setPositiveButton("知道了", null)
             .show()
