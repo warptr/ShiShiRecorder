@@ -1,10 +1,10 @@
 name: Android Release
 
 on:
+  workflow_dispatch:
   push:
     tags:
-      - 'v*'
-  workflow_dispatch:
+      - "v*"
 
 permissions:
   contents: write
@@ -13,37 +13,38 @@ jobs:
   release:
     runs-on: ubuntu-latest
     env:
-      # 采用工作目录内的临时文件，避免 job 级 env 使用受限的 runner 上下文。
-      CAPTURECAP_KEYSTORE_FILE: .ci-capturecap-release.p12
       CAPTURECAP_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
       CAPTURECAP_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       CAPTURECAP_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
       ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
     steps:
       - uses: actions/checkout@v4
-      - name: 允许执行 Gradle Wrapper
+      - name: Enable Gradle Wrapper
         run: chmod +x gradlew
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
       - uses: android-actions/setup-android@v3
-      - name: 安装 Android 构建组件
+      - name: Install Android build tools
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;27.0.12077973" "cmake;3.22.1"
-      - name: 恢复 Release 签名
-        run: printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$CAPTURECAP_KEYSTORE_FILE"
-      - name: 构建签名 APK
+      - name: Restore release signing key
+        run: |
+          key_store="$RUNNER_TEMP/capturecap-release.p12"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$key_store"
+          echo "CAPTURECAP_KEYSTORE_FILE=$key_store" >> "$GITHUB_ENV"
+      - name: Build signed APK
         run: ./gradlew :app:assembleRelease --no-daemon
-      - name: 校验 APK 签名
+      - name: Verify APK signature
         run: "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk
-      - name: 保存 Release APK
+      - name: Upload release APK
         uses: actions/upload-artifact@v4
         with:
-          name: 柿柿录音-release-apk
+          name: shishi-recorder-release-apk
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
-      - name: 创建 GitHub Release
+      - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
