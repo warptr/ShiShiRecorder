@@ -350,14 +350,9 @@ class SimpleMainActivity : AppCompatActivity() {
         .getBoolean(RecordingCatalog.KEY_ACTIVE, false)
     private fun formatDate(value: Long) = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.CHINA).format(Date(value))
 
-    @Suppress("DEPRECATION")
     private fun registerStateReceiver() {
         val filter = IntentFilter(InternalAudioRecordingService.ACTION_STATE_CHANGED)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(stateReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(stateReceiver, filter)
-        }
+        ContextCompat.registerReceiver(this, stateReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
     }
 
     companion object {
