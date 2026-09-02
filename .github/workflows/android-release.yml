@@ -13,7 +13,8 @@ jobs:
   release:
     runs-on: ubuntu-latest
     env:
-      CAPTURECAP_KEYSTORE_FILE: ${{ runner.temp }}/capturecap-release.p12
+      # 采用工作目录内的临时文件，避免 job 级 env 使用受限的 runner 上下文。
+      CAPTURECAP_KEYSTORE_FILE: .ci-capturecap-release.p12
       CAPTURECAP_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
       CAPTURECAP_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       CAPTURECAP_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
